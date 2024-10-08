@@ -4,15 +4,11 @@ using UnityEngine;
 
 public class CameraMovement : MonoBehaviour
 {
-    public float moveSpeed = 10f;            // Speed of camera movement
+    public float moveSpeed = 25f;            // Speed of camera movement
     public float screenEdgeThreshold = 0.1f; // Threshold for detecting the cursor at the screen's edges
     public float pitchAngle = 45f;           // Fixed downward pitch angle
     public float rotationSpeed = 5f;         // Speed of smooth rotation
     public float rotationAngle = 30f;        // Angle to rotate when pressing E or Q
-    public float scrollSpeed = 1f;          // Speed for moving the camera up and down
-    public float minHeight = 15f;            // Minimum allowed height
-    public float maxHeight = 50f;            // Maximum allowed height
-
 
     private Vector3 movement;
     private float fixedYPosition;            // Store the initial Y position to keep it fixed
@@ -37,7 +33,6 @@ public class CameraMovement : MonoBehaviour
     {
         HandleMovement();
         HandleRotation();
-        HandleScroll();
     }
 
     void HandleMovement()
@@ -106,23 +101,5 @@ public class CameraMovement : MonoBehaviour
         targetRotation = Quaternion.Euler(pitchAngle, currentEulerAngles.y, 0f);
     }
 
-    void HandleScroll()
-    {
-        // Get mouse scroll input
-        float scrollInput = Input.GetAxis("Mouse ScrollWheel");
 
-        if (scrollInput != 0f)
-        {
-            // Calculate the new Y position based on scroll input
-            Vector3 newPosition = transform.position;
-            newPosition.y -= scrollInput * scrollSpeed * Time.deltaTime * 100f; // Use scroll speed to move up/down
-
-            // Clamp the new Y position between minHeight and maxHeight
-            newPosition.y = Mathf.Clamp(newPosition.y, minHeight, maxHeight);
-
-            // Apply the new position
-            transform.position = newPosition;
-        }
-    }
 }
- 
