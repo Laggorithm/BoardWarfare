@@ -9,6 +9,9 @@ public class GroundAIUnit : MonoBehaviour
     private int rotationSpeed = 150;    // Speed of the unit rotation towards the desired position
     private float wanderRange = 15f;   // Range within which the unit can wander
     private int speed = 5;             // Speed of the unit movement
+    private int armor = 20;
+    private float Hp = 100;
+    public static float Damage = 40;
 
     void Start()
     {
@@ -70,5 +73,11 @@ public class GroundAIUnit : MonoBehaviour
             IsWandering = true;  // Resume wandering when exiting the trigger
             StartCoroutine(Wandering()); // Restart the wandering coroutine if it was stopped
         }
+    }
+
+    public void TakeDamage(float damage)
+    {
+        float finalDamage = damage * (100 / (100 + armor));
+        Hp -= finalDamage;
     }
 }
