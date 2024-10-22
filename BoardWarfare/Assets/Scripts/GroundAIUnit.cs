@@ -1,27 +1,39 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
+using static UnityEngine.GraphicsBuffer;
 
 public class GroundAIUnit : MonoBehaviour
 {
-    private bool IsWandering = true;  // Determine if the unit is in wandering or combat state
+    private bool IsWandering;  // Determine if the unit is in wandering or combat state
     private Vector3 desiredPositionX;  // The position the unit moves towards
     private int rotationSpeed = 150;    // Speed of the unit rotation towards the desired position
     private float wanderRange = 15f;   // Range within which the unit can wander
     private int speed = 5;             // Speed of the unit movement
-    private int armor = 20;
+    private int armor = 15;
     private float Hp = 100;
-    public static float Damage = 40;
+    private float Dmg = 10;
+    private float attackRange = 15f;
+    private int ActionValue = 2;
+     
 
     void Start()
     {
+        IsWandering = true;
         StartCoroutine(Wandering());   // Start the wandering coroutine when the game starts
     }
 
     // Update is called once per frame
     void Update()
     {
-        Debug.Log(IsWandering);
+        Debug.Log(ActionValue);
+        if (ActionValue == 0)
+        {
+            StopAllCoroutines();
+        }
+         
     }
 
     private IEnumerator Wandering()
@@ -56,16 +68,31 @@ public class GroundAIUnit : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.CompareTag("Test"))
+        if (other.GetComponent<UnitController>() != null)
         {
+            UnitController unitController = other.GetComponent<UnitController>();
             IsWandering = false; // Stop wandering when entering the trigger
-            Vector3 direction = other.gameObject.transform.position - transform.position;
-            direction.y = 0;  // Prevent vertical rotation
-            Quaternion rotation = Quaternion.LookRotation(direction);
-            transform.rotation = Quaternion.Slerp(transform.rotation, rotation, Time.deltaTime * rotationSpeed);
-        }
-    }
+            
+            if (ActionValue >= 1 && (Vector3.Distance(transform.position, other.transform.position) > attackRange))
+            {
+                ActionValue -= 1;
+                Vector3 direction = other.gameObject.transform.position - transform.position;
+                direction.y = 0;  // Prevent vertical rotation
+                Quaternion rotation = Quaternion.LookRotation(direction);
+                transform.rotation = Quaternion.Slerp(transform.rotation, rotation, Time.deltaTime * rotationSpeed);
+                Vector3 targetPosition = transform.position + direction.normalized * 5f; // Calculate the target position 5 units away in the direction
+                transform.position = Vector3.MoveTowards(transform.position, targetPosition, Time.deltaTime * speed);
 
+            }
+            // Check if it's the enemy's turn or within attack range
+            if (ActionValue >= 1 && (Vector3.Distance(transform.position, other.transform.position) <= attackRange))
+            {
+                ActionValue -= 1;
+                unitController.TakeDamage(10);
+            }
+        }
+
+    }
     private void OnTriggerExit(Collider other)
     {
         if (other.CompareTag("Test"))
@@ -79,5 +106,10 @@ public class GroundAIUnit : MonoBehaviour
     {
         float finalDamage = damage * (100 / (100 + armor));
         Hp -= finalDamage;
+        if (Hp < 0)
+        {
+            Destroy(gameObject);
+        }
     }
+
 }

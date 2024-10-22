@@ -93,7 +93,7 @@ public class UnitController : MonoBehaviour
             if (Physics.Raycast(ray, out hit))
             {
                 // Проверяем, если у объекта есть компонент EnemyController (враг)
-                if (hit.collider.gameObject.GetComponent<EnemyController>() != null)
+                if (hit.collider.gameObject.GetComponent<UnitController>() != null)
                 {
                     target = hit.collider.gameObject; // Устанавливаем цель
                     Debug.Log("Target selected: " + target.name);
@@ -137,7 +137,7 @@ public class UnitController : MonoBehaviour
                 if (unitActions > 0)
                 {
                     // Наносим урон цели
-                    target.GetComponent<EnemyController>().TakeDamage(attackDamage);
+                    target.GetComponent<UnitController>().TakeDamage(attackDamage);
 
                     // Уменьшаем количество действий
                     unitActions -= 1;
