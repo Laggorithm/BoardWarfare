@@ -1,14 +1,10 @@
-using System;
 using System.Collections;
-using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEngine;
-using static UnityEngine.GraphicsBuffer;
 
 public class AIUnit : MonoBehaviour
 {
     private bool IsWandering;  // Determine if the unit is in wandering or combat state
-    private Vector3 desiredPositionX;  // The position the unit moves towards
+    private Vector3 desiredPosition;  // The position the unit moves towards
     private int rotationSpeed = 150;    // Speed of the unit rotation towards the desired position
     private float wanderRange = 15f;   // Range within which the unit can wander
     private int speed;             // Speed of the unit movement
@@ -19,6 +15,7 @@ public class AIUnit : MonoBehaviour
     private int ActionValue = 2;
     private Transform ChosenEnemyUnit;
     private string unitClass;
+
     void Start()
     {
         InitializeUnitStats();
@@ -27,16 +24,14 @@ public class AIUnit : MonoBehaviour
         StartCoroutine(Wandering());   // Start the wandering coroutine when the game starts
     }
 
-    // Update is called once per frame
     void Update()
     {
-
         if (ActionValue == 0)
         {
             Idle();
         }
-
     }
+
     private void InitializeUnitStats()
     {
         // Initialize stats based on the unit's class
@@ -76,32 +71,33 @@ public class AIUnit : MonoBehaviour
                 break;
         }
     }
+
     private IEnumerator Wandering()
     {
         while (IsWandering)
         {
-            //Walking animation
             // Randomize the X and Z positions within a range from the current position
-            float randomX = UnityEngine.Random.Range(-wanderRange, wanderRange);
-            float randomZ = UnityEngine.Random.Range(-wanderRange, wanderRange);
+            float randomX = Random.Range(-wanderRange, wanderRange);
+            float randomZ = Random.Range(-wanderRange, wanderRange);
 
-            // Set the desiredPosition as a random spot around the current position within 15 units
-            Vector3 desiredPosition = new Vector3(transform.position.x + randomX, transform.position.y, transform.position.z + randomZ);
+            // Set the desiredPosition as a random spot around the current position within range
+            desiredPosition = new Vector3(transform.position.x + randomX, transform.position.y, transform.position.z + randomZ);
             Debug.Log("New desired position: " + desiredPosition);
 
-            // Calculate the direction and smoothly rotate towards the desired position
-            Vector3 direction = desiredPosition - transform.position;
-            direction.y = 0;  // Prevent vertical rotation
-            Quaternion rotation = Quaternion.LookRotation(direction);
-            transform.rotation = Quaternion.Slerp(transform.rotation, rotation, Time.deltaTime * rotationSpeed);
-
-            // Move the unit towards the desired position
+            // Move to the desired position
             while (Vector3.Distance(transform.position, desiredPosition) > 0.1f)
             {
+                // Rotate towards the desired position
+                Vector3 direction = desiredPosition - transform.position;
+                direction.y = 0;  // Prevent vertical rotation
+                Quaternion rotation = Quaternion.LookRotation(direction);
+                transform.rotation = Quaternion.Slerp(transform.rotation, rotation, Time.deltaTime * rotationSpeed);
+
+                // Move the unit towards the desired position
                 transform.position = Vector3.MoveTowards(transform.position, desiredPosition, Time.deltaTime * speed);
                 yield return null;  // Wait until the next frame to continue movement
             }
-            //idle animation
+
             // Wait for 5 seconds before choosing a new spot
             yield return new WaitForSeconds(5f);
         }
@@ -110,78 +106,73 @@ public class AIUnit : MonoBehaviour
     private void Idle()
     {
         StopAllCoroutines();
-        //idle animation
-        //wait for end of animation
+        // idle animation
+        // wait for the end of animation
     }
 
     private IEnumerator Approaching()
     {
-
-        while (ChosenEnemyUnit != null && ActionValue > 0)
+        // Move to the previously set desired position first
+        while (Vector3.Distance(transform.position, desiredPosition) > 0.1f)
         {
-            // Calculate the direction towards the enemy
-            Vector3 direction = ChosenEnemyUnit.position - transform.position;
-            direction.y = 0;  // Prevent vertical movement (only rotate on the Y axis)
+            // Rotate towards the desired position
+            Vector3 direction = desiredPosition - transform.position;
+            direction.y = 0;  // Prevent vertical movement
 
-            // Rotate towards the enemy
+            // Rotate towards the desired position
             Quaternion targetRotation = Quaternion.LookRotation(direction);
             transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * rotationSpeed);
-            yield return new WaitForSeconds(2);
-            // Calculate the distance between the unit and the chosen enemy unit
+            transform.position = Vector3.MoveTowards(transform.position, desiredPosition, Time.deltaTime * speed);
+            yield return null;  // Wait for the next frame
+        }
+
+        // Wait for 2 seconds after stopping
+        yield return new WaitForSeconds(2f);
+
+        // Calculate the distance to the enemy now that the unit has stopped
+        if (ChosenEnemyUnit != null && ActionValue > 0)
+        {
             float distanceToEnemy = Vector3.Distance(transform.position, ChosenEnemyUnit.position);
             UnitController unitController = ChosenEnemyUnit.GetComponent<UnitController>();
-            // If the unit is within attack range, stop and prepare to attack
-            if (distanceToEnemy <= attackRange && ActionValue > 0)
+
+            // If the unit is within attack range, attack the enemy
+            if (distanceToEnemy <= attackRange)
             {
-                //attack animation
+                // Attack animation
                 Debug.Log("Enemy in range. Ready to attack.");
                 unitController.TakeDamage(Dmg);
                 Debug.Log("Attacked Enemy Unit");
-                ActionValue -= 1;
-                //wait for animation to en
-                ActionValue = 0;
+                ActionValue = 0;  // Set action value to 0 after attacking
                 yield break;  // Exit the coroutine since no more movement is needed
-
-            }
-            if (distanceToEnemy <= attackRange && ActionValue <= 0)
-            {
-                Debug.Log("Enemy in Range, but no Action Value left");
             }
 
-           
-
-            // Move the unit forward by up to 10 units, scaled by speed and deltaTime
-            float moveDistance = Mathf.Min(10f, distanceToEnemy);  // Cap the movement to a maximum of 10 units
-            Vector3 forwardMovement = transform.forward * moveDistance * Time.deltaTime * speed;
-
-            // Move the unit forward
-            float distanceMoved = 0f;
-            while (distanceMoved < 10f && Vector3.Distance(transform.position, ChosenEnemyUnit.position) > attackRange)
+            // Move towards the enemy if not in range
+            while (distanceToEnemy > attackRange && ActionValue > 0)
             {
+                // Update the distance after moving
+                distanceToEnemy = Vector3.Distance(transform.position, ChosenEnemyUnit.position);
+                float moveDistance = Mathf.Min(10f, distanceToEnemy - attackRange);  // Cap movement to 10 units
+                Vector3 forwardMovement = transform.forward * moveDistance * Time.deltaTime * speed;
+
+                // Move the unit forward
                 transform.position += forwardMovement;
-                distanceMoved += forwardMovement.magnitude;
-                yield return null;  // Wait for the next frame
+
+                // Consume one action value for every movement towards the enemy
+                ActionValue -= 1;
+                Debug.Log($"Moved {moveDistance} units towards enemy. Remaining ActionValue: {ActionValue}");
+
+                // Wait before the next action
+                yield return new WaitForSeconds(2f);
             }
-
-            // Consume one action value for every 10 units traveled
-            ActionValue -= 1;
-            Debug.Log($"Moved {moveDistance} units towards enemy. Remaining ActionValue: {ActionValue}");
-
-            // Wait for 2 seconds to simulate "thinking"
-            yield return new WaitForSeconds(2f);
         }
 
         // If we run out of action value
         if (ActionValue == 0)
         {
             Debug.Log("No ActionValue left. Waiting for recharge.");
-            // Optionally, you can handle what happens while the unit waits for more ActionValue
+            // Optionally, handle what happens while the unit waits for more ActionValue
         }
     }
-
-
-
-
 
     private void OnTriggerEnter(Collider other)
     {
@@ -190,6 +181,8 @@ public class AIUnit : MonoBehaviour
 
         if (enemyUnit != null)
         {
+            StopCoroutine(Wandering());
+
             // If there's no chosen enemy yet, or this enemy is closer, set it as the chosen one
             if (ChosenEnemyUnit == null)
             {
@@ -213,14 +206,13 @@ public class AIUnit : MonoBehaviour
 
             // Stop wandering and start approaching the chosen enemy
             IsWandering = false;
-            StopAllCoroutines();
             StartCoroutine(Approaching()); // Immediately approach the chosen enemy
         }
     }
 
     private void OnTriggerExit(Collider other)
     {
-        if (other.GetComponent<UnitController>())
+        if (other.GetComponent<UnitController>() != null)
         {
             IsWandering = true;  // Resume wandering when exiting the trigger
             StartCoroutine(Wandering()); // Restart the wandering coroutine if it was stopped
@@ -236,5 +228,4 @@ public class AIUnit : MonoBehaviour
             Destroy(gameObject);
         }
     }
-
 }

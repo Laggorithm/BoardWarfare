@@ -5,6 +5,9 @@ TagManager:
   serializedVersion: 2
   tags:
   - Test
+  - Ground
+  - Air
+  - Heavy
   layers:
   - Default
   - TransparentFX
