@@ -137,7 +137,7 @@ public class UnitController : MonoBehaviour
                 if (unitActions > 0)
                 {
                     // Наносим урон цели
-                    target.GetComponent<UnitController>().TakeDamage(attackDamage);
+                    target.GetComponent<AIUnit>().TakeDamage(attackDamage);
 
                     // Уменьшаем количество действий
                     unitActions -= 1;

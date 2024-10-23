@@ -1607,10 +1607,10 @@ GameObject:
   - component: {fileID: 1376335792915621637}
   - component: {fileID: 1376335792915621634}
   - component: {fileID: 1376335792915621641}
-  - component: {fileID: 1376335792915621638}
+  - component: {fileID: -8851919369121223283}
   m_Layer: 0
   m_Name: AIGroundUnit
-  m_TagString: Untagged
+  m_TagString: Air
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1700,7 +1700,7 @@ BoxCollider:
   serializedVersion: 2
   m_Size: {x: 20.048157, y: 3.4106526, z: 20.022099}
   m_Center: {x: -0.021409988, y: 2.1253893, z: 0.090257645}
---- !u!114 &1376335792915621638
+--- !u!114 &-8851919369121223283
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1709,7 +1709,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1377732467025632559}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 3c81d5853b4ec454791a0633d744ee59, type: 3}
+  m_Script: {fileID: 11500000, guid: 19255e06138c6014682d86030d5afe49, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1 &1377745352504808735
