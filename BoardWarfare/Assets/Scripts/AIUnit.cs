@@ -44,7 +44,7 @@ public class AIUnit : MonoBehaviour
                 armor = 15;
                 Hp = 100;
                 Dmg = 40;
-                attackRange = 5f;
+                attackRange = 2f;
                 break;
             case "Air":
                 speed = 7; // Air units are faster
@@ -87,6 +87,12 @@ public class AIUnit : MonoBehaviour
             // Move to the desired position
             while (Vector3.Distance(transform.position, desiredPosition) > 0.1f)
             {
+                // **Important check**: If the AI is no longer wandering, break out of this loop
+                if (!IsWandering)
+                {
+                    yield break; // Stop wandering if transitioning to another state
+                }
+
                 // Rotate towards the desired position
                 Vector3 direction = desiredPosition - transform.position;
                 direction.y = 0;  // Prevent vertical rotation
@@ -98,10 +104,11 @@ public class AIUnit : MonoBehaviour
                 yield return null;  // Wait until the next frame to continue movement
             }
 
-            // Wait for 5 seconds before choosing a new spot
+            // Wait for 5 seconds before choosing a new spot (if still wandering)
             yield return new WaitForSeconds(5f);
         }
     }
+
 
     private void Idle()
     {
@@ -129,9 +136,22 @@ public class AIUnit : MonoBehaviour
         // Wait for 2 seconds after stopping
         yield return new WaitForSeconds(2f);
 
-        // Calculate the distance to the enemy now that the unit has stopped
+        // Now, calculate the distance to the enemy and turn towards them before moving closer
         if (ChosenEnemyUnit != null && ActionValue > 0)
         {
+            // Rotate towards the chosen enemy first
+            Vector3 enemyDirection = ChosenEnemyUnit.position - transform.position;
+            enemyDirection.y = 0; // Prevent vertical movement when rotating
+
+            // Smoothly rotate towards the enemy
+            Quaternion enemyRotation = Quaternion.LookRotation(enemyDirection);
+            while (Quaternion.Angle(transform.rotation, enemyRotation) > 0.1f)
+            {
+                transform.rotation = Quaternion.Slerp(transform.rotation, enemyRotation, Time.deltaTime * rotationSpeed);
+                yield return null;  // Wait for the next frame to continue rotating
+            }
+
+            // Calculate the distance to the enemy after turning
             float distanceToEnemy = Vector3.Distance(transform.position, ChosenEnemyUnit.position);
             UnitController unitController = ChosenEnemyUnit.GetComponent<UnitController>();
 
@@ -174,14 +194,15 @@ public class AIUnit : MonoBehaviour
         }
     }
 
+
     private void OnTriggerEnter(Collider other)
     {
-        // Check if the other object has the UnitController component
         UnitController enemyUnit = other.GetComponent<UnitController>();
 
         if (enemyUnit != null)
         {
-            StopCoroutine(Wandering());
+            // Stop all coroutines, including wandering
+            StopAllCoroutines();  // Make sure no wandering movement continues
 
             // If there's no chosen enemy yet, or this enemy is closer, set it as the chosen one
             if (ChosenEnemyUnit == null)
@@ -204,11 +225,14 @@ public class AIUnit : MonoBehaviour
                 }
             }
 
-            // Stop wandering and start approaching the chosen enemy
+            // Set the wandering state to false to ensure it doesn't wander anymore
             IsWandering = false;
-            StartCoroutine(Approaching()); // Immediately approach the chosen enemy
+
+            // Immediately start approaching the chosen enemy
+            StartCoroutine(Approaching()); // Transition to approaching state
         }
     }
+
 
     private void OnTriggerExit(Collider other)
     {
@@ -229,3 +253,4 @@ public class AIUnit : MonoBehaviour
         }
     }
 }
+ 
