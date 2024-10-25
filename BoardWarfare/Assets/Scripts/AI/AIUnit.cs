@@ -15,7 +15,10 @@ public class AIUnit : MonoBehaviour
     private int ActionValue = 2;
     private Transform ChosenEnemyUnit;
     private string unitClass;
-     
+
+    private bool hasChosenEnemy = false; // Flag to check if an enemy is already chosen
+
+    private Coroutine wanderingCoroutine;
 
     // Animator reference
     private Animator animator;
@@ -38,11 +41,6 @@ public class AIUnit : MonoBehaviour
         {
             Idle();
         }
-
-
-
-        // You can remove the animation update if no animations are used
-        // UpdateAnimationState();
     }
 
     private void InitializeUnitStats()
@@ -87,49 +85,34 @@ public class AIUnit : MonoBehaviour
 
     private IEnumerator Wandering()
     {
-        
-
         while (IsWandering)
         {
-            
-            // Randomize the X and Z positions within a range from the current position
             float randomX = Random.Range(-wanderRange, wanderRange);
             float randomZ = Random.Range(-wanderRange, wanderRange);
-
-            // Set the desiredPosition as a random spot around the current position within range
             desiredPosition = new Vector3(transform.position.x + randomX, transform.position.y, transform.position.z + randomZ);
             Debug.Log("New desired position: " + desiredPosition);
 
-            // Move to the desired position
             while (Vector3.Distance(transform.position, desiredPosition) > 0.1f)
             {
-                // **Important check**: If the AI is no longer wandering, break out of this loop
                 if (!IsWandering)
                 {
                     yield break; // Stop wandering if transitioning to another state
                 }
-                animator.GetBool("Walking");
                 animator.SetBool("Walking", true);
 
-                // Rotate towards the desired position
                 Vector3 direction = desiredPosition - transform.position;
-                direction.y = 0;  // Prevent vertical rotation
+                direction.y = 0;
                 Quaternion rotation = Quaternion.LookRotation(direction);
                 transform.rotation = Quaternion.Slerp(transform.rotation, rotation, Time.deltaTime * rotationSpeed);
 
-                // Move the unit towards the desired position
                 transform.position = Vector3.MoveTowards(transform.position, desiredPosition, Time.deltaTime * speed);
 
-                yield return null;  // Wait until the next frame to continue movement
+                yield return null;
             }
 
-            // Wait for 5 seconds before choosing a new spot (if still wandering)
-            animator.GetBool("Walking");
             animator.SetBool("Walking", false);
             yield return new WaitForSeconds(5f);
-            
         }
-        
     }
 
     private void Idle()
@@ -140,23 +123,25 @@ public class AIUnit : MonoBehaviour
     }
 
     private IEnumerator Approaching()
+{
+    while (hasChosenEnemy) // Continue approaching while an enemy is chosen
     {
         if (ChosenEnemyUnit != null && ActionValue > 0)
         {
             // Randomly choose a point around the enemy unit within a radius of 10 units
             Vector3 randomOffset = new Vector3(
-                Random.Range(-15f, 15f),
+                Random.Range(-10f, 10f),
                 0,
-                Random.Range(-15f, 15f)
+                Random.Range(-10f, 10f)
             );
 
             // Set desiredPosition to be around the enemy unit
             desiredPosition = ChosenEnemyUnit.position + randomOffset;
             Debug.Log("New approach position around enemy: " + desiredPosition);
-            animator.GetBool("Walking");
             animator.SetBool("Walking", true);
+
             // Move towards the randomly chosen position around the enemy
-            while (Vector3.Distance(transform.position, desiredPosition) > 0.1f)
+            while (Vector3.Distance(transform.position, desiredPosition) > 0.1f && hasChosenEnemy)
             {
                 // Rotate towards the desired position
                 Vector3 direction = desiredPosition - transform.position;
@@ -169,79 +154,119 @@ public class AIUnit : MonoBehaviour
                 yield return null;  // Wait for the next frame
             }
 
-            // If within attack range of the enemy after reaching the new position, attack
-            float distanceToEnemy = Vector3.Distance(transform.position, ChosenEnemyUnit.position);
-            if (distanceToEnemy <= attackRange)
+            // Check if still in range to attack the enemy
+            if (ChosenEnemyUnit != null)
             {
-                animator.GetBool("Walking");
-                animator.SetBool("Walking", false);
-                
-                UnitController unitController = ChosenEnemyUnit.GetComponent<UnitController>();
-                if (unitController != null)
+                float distanceToEnemy = Vector3.Distance(transform.position, ChosenEnemyUnit.position);
+                if (distanceToEnemy <= attackRange)
                 {
-                    animator.GetBool("Aiming");
-                    animator.SetBool("Aiming", true);
-                    Debug.Log("Enemy in range. Attacking.");
-                    unitController.TakeDamage(Dmg);
-                    ActionValue = 0; // Deplete action value after attack
+                    animator.SetBool("Walking", false);
+                    yield return new WaitForSeconds(2); // Wait before aiming
+                    animator.SetTrigger("Aiming");
+                    yield return WaitForAnimationToEnd("Aiming"); // Wait for aiming animation to finish
+
+                    // Calculate the direction towards the enemy
+                    Vector3 directionToEnemy = (ChosenEnemyUnit.position - transform.position).normalized;
+
+                    // Calculate the rotation to face the enemy
+                    Quaternion lookRotation = Quaternion.LookRotation(directionToEnemy);
+
+                    // Apply an additional rotation to align the right corner of the front with the enemy
+                    lookRotation *= Quaternion.Euler(0, 45, 0); // Adjust this value as needed
+
+                    // Smoothly rotate the model to face the enemy with the adjusted rotation
+                    transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, Time.deltaTime * rotationSpeed);
+
+                    UnitController unitController = ChosenEnemyUnit.GetComponent<UnitController>();
+                    if (unitController != null)
+                    {
+                        yield return new WaitForSeconds(1); // Optional wait before attacking
+                        animator.SetTrigger("Aiming");
+                        yield return WaitForAnimationToEnd("Aiming"); // Wait for aiming animation to finish
+                        
+                        Debug.Log("Enemy in range. Attacking.");
+                        unitController.TakeDamage(Dmg);
+                        ActionValue = 0; // Deplete action value after attack
+                    }
                 }
             }
-
-            // If no action value left, wait for recharge or other logic
-            if (ActionValue == 0)
-            {
-                Idle();
-                Debug.Log("No ActionValue left. Waiting for recharge.");
-            }
         }
+
+        // If no action value left, wait for recharge or other logic
+        if (ActionValue == 0)
+        {
+            Idle();
+            Debug.Log("No ActionValue left. Waiting for recharge.");
+            yield break; // Exit the coroutine
+        }
+
+        yield return null; // Wait for the next frame to avoid blocking
     }
+}
+
+// Coroutine to wait for the animation to finish
+private IEnumerator WaitForAnimationToEnd(string animationName)
+{
+    while (animator.GetCurrentAnimatorStateInfo(0).IsName(animationName) &&
+           animator.GetCurrentAnimatorStateInfo(0).normalizedTime < 1.0f)
+    {
+        yield return null; // Wait for the next frame
+    }
+}
+
+
 
     private void OnTriggerEnter(Collider other)
     {
+        // Check if the object has a UnitController component (indicating it's an enemy)
         UnitController enemyUnit = other.GetComponent<UnitController>();
 
-        if (enemyUnit != null)
+        if (enemyUnit != null && !hasChosenEnemy)
         {
-            // Stop all coroutines, including wandering
-            StopAllCoroutines();  // Make sure no wandering movement continues
-
-            // If there's no chosen enemy yet, or this enemy is closer, set it as the chosen one
-            if (ChosenEnemyUnit == null)
-            {
-                ChosenEnemyUnit = other.transform;
-                Debug.Log("New enemy detected: " + ChosenEnemyUnit.name);
-            }
-            else
-            {
-                // Calculate the distance to the current chosen enemy
-                float currentDistance = Vector3.Distance(transform.position, ChosenEnemyUnit.position);
-                // Calculate the distance to the new enemy
-                float newEnemyDistance = Vector3.Distance(transform.position, other.transform.position);
-
-                // Choose the closer enemy
-                if (newEnemyDistance < currentDistance)
-                {
-                    ChosenEnemyUnit = other.transform;
-                    Debug.Log("Switching to a closer enemy: " + ChosenEnemyUnit.name);
-                }
-            }
-
-            // Set the wandering state to false to ensure it doesn't wander anymore
+            // Stop wandering if an enemy is detected
             IsWandering = false;
 
-            // Immediately start approaching the chosen enemy
-            StartCoroutine(Approaching()); // Transition to approaching state
+            // Stop the wandering coroutine if it’s running
+            if (wanderingCoroutine != null)
+            {
+                StopCoroutine(wanderingCoroutine);
+                wanderingCoroutine = null;
+            }
+
+            // Set the chosen enemy and flag it
+            ChosenEnemyUnit = other.transform;
+            hasChosenEnemy = true; // Mark that an enemy has been chosen
+            Debug.Log("Enemy detected: " + ChosenEnemyUnit.name);
+
+            // Start approaching the chosen enemy
+            StartCoroutine(Approaching());
         }
     }
 
     private void OnTriggerExit(Collider other)
     {
-        if (other.GetComponent<UnitController>() != null)
+        // Check if the object has a UnitController component (indicating it's an enemy)
+        if (other.GetComponent<UnitController>() != null && hasChosenEnemy)
         {
-            IsWandering = true;  // Resume wandering when exiting the trigger
-            StartCoroutine(Wandering()); // Restart the wandering behavior
+            // Check if the current chosen enemy is the one that just exited
+            if (other.transform == ChosenEnemyUnit)
+            {
+                // Reset the flag and chosen enemy
+                hasChosenEnemy = false;
+                ChosenEnemyUnit = null;
+
+                // Resume wandering when exiting the trigger range of the chosen enemy
+                IsWandering = true;
+
+                // Start the wandering coroutine only if it’s not already running
+                if (wanderingCoroutine == null)
+                {
+                    wanderingCoroutine = StartCoroutine(Wandering());
+                }
+            }
         }
     }
+
 
     public void TakeDamage(float damage)
     {
