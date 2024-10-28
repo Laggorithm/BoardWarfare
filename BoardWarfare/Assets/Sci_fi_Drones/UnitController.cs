@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using TMPro;
+using UnityEngine;
 
 public class UnitController : MonoBehaviour
 {
@@ -18,7 +19,13 @@ public class UnitController : MonoBehaviour
     public static bool isUnitSelected = false;
     public static UnitController selectedUnit = null;
 
-    void Update()
+    public TextMeshProUGUI actiontext;
+    public TextMeshProUGUI statstext;
+    public void Start()
+    {
+        actiontext.text = "";
+    }
+    public void Update()
     {
         // Проверка состояния здоровья
         if (health < maxHealth / 2)
@@ -75,6 +82,7 @@ public class UnitController : MonoBehaviour
                     isUnitSelected = true; // Устанавливаем флаг, что юнит выбран
                     unit.isSelected = true; // Устанавливаем флаг у самого юнита
                     Debug.Log("Unit selected: " + unit.name);
+                    statstext.text = "";
                 }
             }
         }
@@ -93,10 +101,11 @@ public class UnitController : MonoBehaviour
             if (Physics.Raycast(ray, out hit))
             {
                 // Проверяем, если у объекта есть компонент EnemyController (враг)
-                if (hit.collider.gameObject.GetComponent<UnitController>() != null)
+                if (hit.collider.gameObject.GetComponent<AIUnit>() != null)
                 {
                     target = hit.collider.gameObject; // Устанавливаем цель
                     Debug.Log("Target selected: " + target.name);
+                    statstext.text = "";
                 }
             }
         }
@@ -121,6 +130,7 @@ public class UnitController : MonoBehaviour
             {
                 Debug.Log("Target reached.");
                 unitActions -= 1; // Уменьшаем количество действий
+                actiontext.text = "";
             }
         }
     }
@@ -141,7 +151,7 @@ public class UnitController : MonoBehaviour
 
                     // Уменьшаем количество действий
                     unitActions -= 1;
-
+                    actiontext.text = "";
                     Debug.Log("Attacked target: " + target.name);
                 }
             }
