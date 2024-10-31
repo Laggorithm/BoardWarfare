@@ -4,15 +4,19 @@ using UnityEngine;
 
 public class CameraMovement : MonoBehaviour
 {
-    public float moveSpeed = 25f;            // Speed of camera movement
+    public bool IsRotationActive = false;
+    public float moveSpeed = 2f;            // Speed of camera movement
     public float screenEdgeThreshold = 0.1f; // Threshold for detecting the cursor at the screen's edges
-    public float pitchAngle = 45f;           // Fixed downward pitch angle
+    public float pitchAngle = 35f;           // Fixed downward pitch angle
     public float rotationSpeed = 5f;         // Speed of smooth rotation
     public float rotationAngle = 30f;        // Angle to rotate when pressing E or Q
+    public float rotationStopThreshold = 0.1f; // Threshold to determine when the camera is "stopped"
 
     private Vector3 movement;
     private float fixedYPosition;            // Store the initial Y position to keep it fixed
     private Quaternion targetRotation;       // Smooth target rotation
+
+    private readonly float[] allowedAngles = { 0f, 45f, 90f, 135f, 180f, -45f, -90f, -135f }; // Allowed rotation angles
 
     void Start()
     {
@@ -74,8 +78,6 @@ public class CameraMovement : MonoBehaviour
         transform.position = newPosition;
     }
 
-
-
     void HandleRotation()
     {
         // Check if E or Q is pressed for rotation
@@ -90,16 +92,52 @@ public class CameraMovement : MonoBehaviour
 
         // Smoothly rotate to the target rotation
         transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * rotationSpeed);
-    }
 
+        // Snap to the closest allowed angle if the rotation is close to stopping
+        if (Quaternion.Angle(transform.rotation, targetRotation) < rotationStopThreshold)
+        {
+            targetRotation = Quaternion.Euler(pitchAngle, SnapToAllowedAngle(transform.eulerAngles.y), 0f);
+        }
+    }
 
     void RotateCamera(float angle)
     {
         // Adjust the target Y rotation smoothly
         Vector3 currentEulerAngles = transform.eulerAngles;
         currentEulerAngles.y += angle;
+
+        // Set the target rotation to the next rotation angle
         targetRotation = Quaternion.Euler(pitchAngle, currentEulerAngles.y, 0f);
     }
 
+    private float SnapToAllowedAngle(float angle)
+    {
+        // Normalize the angle to the range of 0 to 360 degrees
+        angle = (angle + 360) % 360;
+
+        float closestAngle = allowedAngles[0];
+        float smallestDifference = Mathf.Abs(angle - closestAngle);
+
+        foreach (float allowedAngle in allowedAngles)
+        {
+            // Normalize the allowed angle as well
+            float normalizedAllowedAngle = (allowedAngle + 360) % 360;
+
+            // Calculate the difference considering wrapping
+            float difference = Mathf.Abs(angle - normalizedAllowedAngle);
+            if (difference > 180)
+            {
+                difference = 360 - difference; // Adjust for wrapping
+            }
+
+            if (difference < smallestDifference)
+            {
+                smallestDifference = difference;
+                closestAngle = allowedAngle;
+            }
+        }
+
+        return closestAngle;
+    }
 
 }
