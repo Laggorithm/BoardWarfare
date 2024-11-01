@@ -24,6 +24,9 @@ public class AIUnit : MonoBehaviour
     private Animator animator;
     private Tile currentTile;
 
+    private List<Transform> detectedEnemies = new List<Transform>();
+    private Transform chosenEnemy = null; // Store the currently chosen enemy
+
     void Start()
     {
         InitializeUnitStats();
@@ -86,6 +89,8 @@ public class AIUnit : MonoBehaviour
                 break;
         }
     }
+    
+
 
     private IEnumerator Wandering()
     {
@@ -157,59 +162,35 @@ public class AIUnit : MonoBehaviour
         }
     }
 
-    public void EngageEnemy(Transform enemy)
+
+
+    private Tile GetClosestUnoccupiedTile(Vector2Int targetPosition)
     {
-        // Stops wandering behavior
-        IsWandering = false;
-        if (wanderingCoroutine != null)
+        Tile closestTile = null;
+        float closestDistance = Mathf.Infinity;
+
+        // Check tiles around the target position
+        for (int x = -1; x <= 1; x++)
         {
-            StopCoroutine(wanderingCoroutine);
+            for (int z = -1; z <= 1; z++)
+            {
+                Vector2Int checkPosition = new Vector2Int(targetPosition.x + x, targetPosition.y + z);
+                Tile tile = gridSpawner.GetTileAtPosition(checkPosition);
+                if (tile != null && !tile.IsOccupied)
+                {
+                    float distance = Vector2Int.Distance(targetPosition, checkPosition);
+                    if (distance < closestDistance)
+                    {
+                        closestDistance = distance;
+                        closestTile = tile;
+                    }
+                }
+            }
         }
 
-        ChosenEnemyUnit = enemy;
-        hasChosenEnemy = true;
-        StartCoroutine(ApproachAndAttackEnemy());
+        return closestTile;
     }
 
-    private IEnumerator ApproachAndAttackEnemy()
-    {
-        while (hasChosenEnemy && ChosenEnemyUnit != null)
-        {
-            Vector3 enemyPosition = ChosenEnemyUnit.position;
-            Vector3 direction = enemyPosition - transform.position;
-            direction.y = 0;
-
-            // Rotate to face the enemy
-            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(direction), Time.deltaTime * rotationSpeed);
-
-            // Move towards the enemy if out of attack range
-            if (Vector3.Distance(transform.position, enemyPosition) > attackRange)
-            {
-                animator.SetBool("Walking", true);
-                desiredPosition = enemyPosition;
-                desiredPosition.y = 5f; // Fixing Y position to 5f
-                transform.position = Vector3.MoveTowards(transform.position, desiredPosition, Time.deltaTime * speed);
-            }
-            else
-            {
-                // Attack logic
-                animator.SetBool("Walking", false);
-                animator.SetTrigger("Attack");
-
-                // Simulate damage (in a real game, you’d call the enemy’s TakeDamage function here)
-                Debug.Log($"{gameObject.name} attacks {ChosenEnemyUnit.name} for {Dmg} damage.");
-
-                yield return new WaitForSeconds(1f); // Attack cooldown
-            }
-
-            yield return null;
-        }
-
-        // When the enemy is defeated or disengaged, resume wandering
-        hasChosenEnemy = false;
-        IsWandering = true;
-        wanderingCoroutine = StartCoroutine(Wandering());
-    }
 
     public void TakeDamage(float damage)
     {
