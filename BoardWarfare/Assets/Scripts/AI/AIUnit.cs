@@ -96,32 +96,29 @@ public class AIUnit : MonoBehaviour
 
     private IEnumerator Wandering()
     {
-        Vector2Int lastGridPosition = Vector2Int.zero; // Track the last grid position
+        Vector2Int lastGridPosition = Vector2Int.zero;
         Vector2Int currentGridPosition;
 
         while (IsWandering)
         {
-            // Get the current grid position based on the AI unit's position
             currentGridPosition = new Vector2Int(
                 Mathf.FloorToInt(transform.position.x / spacing),
                 Mathf.FloorToInt(transform.position.z / spacing)
             );
 
-            // Create a list to hold possible new positions
             List<Vector2Int> possiblePositions = new List<Vector2Int>();
 
-            // Check all directions up to 2 tiles away
             for (int x = -2; x <= 2; x++)
             {
                 for (int z = -2; z <= 2; z++)
                 {
-                    if (Mathf.Abs(x) + Mathf.Abs(z) <= 2) // Ensure the total distance is <= 2 tiles
+                    if (Mathf.Abs(x) + Mathf.Abs(z) <= 2)
                     {
                         Vector2Int newPos = currentGridPosition + new Vector2Int(x, z);
-                        // Ensure the new position is valid, not the same as current or last position
                         if (gridSpawner.gridPositions.ContainsKey(newPos) &&
                             newPos != currentGridPosition &&
-                            newPos != lastGridPosition)
+                            newPos != lastGridPosition &&
+                            !gridSpawner.occupiedTiles.ContainsKey(newPos))  // Check if unoccupied
                         {
                             possiblePositions.Add(newPos);
                         }
@@ -129,46 +126,39 @@ public class AIUnit : MonoBehaviour
                 }
             }
 
-            // Choose a random position from the possible ones, if any
             if (possiblePositions.Count > 0)
             {
                 Vector2Int randomPosition = possiblePositions[Random.Range(0, possiblePositions.Count)];
                 desiredPosition = gridSpawner.gridPositions[randomPosition].transform.position;
-                desiredPosition.y = 5; // Maintain fixed Y position
+                desiredPosition.y = 5;
 
-                Debug.Log("New desired position: " + desiredPosition);
+                gridSpawner.occupiedTiles[currentGridPosition] = gameObject;  // Mark current position as occupied
 
-                // Move towards the desired position
                 while (Vector3.Distance(transform.position, desiredPosition) > 0.1f)
                 {
-                    if (!IsWandering)
-                    {
-                        yield break; // Stop wandering if transitioning to another state
-                    }
+                    if (!IsWandering) yield break;
 
                     animator.SetBool("Walking", true);
 
                     Vector3 direction = desiredPosition - transform.position;
-                    direction.y = 0; // Prevent vertical movement
+                    direction.y = 0;
 
-                    Quaternion rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(direction), Time.deltaTime * rotationSpeed);
-                    transform.rotation = rotation;
-
-                    // Set the new position, maintaining the Y coordinate
+                    transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(direction), Time.deltaTime * rotationSpeed);
                     transform.position = Vector3.MoveTowards(transform.position, desiredPosition, Time.deltaTime * speed);
-                    transform.position = new Vector3(transform.position.x, 5, transform.position.z); // Force the Y coordinate to 5
+                    transform.position = new Vector3(transform.position.x, 5, transform.position.z);
 
-                    yield return null; // Wait for the next frame
+                    yield return null;
                 }
 
                 animator.SetBool("Walking", false);
-
-                // Update the last position to the current one
                 lastGridPosition = currentGridPosition;
+
+                // Update occupancy
+                gridSpawner.occupiedTiles.Remove(currentGridPosition);  // Free old position
+                gridSpawner.occupiedTiles[randomPosition] = gameObject;  // Mark new position as occupied
             }
 
-            // Wait a moment before the next move
-            yield return new WaitForSeconds(Random.Range(1f, 3f)); // Adjust wait time randomly between moves
+            yield return new WaitForSeconds(Random.Range(1f, 3f));
         }
     }
 
@@ -326,4 +316,18 @@ public class AIUnit : MonoBehaviour
             Destroy(gameObject);
         }
     }
+    private void OnDestroy()
+    {
+        Vector2Int currentGridPosition = new Vector2Int(
+            Mathf.FloorToInt(transform.position.x / spacing),
+            Mathf.FloorToInt(transform.position.z / spacing)
+        );
+
+        if (gridSpawner.occupiedTiles.ContainsKey(currentGridPosition) &&
+            gridSpawner.occupiedTiles[currentGridPosition] == gameObject)
+        {
+            gridSpawner.occupiedTiles.Remove(currentGridPosition);
+        }
+    }
+
 }

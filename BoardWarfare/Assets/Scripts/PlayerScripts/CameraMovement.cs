@@ -17,7 +17,7 @@ public class CameraMovement : MonoBehaviour
     private float fixedYPosition;            // Store the initial Y position to keep it fixed
     private Quaternion targetRotation;       // Smooth target rotation
 
-    private readonly float[] allowedAngles = { 0f, 45f, 90f, 135f, 180f, -45f, -90f, -135f }; // Allowed rotation angles
+    private readonly float[] allowedAngles = { 0f, 45f, 90f, 135f, 180f, -45f, -90f, -135f, -180 }; // Allowed rotation angles
 
     void Start()
     {

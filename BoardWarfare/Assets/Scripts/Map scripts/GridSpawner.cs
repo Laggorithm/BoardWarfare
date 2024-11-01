@@ -9,6 +9,8 @@ public class GridSpawner : MonoBehaviour
 
     // Dictionary to hold positions of each block for easy access
     public Dictionary<Vector2Int, GameObject> gridPositions = new Dictionary<Vector2Int, GameObject>();
+    public Dictionary<Vector2Int, GameObject> occupiedTiles = new Dictionary<Vector2Int, GameObject>();
+
 
     void Start()
     {
