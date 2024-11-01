@@ -11,6 +11,7 @@ public class CameraMovement : MonoBehaviour
     public float rotationSpeed = 5f;         // Speed of smooth rotation
     public float rotationAngle = 30f;        // Angle to rotate when pressing E or Q
     public float rotationStopThreshold = 0.1f; // Threshold to determine when the camera is "stopped"
+    public bool isMovementEnabled = false;    // Toggle for enabling/disabling movement
 
     private Vector3 movement;
     private float fixedYPosition;            // Store the initial Y position to keep it fixed
@@ -35,8 +36,21 @@ public class CameraMovement : MonoBehaviour
 
     void Update()
     {
-        HandleMovement();
+        HandleToggleMovement();
+        if (isMovementEnabled)
+        {
+            HandleMovement();
+        }
         HandleRotation();
+    }
+
+    void HandleToggleMovement()
+    {
+        // Toggle movement on or off when 'C' is pressed
+        if (Input.GetKeyDown(KeyCode.C))
+        {
+            isMovementEnabled = !isMovementEnabled;
+        }
     }
 
     void HandleMovement()
@@ -139,5 +153,4 @@ public class CameraMovement : MonoBehaviour
 
         return closestAngle;
     }
-
 }
