@@ -206,7 +206,7 @@ public class AIUnit : MonoBehaviour
     private void Die()
     {
         // Handle death logic
-        animator.SetTrigger("Die");
+        // animator.SetTrigger("Die");
         Debug.Log($"{gameObject.name} has been defeated.");
 
         // Optionally add a delay before destroying
