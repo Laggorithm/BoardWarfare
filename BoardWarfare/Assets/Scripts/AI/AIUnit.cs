@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 public class AIUnit : MonoBehaviour
@@ -24,8 +25,9 @@ public class AIUnit : MonoBehaviour
     private Animator animator;
     private Tile currentTile;
 
-    private List<Transform> detectedEnemies = new List<Transform>();
-    private Transform chosenEnemy = null; // Store the currently chosen enemy
+    private List<Transform> detectedEnemies = new List<Transform>(); // New: Stores detected enemies
+    private Transform chosenEnemy = null; // New: Holds the enemy with the lowest health
+
 
     void Start()
     {
@@ -89,7 +91,105 @@ public class AIUnit : MonoBehaviour
                 break;
         }
     }
-    
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.TryGetComponent(out UnitController enemyController))
+        {
+            if (!detectedEnemies.Contains(other.transform))
+            {
+                detectedEnemies.Add(other.transform);
+                Debug.Log($"Detected enemy: {other.name}");
+
+                // Check if we need to update our target based on health
+                UpdateTargetEnemy();
+            }
+        }
+    }
+
+    private void UpdateTargetEnemy()
+    {
+        // Filter out any enemies that might have been destroyed or are missing their health component
+        detectedEnemies = detectedEnemies
+            .Where(enemy => enemy != null && enemy.TryGetComponent(out UnitController _))
+            .ToList();
+
+        if (detectedEnemies.Count == 0)
+        {
+            chosenEnemy = null; // No valid enemies
+            return;
+        }
+
+        // Find the enemy with the lowest health
+        chosenEnemy = detectedEnemies
+            .OrderBy(enemy => enemy.GetComponent<UnitController>().health)
+            .FirstOrDefault();
+
+        if (chosenEnemy != null)
+        {
+            MoveToEnemyTile(chosenEnemy);
+        }
+    }
+
+    private void MoveToEnemyTile(Transform enemy)
+    {
+        Vector2Int enemyPosition = new Vector2Int(
+            Mathf.FloorToInt(enemy.position.x / spacing),
+            Mathf.FloorToInt(enemy.position.z / spacing)
+        );
+
+        Tile targetTile = GetClosestUnoccupiedTile(enemyPosition);
+        if (targetTile != null)
+        {
+            desiredPosition = targetTile.Position;
+            desiredPosition.y = 5f; // Fix Y position to 5
+
+            targetTile.IsOccupied = true;
+            if (currentTile != null) currentTile.IsOccupied = false;
+
+            StopCoroutine(wanderingCoroutine); // Stop wandering behavior while moving to enemy
+            StartCoroutine(MoveToTargetPosition());
+        }
+    }
+
+
+    private IEnumerator MoveToTargetPosition()
+    {
+        while (Vector3.Distance(transform.position, desiredPosition) > 0.1f)
+        {
+            animator.SetBool("Walking", true);
+
+            Vector3 direction = desiredPosition - transform.position;
+            direction.y = 0;
+            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(direction), Time.deltaTime * rotationSpeed);
+
+            // Move to the target position while keeping Y fixed at 5
+            Vector3 nextPosition = Vector3.MoveTowards(transform.position, desiredPosition, Time.deltaTime * speed);
+            nextPosition.y = 5f; // Fix Y position to 5
+            transform.position = nextPosition;
+
+            yield return null;
+        }
+
+        animator.SetBool("Walking", false);
+        currentTile = gridSpawner.GetTileAtPosition(new Vector2Int(
+            Mathf.FloorToInt(desiredPosition.x / spacing),
+            Mathf.FloorToInt(desiredPosition.z / spacing)
+        ));
+
+        // Face the enemy upon reaching the destination
+        if (chosenEnemy != null)
+        {
+            Vector3 enemyDirection = chosenEnemy.position - transform.position;
+            enemyDirection.y = 0;
+            transform.rotation = Quaternion.LookRotation(enemyDirection);
+            yield return new WaitForSeconds(2);
+            animator.SetTrigger("Aiming");
+            yield return new WaitForSeconds(1);
+
+        }
+    }
+
 
 
     private IEnumerator Wandering()
