@@ -8,7 +8,6 @@ public class AIUnit : MonoBehaviour
     private bool IsWandering;
     private Vector3 desiredPosition;
     private int rotationSpeed = 150;
-    private float wanderRange = 15f;
     private int speed;
     private int armor;
     private float Hp;
@@ -68,11 +67,11 @@ public class AIUnit : MonoBehaviour
                 attackRange = 10f;
                 break;
             case "Air":
-                speed = 7;
+                speed = 10;
                 armor = 5;
                 Hp = 50;
                 Dmg = 8;
-                wanderRange = 20f;
+                
                 attackRange = 35f;
                 break;
             case "Heavy":
@@ -290,6 +289,7 @@ public class AIUnit : MonoBehaviour
 
         return closestTile;
     }
+
 
 
     public void TakeDamage(float damage)
