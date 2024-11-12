@@ -1,4 +1,5 @@
-﻿using TMPro;
+﻿using System.Collections.Generic;
+using TMPro;
 using UnityEngine;
 
 public class UnitController : MonoBehaviour
@@ -12,6 +13,9 @@ public class UnitController : MonoBehaviour
     public bool hpIsLow = false;
     public bool isSelected = false; // Новый флаг, указывающий, выбран ли юнит
     public float unitActions = 4f;
+    public GridSpawner gridSpawner; // Reference to GridSpawner
+    private List<GameObject> path = new List<GameObject>(); // Path to follow
+    private int pathIndex = 0; // Index in the path
 
     private GameObject target; // Противник
 
@@ -48,16 +52,49 @@ public class UnitController : MonoBehaviour
             SelectTarget();
 
             // Если цель выбрана и есть доступные действия
-            if (target != null && unitActions > 0)
+            if (target != null && path.Count > 0 && unitActions > 0)
             {
-                MoveTowardsTarget();
-
-                // Если юнит находится в радиусе атаки, атакуем
-                if (Vector3.Distance(transform.position, target.transform.position) <= attackRange)
-                {
-                    AttackTarget();
-                }
+                FollowPath(); // Move along the path
             }
+        }
+    }
+    public void FindPathToTarget()
+    {
+        // Convert unit's position to grid coordinates
+        int startX = Mathf.RoundToInt(transform.position.x / gridSpawner.scale);
+        int startY = Mathf.RoundToInt(transform.position.z / gridSpawner.scale);
+
+        // Convert target's position to grid coordinates
+        int targetX = Mathf.RoundToInt(target.transform.position.x / gridSpawner.scale);
+        int targetY = Mathf.RoundToInt(target.transform.position.z / gridSpawner.scale);
+
+        // Request path from GridSpawner
+        path = gridSpawner.GetPath(startX, startY, targetX, targetY);
+        pathIndex = 0; // Reset path index to the start
+    }
+
+    void FollowPath()
+    {
+        if (pathIndex < path.Count)
+        {
+            // Get the next position from the path
+            GameObject nextTile = path[pathIndex];
+            Vector3 nextPosition = nextTile.transform.position;
+
+            // Move toward the next tile position
+            transform.position = Vector3.MoveTowards(transform.position, nextPosition, moveSpeed * Time.deltaTime);
+
+            // Check if reached the tile
+            if (Vector3.Distance(transform.position, nextPosition) < 0.1f)
+            {
+                pathIndex++; // Move to the next tile in the path
+                unitActions--; // Reduce available actions for the unit
+            }
+        }
+        else
+        {
+            Debug.Log("Reached target through path.");
+            path.Clear(); // Clear path once target is reached
         }
     }
 
@@ -90,51 +127,25 @@ public class UnitController : MonoBehaviour
 
     void SelectTarget()
     {
-        // Если игрок нажимает левую кнопку мыши для выбора цели
         if (Input.GetMouseButtonDown(0))
         {
-            // Выполняем лучевое сканирование по экрану от позиции курсора
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             RaycastHit hit;
 
-            // Если луч попадает в объект
             if (Physics.Raycast(ray, out hit))
             {
-                // Проверяем, если у объекта есть компонент EnemyController (враг)
                 if (hit.collider.gameObject.GetComponent<AIUnit>() != null)
                 {
-                    target = hit.collider.gameObject; // Устанавливаем цель
+                    target = hit.collider.gameObject;
                     Debug.Log("Target selected: " + target.name);
                     statstext.text = "";
+
+                    // Trigger pathfinding to the target's position
+                    FindPathToTarget();
                 }
             }
         }
     }
-
-    void MoveTowardsTarget()
-    {
-        // Проверяем, есть ли цель
-        if (target != null && unitActions > 0)
-        {
-            Vector3 direction = (target.transform.position - transform.position).normalized;
-
-            // Ограничиваем движение по осям X и Z (движение только вперед, назад, вправо и влево по сетке)
-            Vector3 moveDirection = new Vector3(Mathf.Round(direction.x), 0, Mathf.Round(direction.z));
-
-            // Передвигаем юнита в выбранном направлении на одну клетку
-            transform.position += moveDirection * moveSpeed * Time.deltaTime;
-
-            // Если юнит достиг цели по X и Z, останавливаем движение
-            if (Vector3.Distance(new Vector3(transform.position.x, 0, transform.position.z),
-                                 new Vector3(target.transform.position.x, 0, target.transform.position.z)) < 0.1f)
-            {
-                Debug.Log("Target reached.");
-                unitActions -= 1; // Уменьшаем количество действий
-                actiontext.text = "";
-            }
-        }
-    }
-
     void AttackTarget()
     {
         // Проверяем, есть ли цель

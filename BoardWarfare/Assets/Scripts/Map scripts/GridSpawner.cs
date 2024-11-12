@@ -164,6 +164,20 @@ public class GridSpawner : MonoBehaviour
         }
 
     }
+    public List<GameObject> GetPath(int startX, int startY, int endX, int endY)
+    {
+        this.startX = startX;
+        this.startY = startY;
+        this.endX = endX;
+        this.endY = endY;
+
+        findDistance = true;
+        SetDistance();
+        SetPath();
+
+        return new List<GameObject>(path); // Return a copy of the path
+    }
+
     void TestFourDirections(int x, int y, int step)
     {
         // Test up (direction 1)
