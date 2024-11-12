@@ -14,6 +14,7 @@ public class AIUnit : MonoBehaviour
     private float Dmg = 10;
     private float attackRange;
     private int ActionValue = 2;
+    public int cost;
     private Transform ChosenEnemyUnit;
     private string unitClass;
     private float spacing;
@@ -24,6 +25,7 @@ public class AIUnit : MonoBehaviour
     private Animator animator;
     private Tile currentTile;
 
+    
     private List<Transform> detectedEnemies = new List<Transform>(); // New: Stores detected enemies
     private Transform chosenEnemy = null; // New: Holds the enemy with the lowest health
 
@@ -37,6 +39,7 @@ public class AIUnit : MonoBehaviour
         spacing = gridSpawner.spacing;
         SetCurrentTile();
         wanderingCoroutine = StartCoroutine(Wandering());
+        
     }
 
     private void SetCurrentTile()
@@ -65,12 +68,14 @@ public class AIUnit : MonoBehaviour
                 Hp = 100;
                 Dmg = 40;
                 attackRange = 10f;
+                cost = 20;
                 break;
             case "Air":
                 speed = 10;
                 armor = 5;
                 Hp = 50;
                 Dmg = 8;
+                cost = 20;
                 
                 attackRange = 35f;
                 break;
@@ -80,6 +85,7 @@ public class AIUnit : MonoBehaviour
                 Hp = 200;
                 Dmg = 50;
                 attackRange = 15f;
+                cost = 40;
                 break;
             default:
                 speed = 5;
@@ -87,6 +93,7 @@ public class AIUnit : MonoBehaviour
                 Hp = 50;
                 Dmg = 5;
                 attackRange = 5f;
+                cost = 20;
                 break;
         }
     }

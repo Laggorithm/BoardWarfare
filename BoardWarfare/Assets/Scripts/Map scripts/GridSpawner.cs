@@ -22,12 +22,13 @@ public class GridSpawner : MonoBehaviour
     public GameObject blockPrefab;  // Prefab for each block
     public int gridSize = 16;       // Grid size (16x16)
     public float spacing = 1.5f;    // Spacing between blocks, adjust based on prefab size
-
+    AICombatUnitController aICombatUnitController;
     public Dictionary<Vector2Int, Tile> gridPositions = new Dictionary<Vector2Int, Tile>();
 
     void Start()
     {
         SpawnGrid();
+         
     }
 
     void SpawnGrid()
@@ -52,4 +53,5 @@ public class GridSpawner : MonoBehaviour
         gridPositions.TryGetValue(gridCoord, out Tile tile);
         return tile;
     }
+ 
 }
