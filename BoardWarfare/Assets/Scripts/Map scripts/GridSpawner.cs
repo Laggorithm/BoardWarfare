@@ -214,7 +214,21 @@ public class GridSpawner : MonoBehaviour
         }
     }
 
+    public List<Tile> GetAvailableTiles()
+    {
+        List<Tile> availableTiles = new List<Tile>();
 
+        foreach (GameObject obj in gridArray)
+        {
+            GridStat gridStat = obj.GetComponent<GridStat>();
+            if (!gridStat.IsOccupied)
+            {
+                availableTiles.Add(new Tile(obj));  // Add the tile to the list if it's not occupied
+            }
+        }
+
+        return availableTiles;
+    }
 
     GameObject FindClosest(Transform targetLocation, List<GameObject> list)
     {
