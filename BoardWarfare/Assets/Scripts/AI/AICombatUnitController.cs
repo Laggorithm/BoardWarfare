@@ -1,14 +1,10 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UIElements;
 
 public class AICombatUnitController : MonoBehaviour
 {
     GridSpawner gridSpawner;
-    AIUnit aIUnit;
-    EconomyManager economyManager;
     List<GameObject> enemiesToSpawn;
     public GameObject GroundUnit;
     public GameObject HeavyUnit;
@@ -16,7 +12,6 @@ public class AICombatUnitController : MonoBehaviour
     private int budget;
     private bool hasSpawnedEnemies = false;
 
-    // Start is called before the first frame update
     void Start()
     {
         gridSpawner = FindObjectOfType<GridSpawner>();
@@ -30,24 +25,21 @@ public class AICombatUnitController : MonoBehaviour
                 for (int i = 0; i < 4; i++)
                 {
                     enemiesToSpawn.Add(GroundUnit);
-                    Debug.Log(enemiesToSpawn[i].name);
                 }
                 break;
         }
 
-        Debug.Log("Enemies to spawn:");
-        StartCoroutine(DelayedSpawnEnemies()); // Start coroutine for delayed spawning
+        StartCoroutine(DelayedSpawnEnemies());
     }
 
-    // Coroutine to delay enemy spawning by 2 seconds
     private IEnumerator DelayedSpawnEnemies()
     {
-        yield return new WaitForSeconds(2f); // Wait for 2 seconds
+        yield return new WaitForSeconds(2f); // Wait for 2 seconds to ensure the grid is generated
         SpawnEnemies();
     }
 
     // Spawning enemies at random unoccupied positions in the bottom two rows
-    public void SpawnEnemies()
+    private void SpawnEnemies()
     {
         if (hasSpawnedEnemies) return;  // Prevent multiple spawns
         hasSpawnedEnemies = true;
@@ -55,40 +47,45 @@ public class AICombatUnitController : MonoBehaviour
         int spawnedCount = 0;
         List<Vector2Int> availablePositions = new List<Vector2Int>();
 
-        // Get the grid size from the GridSpawner
-        int gridSize = gridSpawner.gridSize;
+        // Get the grid dimensions from GridSpawner
+        int rows = gridSpawner.rows;
+        int columns = gridSpawner.columns;
 
-        // Collect all unoccupied tile positions in the two bottom rows
-        foreach (var entry in gridSpawner.gridPositions)
+        // Collect all unoccupied positions in the bottom two rows
+        for (int x = 0; x < columns; x++)
         {
-            Vector2Int position = entry.Key;
-            if (!entry.Value.IsOccupied && (position.y == 0 || position.y == 1))
+            for (int y = 0; y < 2; y++) // Only the bottom two rows
             {
-                availablePositions.Add(position);
+                GameObject tileObject = gridSpawner.gridArray[x, y];
+                if (tileObject != null && !tileObject.GetComponent<GridStat>().IsOccupied)
+                {
+                    availablePositions.Add(new Vector2Int(x, y));
+                }
             }
         }
 
         // Randomly select tiles and spawn enemies
         while (spawnedCount < enemiesToSpawn.Count && availablePositions.Count > 0)
         {
-            // Pick a random unoccupied tile from the available positions
-            int randomIndex = UnityEngine.Random.Range(0, availablePositions.Count);
-            Vector2Int tileCoord = availablePositions[randomIndex];
+            int randomIndex = Random.Range(0, availablePositions.Count);
+            Vector2Int chosenPosition = availablePositions[randomIndex];
+            GameObject tileObject = gridSpawner.gridArray[chosenPosition.x, chosenPosition.y];
 
-            Tile tile = gridSpawner.GetTileAtPosition(tileCoord);
-            if (tile != null && !tile.IsOccupied)
+            // Mark the tile as occupied and spawn the enemy
+            if (tileObject != null)
             {
-                // Mark the tile as occupied
-                tile.IsOccupied = true;
+                tileObject.GetComponent<GridStat>().IsOccupied = true;
 
-                // Instantiate the enemy at the tile position
                 GameObject enemy = enemiesToSpawn[spawnedCount];
-                Instantiate(enemy, tile.Position, Quaternion.identity);
+                // Spawn the enemy at the tile's position with Y set to 5
+                Vector3 spawnPosition = tileObject.transform.position;
+                spawnPosition.y = 5f;
+
+                Instantiate(enemy, spawnPosition, Quaternion.identity);
 
                 spawnedCount++;
             }
 
-            // Remove the chosen tile from the list of available positions
             availablePositions.RemoveAt(randomIndex);
         }
 

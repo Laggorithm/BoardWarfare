@@ -177,6 +177,16 @@ public class GridSpawner : MonoBehaviour
 
         return new List<GameObject>(path); // Return a copy of the path
     }
+    public Dictionary<Vector2Int, GridStat> grid = new Dictionary<Vector2Int, GridStat>();
+
+    public GridStat GetTileAtPosition(Vector2Int position)
+    {
+        if (grid.ContainsKey(position))
+        {
+            return grid[position];
+        }
+        return null;
+    }
 
     void TestFourDirections(int x, int y, int step)
     {

@@ -154,8 +154,16 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   blockPrefab: {fileID: 7208156955235891475, guid: b23dbe83e1ad3df4da106be6295c9c1a, type: 3}
-  gridSize: 16
-  spacing: 10
+  findDistance: 1
+  rows: 10
+  columns: 10
+  scale: 10
+  leftBottomLocation: {x: 0, y: 0, z: 0}
+  startX: 0
+  startY: 0
+  endX: 2
+  endY: 2
+  path: []
 --- !u!4 &508382431
 Transform:
   m_ObjectHideFlags: 0
