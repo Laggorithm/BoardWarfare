@@ -62,6 +62,8 @@ public class GridSpawner : MonoBehaviour
             }
         }
     }
+
+
     void InitialSetUp()
     {
         foreach (GameObject obj in gridArray)
@@ -211,6 +213,8 @@ public class GridSpawner : MonoBehaviour
             SetVisited(x - 1, y, step);
         }
     }
+
+
 
     GameObject FindClosest(Transform targetLocation, List<GameObject> list)
     {
