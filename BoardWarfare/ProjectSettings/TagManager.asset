@@ -8,6 +8,8 @@ TagManager:
   - Ground
   - Air
   - Heavy
+  - WallTall
+  - WallShort
   layers:
   - Default
   - TransparentFX
