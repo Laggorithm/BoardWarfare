@@ -1,5 +1,6 @@
-using UnityEngine;
+using System;
 using System.Collections.Generic;
+using UnityEngine;
 
 public class Tile
 {
@@ -62,7 +63,53 @@ public class GridSpawner : MonoBehaviour
             }
         }
     }
-
+    public List<GameObject> GetManhathanPath(int startX, int startY, int targetX, int targetY)
+    {
+        Vector2Int Start = new Vector2Int(startX, startY);
+        Vector2Int End = new Vector2Int(targetX, targetY);
+        path = new List<GameObject>();
+        Vector2Int Current = Start;
+        path.Add(gridArray[Start.x, Start.y]);
+        while (true)
+        {
+            //Direction normalize cause .Normalize() doesn't work with it
+            Vector2Int Direction = End - Current;
+            if (Direction.x > 1)
+            {
+                Direction.x = 1;
+            }
+            if (Direction.x < 1)
+            {
+                Direction.x = -1;
+            }
+            if (Direction.y > 1)
+            {
+                Direction.y = 1;
+            }
+            if (Direction.y < 1)
+            {
+                Direction.y = -1;
+            }
+            Vector2Int test = Current + Direction;
+            if (test.x < 0)
+            {
+                test.x = 0;
+            }
+            if (test.y < 0)
+            {
+                test.y = 0;
+            }
+            if (gridArray[test.x, test.y] && gridArray[test.y, test.x].GetComponent<GridStat>())
+            {
+                path.Add(gridArray[test.x, test.y]);
+                Current = test;
+            }
+            if (Current == End)
+            {
+                return path;
+            }
+        }
+    }
 
     void InitialSetUp()
     {
@@ -111,6 +158,7 @@ public class GridSpawner : MonoBehaviour
             {
                 if (obj && obj.GetComponent<GridStat>().visited == step - 1)
                 {
+                    Console.WriteLine("We might have a problem");
                     TestFourDirections(obj.GetComponent<GridStat>().x, obj.GetComponent<GridStat>().y, step);
                 }
             }

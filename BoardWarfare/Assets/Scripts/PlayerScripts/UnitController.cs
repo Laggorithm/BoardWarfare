@@ -16,11 +16,11 @@ public class UnitController : MonoBehaviour
     public GridSpawner gridSpawner; // Reference to GridSpawner
     private List<GameObject> path = new List<GameObject>(); // Path to follow
     private int pathIndex = 0; // Index in the path
+    public bool isTarget = false;
+    private string PAAATH;
 
     private GameObject target; // Противник
 
-    // Статический флаг для состояния игры — определяем, какого юнита выбирает игрок
-    public static bool isUnitSelected = false;
     public static UnitController selectedUnit = null;
 
     public TextMeshProUGUI actiontext;
@@ -41,89 +41,125 @@ public class UnitController : MonoBehaviour
             hpIsLow = false;
         }
 
-        // Шаг 1: Если юнит еще не выбран, игрок может выбрать юнита кликом
-        if (!isUnitSelected)
+        // Если юнит еще не выбран, игрок может выбрать юнита кликом
+        if (!isSelected)
         {
             SelectUnit();
         }
-        // Шаг 2: Если юнит выбран, игрок может выбрать противника и начать действия
-        else if (isSelected)
+        // Если юнит выбран, можно выбрать цель и начать движение
+        else if (!isTarget)
         {
             SelectTarget();
 
-            // Если цель выбрана и есть доступные действия
-            if (target != null && path.Count > 0 && unitActions > 0)
+            // Если цель выбрана и у юнита есть действия
+            if (target != null && unitActions > 0)
             {
-                FollowPath(); // Move along the path
-            }
-        }
-    }
-    public void FindPathToTarget()
-    {
-        // Convert unit's position to grid coordinates
-        int startX = Mathf.RoundToInt(transform.position.x / gridSpawner.scale);
-        int startY = Mathf.RoundToInt(transform.position.z / gridSpawner.scale);
-
-        // Convert target's position to grid coordinates
-        int targetX = Mathf.RoundToInt(target.transform.position.x / gridSpawner.scale);
-        int targetY = Mathf.RoundToInt(target.transform.position.z / gridSpawner.scale);
-
-        // Request path from GridSpawner
-        path = gridSpawner.GetPath(startX, startY, targetX, targetY);
-        pathIndex = 0; // Reset path index to the start
-    }
-
-    void FollowPath()
-    {
-        if (pathIndex < path.Count)
-        {
-            // Get the next position from the path
-            GameObject nextTile = path[pathIndex];
-            Vector3 nextPosition = nextTile.transform.position;
-
-            // Move toward the next tile position
-            transform.position = Vector3.MoveTowards(transform.position, nextPosition, moveSpeed * Time.deltaTime);
-
-            // Check if reached the tile
-            if (Vector3.Distance(transform.position, nextPosition) < 0.1f)
-            {
-                pathIndex++; // Move to the next tile in the path
-                unitActions--; // Reduce available actions for the unit
-            }
-        }
-        else
-        {
-            Debug.Log("Reached target through path.");
-            path.Clear(); // Clear path once target is reached
-        }
-    }
-
-    void SelectUnit()
-    {
-        // Если игрок нажимает левую кнопку мыши
-        if (Input.GetMouseButtonDown(0))
-        {
-            // Выполняем лучевое сканирование по экрану от позиции курсора
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            RaycastHit hit;
-
-            // Если луч попадает в объект
-            if (Physics.Raycast(ray, out hit))
-            {
-                // Проверяем, есть ли у объекта компонент UnitController (другой юнит)
-                UnitController unit = hit.collider.gameObject.GetComponent<UnitController>();
-                if (unit != null && !unit.isSelected)
+                if (path.Count > 0 && pathIndex < path.Count)
                 {
-                    // Выбираем этого юнита
-                    selectedUnit = unit;
-                    isUnitSelected = true; // Устанавливаем флаг, что юнит выбран
-                    unit.isSelected = true; // Устанавливаем флаг у самого юнита
-                    Debug.Log("Unit selected: " + unit.name);
-                    statstext.text = "";
+                    FollowPath();
                 }
             }
         }
     }
+    public void OnGUI()
+    {
+        GUI.Toggle(new Rect(10, 10, 100, 30), isSelected, "is selected");
+        GUI.Toggle(new Rect(10, 20, 100, 30), isTarget, "target selected");
+        GUI.Label(new Rect(10, 30, 100, 30), PAAATH);
+    }
+
+    public void FindPathToTarget()
+    {
+        if (target == null) return;
+
+        // Преобразуем позицию юнита и цели в координаты сетки
+        int startX = Mathf.RoundToInt(transform.position.x / gridSpawner.scale);
+        int startY = Mathf.RoundToInt(transform.position.z / gridSpawner.scale);
+
+        int targetX = Mathf.RoundToInt(target.transform.position.x / gridSpawner.scale);
+        int targetY = Mathf.RoundToInt(target.transform.position.z / gridSpawner.scale);
+
+        // Получаем путь от GridSpawner
+        path = gridSpawner.GetManhathanPath(startX, startY, targetX, targetY);
+        pathIndex = 0;
+
+        if (path.Count == 0)
+        {
+            Debug.Log("Path not found.");
+            PAAATH = "Path not found";
+        }
+        else
+        {
+            Debug.Log("Path founded.");
+            PAAATH = "Path founded";
+        }
+    }
+
+
+
+    void FollowPath()
+    {
+        if (path.Count == 0 || pathIndex >= path.Count)
+        {
+            // Если путь пустой или достигнут конец пути, прекращаем движение
+            Debug.Log("Path ended.");
+            path.Clear();
+            return;
+        }
+
+        // Получаем текущую целевую клетку
+        GameObject nextTile = path[pathIndex];
+        Vector3 nextPosition = nextTile.transform.position;
+
+        // Двигаемся к целевой клетке
+        transform.position = Vector3.MoveTowards(transform.position, nextPosition, moveSpeed * Time.deltaTime);
+
+        // Проверяем, достигнута ли целевая клетка
+        if (Vector3.Distance(transform.position, nextPosition) < 0.1f)
+        {
+            // Обновляем индексы пути и уменьшаем количество доступных действий
+            pathIndex++;
+            unitActions--;
+
+            // Проверяем, достигнут ли конец пути
+            if (pathIndex >= path.Count)
+            {
+                Debug.Log("Unit on his position.");
+                path.Clear(); // Очищаем путь после завершения
+            }
+        }
+    }
+
+
+    void SelectUnit()
+    {
+        if (Input.GetMouseButtonDown(0))
+        {
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            RaycastHit hit;
+
+            if (Physics.Raycast(ray, out hit))
+            {
+                UnitController unit = hit.collider.gameObject.GetComponent<UnitController>();
+
+                if (unit != null && !unit.isSelected)
+                {
+                    // Сбрасываем предыдущий выбор
+                    if (selectedUnit != null)
+                    {
+                        selectedUnit.ResetUnitSelection();
+                    }
+
+                    // Устанавливаем нового выбранного юнита
+                    selectedUnit = unit;
+                    isSelected = true;
+                    unit.isSelected = true;
+                    Debug.Log("Unit selected: " + unit.name);
+                }
+            }
+        }
+    }
+
 
     void SelectTarget()
     {
@@ -139,7 +175,7 @@ public class UnitController : MonoBehaviour
                     target = hit.collider.gameObject;
                     Debug.Log("Target selected: " + target.name);
                     statstext.text = "";
-
+                    isTarget = true;
                     // Trigger pathfinding to the target's position
                     FindPathToTarget();
                 }
@@ -186,8 +222,6 @@ public class UnitController : MonoBehaviour
 
     public void ResetUnitSelection()
     {
-        // Сброс выбора юнита после завершения хода
-        isUnitSelected = false;
         isSelected = false;
         target = null;
         unitActions = 4f; // Сбросим действия для нового хода
