@@ -79,7 +79,9 @@ public class AIUnit : MonoBehaviour
         }
         switch (ActionValue)
         {
-
+            case (0):
+                StopAllCoroutines();
+                break;
         }
 
     }
@@ -323,9 +325,12 @@ public class AIUnit : MonoBehaviour
             Destroy(currentTile);  // Clean up the temporary target tile GameObject
         }
         ActionValue -= 1;
-
-        GetComponent<Animator>().SetTrigger("Aiming");
         Debug.Log("Reached the target near the enemy.");
+        if (ActionValue < 0)
+        {
+            GetComponent<Animator>().SetTrigger("Aiming");
+            ActionValue = 0;
+        }
     }
 
 
@@ -343,9 +348,9 @@ public class AIUnit : MonoBehaviour
         
         if (tag == "Ground")
         {
-            float rotationAngle = 50f;
+             rotationAngle = 50f;
         }
-        else {float rotationAngle = 0;}
+        else { rotationAngle = 0;}
         // Step 2: Apply the 45-degree offset to the Y-axis rotation
           // 45 degrees offset
         directionToEnemy = Quaternion.Euler(0, rotationAngle, 0) * directionToEnemy; // Apply rotation offset to direction
