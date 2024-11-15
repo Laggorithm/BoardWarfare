@@ -21,13 +21,13 @@ public class AIUnit : MonoBehaviour
     private int currentPathIndex = 0;      // Keeps track of the current tile in the path
     private List<Transform> detectedEnemies = new List<Transform>();
     private List<Tile> availableTiles = new List<Tile>();  // List of available tiles
+    float rotationAngle;
+    private bool isWandering = false;
 
     void Start()
     {
         InitializeUnitStats();
-        TestMovement();
-        StartCoroutine(FollowPath());
-
+        StartWandering();  // Start the wandering behavior
     }
 
     private void InitializeUnitStats()
@@ -76,55 +76,48 @@ public class AIUnit : MonoBehaviour
         if (chosenEnemy != null)
         {
             UpdateTargetEnemy();
+        }
+        switch (ActionValue)
+        {
 
         }
 
     }
 
-    public void MoveAlongPath(List<GameObject> path)
+    public void StartWandering()
     {
-        // Get the available tiles from the grid
-        availableTiles = GetAvailableTiles();
-
-        currentPath = path;
-        currentPathIndex = 0;
-
-        // Start the movement coroutine
-        StartCoroutine(FollowPath());
+        isWandering = true;
+        StartCoroutine(WanderingRoutine());
     }
 
-    public void TestMovement()
+    public void StopWandering()
     {
-        // Get the current position of the unit
-        Vector3 currentPosition = transform.position;
-
-        // Define a path with one step at a time
-        List<GameObject> testPath = new List<GameObject>();
-
-        // Create the initial tile (starting position)
-        GameObject tile1 = new GameObject("Tile1");
-        tile1.transform.position = currentPosition;
-
-        // Randomly choose a direction and distance to move (10 units)
-        Vector3 randomMovement = GetRandomMovement(currentPosition);
-
-        // Create a second tile based on the random movement
-        GameObject tile2 = new GameObject("Tile2");
-        tile2.transform.position = randomMovement;
-
-        // The final destination after moving 10 units in a random direction
-        GameObject finalTile = new GameObject("FinalTile");
-        finalTile.transform.position = GetRandomMovement(tile2.transform.position);
-
-        // Add tiles to the path
-        testPath.Add(tile1);
-        testPath.Add(tile2);
-        testPath.Add(finalTile);
-
-        // Call the method to move the unit along this path
-        MoveAlongPath(testPath);
+        isWandering = false;
+        StopCoroutine(WanderingRoutine());
     }
 
+    private IEnumerator WanderingRoutine()
+    {
+        while (isWandering)
+        {
+            Vector3 currentPosition = transform.position;
+
+            // Randomly choose a new target position within 10 units of the current position
+            Vector3 targetPosition = GetRandomMovement(currentPosition);
+            GameObject targetTile = new GameObject("WanderTile");
+            targetTile.transform.position = targetPosition;
+
+            // Set path to the new target position
+            currentPath = new List<GameObject> { targetTile };
+            currentPathIndex = 0;
+
+            // Move along the path to the target tile
+            yield return StartCoroutine(FollowPath());
+
+            // Pause briefly at the target position before selecting a new position
+            yield return new WaitForSeconds(1f);
+        }
+    }
 
     private Vector3 GetRandomMovement(Vector3 currentPosition)
     {
@@ -149,121 +142,228 @@ public class AIUnit : MonoBehaviour
 
     private IEnumerator FollowPath()
     {
-        // Ensure there is a valid path to follow
         if (currentPath == null || currentPath.Count == 0)
         {
             Debug.LogError("No path to follow!");
             yield break;
         }
 
-        // While there are tiles in the path
         while (currentPathIndex < currentPath.Count)
         {
             GameObject currentTile = currentPath[currentPathIndex];
             Vector3 targetPosition = currentTile.transform.position;
             targetPosition.y = transform.position.y;  // Keep the unit's y position fixed
 
-            // Clamp the target position to restrict movement within bounds
             targetPosition.x = Mathf.Clamp(targetPosition.x, 0f, 90f);
             targetPosition.z = Mathf.Clamp(targetPosition.z, 0f, 90f);
 
-            // Move the unit towards the target position (tile position), restricted to one axis at a time
             Vector3 moveDirection = targetPosition - transform.position;
             float step = speed * Time.deltaTime;
 
-            // Start walking animation
             GetComponent<Animator>().SetBool("Walking", true);
 
-            // Rotate smoothly towards the target direction before moving
             if (Mathf.Abs(moveDirection.x) > 0.1f)
             {
                 Vector3 targetDirection = new Vector3(targetPosition.x, transform.position.y, transform.position.z);
-                // Rotate the unit to face the target direction on X axis
                 Quaternion targetRotation = Quaternion.LookRotation(targetDirection - transform.position);
 
-                // Smooth rotation
                 while (Quaternion.Angle(transform.rotation, targetRotation) > 1f)
                 {
                     transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * speed);
-                    yield return null;  // Wait until the next frame
+                    yield return null;
                 }
 
-                // Once rotation is complete, move along the X axis
                 while (Mathf.Abs(transform.position.x - targetPosition.x) > 0.1f)
                 {
                     transform.position = new Vector3(
                         Mathf.MoveTowards(transform.position.x, targetPosition.x, step),
-                        transform.position.y,  // Keep Y constant
+                        transform.position.y,
                         transform.position.z
                     );
-                    yield return null;  // Wait until the next frame
+                    yield return null;
                 }
             }
 
-            // Move unit along the Z axis if it's not done yet
             if (Mathf.Abs(moveDirection.z) > 0.1f)
             {
                 Vector3 targetDirection = new Vector3(transform.position.x, transform.position.y, targetPosition.z);
-                // Rotate the unit to face the target direction on Z axis
                 Quaternion targetRotation = Quaternion.LookRotation(targetDirection - transform.position);
 
-                // Smooth rotation
                 while (Quaternion.Angle(transform.rotation, targetRotation) > 1f)
                 {
                     transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * speed);
-                    yield return null;  // Wait until the next frame
+                    yield return null;
                 }
 
-                // Once rotation is complete, move along the Z axis
                 while (Mathf.Abs(transform.position.z - targetPosition.z) > 0.1f)
                 {
                     transform.position = new Vector3(
-                        transform.position.x,  // Keep X constant
-                        transform.position.y,  // Keep Y constant
+                        transform.position.x,
+                        transform.position.y,
                         Mathf.MoveTowards(transform.position.z, targetPosition.z, step)
                     );
-                    yield return null;  // Wait until the next frame
+                    yield return null;
                 }
             }
 
-            // Ensure the unit stops exactly at the target position (tile)
             transform.position = targetPosition;
-
-            // Stop the walking animation when the unit reaches the destination or is not moving
             GetComponent<Animator>().SetBool("Walking", false);
 
-            // Wait for a second after reaching the tile before moving to the next one
-            Debug.Log("Arrived at tile, pausing for 1 second...");
-            yield return new WaitForSeconds(1f); // Pause for 1 second
-
-            // Once the unit reaches the current tile, move to the next tile in the path
             currentPathIndex++;
+            Destroy(currentTile);  // Clean up the temporary target tile GameObject
         }
-
-        // Once the unit has completed the path, you can add any additional logic here (e.g., stop movement, change state)
-        Debug.Log("Reached the destination!");
     }
 
-
-    private List<Tile> GetAvailableTiles()
+    public void MoveAlongPath(List<GameObject> path)
     {
-        // This method would return the list of available tiles (tiles not occupied)
-        List<Tile> availableTilesList = new List<Tile>();
+        // Store the path and start following it from the beginning
+        currentPath = path;
+        currentPathIndex = 0;
 
-        // Here you would loop through the grid's tiles and check if each tile is not occupied
-        // (For example, based on a GridSpawner instance or GridStat objects)
-        foreach (Tile tile in availableTiles)
+        // Start moving along the path
+        StartCoroutine(FollowPath());
+    }
+
+    private void SetTargetNearEnemy()
+    {
+        // Stop any wandering if currently in progress
+        isWandering = false;
+
+        // Stop any active coroutines
+        StopAllCoroutines();
+
+        if (chosenEnemy == null)
         {
-            if (!tile.IsOccupied)
-            {
-                availableTilesList.Add(tile);
-            }
+            Debug.LogError("No enemy chosen to target.");
+            return;
         }
 
-        return availableTilesList;
+        // Get the enemy's position
+        Vector3 enemyPosition = chosenEnemy.position;
+
+        // Determine a nearby position to move towards (e.g., 10 units to the right of the enemy)
+        Vector3 targetPosition = enemyPosition + new Vector3(10, 0, 0);// Adjust this to any side if needed
+        // Create a list to store the movement path
+        List<Vector3> pathToTarget = new List<Vector3>();
+
+        // Simulate tile-based movement by adding steps towards the target in increments of 10 units
+        Vector3 currentPos = transform.position;
+        while (Vector3.Distance(currentPos, targetPosition) > 0.1f)
+        {
+            // Move 10 units in X or Z direction, whichever is closer to the target
+            if (Mathf.Abs(targetPosition.x - currentPos.x) > Mathf.Abs(targetPosition.z - currentPos.z))
+            {
+                currentPos.x = Mathf.MoveTowards(currentPos.x, targetPosition.x, 10);
+            }
+            else
+            {
+                currentPos.z = Mathf.MoveTowards(currentPos.z, targetPosition.z, 10);
+            }
+
+            // Add the calculated step position to the path
+            pathToTarget.Add(currentPos);
+        }
+
+        // Convert path positions to GameObjects (temporary objects for movement)
+        List<GameObject> pathObjects = pathToTarget.Select(pos =>
+        {
+            GameObject stepObject = new GameObject("PathStep");
+            stepObject.transform.position = pos;
+            return stepObject;
+        }).ToList();
+
+        // Move along the generated path
+        StartCoroutine(FollowPath(pathObjects));
+
+        Debug.Log("Chasing enemy to a position near them.");
+    }
+
+    private IEnumerator FollowPath(List<GameObject> path)
+    {
+        if (path == null || path.Count == 0)
+        {
+            Debug.LogError("No path to follow!");
+            yield break;
+        }
+
+        foreach (GameObject currentTile in path)
+        {
+            Vector3 targetPosition = currentTile.transform.position;
+            targetPosition.y = transform.position.y;  // Keep the unit's y position fixed
+
+            Vector3 moveDirection = targetPosition - transform.position;
+            float step = speed * Time.deltaTime;
+
+            GetComponent<Animator>().SetBool("Walking", true);
+
+            // Rotate towards the movement direction
+            if (moveDirection.magnitude > 0.1f)
+            {
+                Quaternion targetRotation = Quaternion.LookRotation(moveDirection);
+                while (Quaternion.Angle(transform.rotation, targetRotation) > 1f)
+                {
+                    transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * speed);
+                    yield return null;
+                }
+            }
+
+            // Move towards the target position
+            while (Vector3.Distance(transform.position, targetPosition) > 0.1f)
+            {
+                transform.position = Vector3.MoveTowards(transform.position, targetPosition, step);
+                yield return null;
+            }
+
+            transform.position = targetPosition;  // Final position
+            GetComponent<Animator>().SetBool("Walking", false);
+
+            // After reaching the destination, turn towards the enemy
+            TurnTowardsEnemy(chosenEnemy);
+
+            Destroy(currentTile);  // Clean up the temporary target tile GameObject
+        }
+        ActionValue -= 1;
+
+        GetComponent<Animator>().SetTrigger("Aiming");
+        Debug.Log("Reached the target near the enemy.");
     }
 
 
+
+
+
+    // Function to make the unit turn towards the enemy
+    private void TurnTowardsEnemy(Transform enemy)
+    {
+        if (enemy == null) return;
+
+        // Step 1: Calculate the direction to the enemy
+        Vector3 directionToEnemy = enemy.position - transform.position;
+        directionToEnemy.y = 0;  // Ignore vertical movement, keep horizontal rotation
+        
+        if (tag == "Ground")
+        {
+            float rotationAngle = 50f;
+        }
+        else {float rotationAngle = 0;}
+        // Step 2: Apply the 45-degree offset to the Y-axis rotation
+          // 45 degrees offset
+        directionToEnemy = Quaternion.Euler(0, rotationAngle, 0) * directionToEnemy; // Apply rotation offset to direction
+
+        // Step 3: Make the unit look towards the new direction
+        transform.LookAt(transform.position + directionToEnemy);  // Rotate towards the modified direction
+    }
+
+
+
+
+
+
+
+    // Helper method to stop the wandering coroutine properly
+
+
+    // Helper method to stop the path-following coroutine properly
 
 
 
@@ -292,8 +392,10 @@ public class AIUnit : MonoBehaviour
             {
                 detectedEnemies.Add(other.transform);
                 Debug.Log($"Detected enemy: {other.name}");
-
+                StopAllCoroutines();
                 UpdateTargetEnemy();
+                SetTargetNearEnemy();
+                
             }
         }
     }
