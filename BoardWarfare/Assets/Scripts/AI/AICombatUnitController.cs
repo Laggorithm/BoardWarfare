@@ -9,27 +9,72 @@ public class AICombatUnitController : MonoBehaviour
     public GameObject GroundUnit;
     public GameObject HeavyUnit;
     public GameObject AirUnit;
-    private int budget;
+    
+    private int waveIndex;
     private bool hasSpawnedEnemies = false;
 
     void Start()
     {
+        waveIndex = GetRandomNumber(1, 4);
         gridSpawner = FindObjectOfType<GridSpawner>();
         enemiesToSpawn = new List<GameObject>();
-        budget = 100;
+         
 
         // Populate enemiesToSpawn based on the budget
-        switch (budget)
+        switch (waveIndex)
         {
-            case 100:
+            case 1:
                 for (int i = 0; i < 4; i++)
                 {
                     enemiesToSpawn.Add(GroundUnit);
+                    
+                }
+                for (int i = 0; i < 2; i++)
+                {
+                    enemiesToSpawn.Add(AirUnit);
                 }
                 break;
+            case 2:
+                for (int i = 0; i < 5; i++)
+                {
+                    enemiesToSpawn.Add(GroundUnit);
+                }
+                for (int i = 0; i <2; i++)
+                {
+                    enemiesToSpawn.Add(HeavyUnit);
+                    enemiesToSpawn.Add(AirUnit);
+                }
+                break;
+            case 3:
+                for (int i = 0; i < 4; i++)
+                {
+                    enemiesToSpawn.Add(GroundUnit);
+                    enemiesToSpawn.Add(HeavyUnit);
+                }
+                break;
+            case 4:
+                for (int i = 0; i < 3; i++)
+                {
+                    enemiesToSpawn.Add(GroundUnit);
+                    
+                }
+                for (int i = 0; i < 6; i++)
+                {
+
+                    enemiesToSpawn.Add(HeavyUnit);
+                }
+                break;
+
+                
         }
 
         StartCoroutine(DelayedSpawnEnemies());
+        Debug.Log(waveIndex);
+    }
+
+    private int GetRandomNumber(int min, int max)
+    {
+        return UnityEngine.Random.Range(min, max); // +1 to include max in the range
     }
 
     private IEnumerator DelayedSpawnEnemies()

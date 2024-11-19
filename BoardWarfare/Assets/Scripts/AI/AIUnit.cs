@@ -12,7 +12,7 @@ public class AIUnit : MonoBehaviour
     private float Dmg = 10;
     private float attackRange;
     private int ActionValue = 2;
-    public int cost;
+
     private Transform chosenEnemy;
     private string unitClass;
     private float spacing;
@@ -23,7 +23,11 @@ public class AIUnit : MonoBehaviour
     private List<Tile> availableTiles = new List<Tile>();  // List of available tiles
     float rotationAngle;
     private bool isWandering = false;
-
+    UnitController unitController;
+    private Transform chosenWall;  // Reference for the wall unit will approach
+    private List<Transform> detectedWalls = new List<Transform>();  // List of walls detected by the unit
+    bool BehindWall;
+    bool SeeEnemy;
     void Start()
     {
         InitializeUnitStats();
@@ -42,14 +46,14 @@ public class AIUnit : MonoBehaviour
                 Hp = 100;
                 Dmg = 40;
                 attackRange = 10f;
-                cost = 20;
+
                 break;
             case "Air":
                 speed = 10;
                 armor = 5;
                 Hp = 50;
                 Dmg = 8;
-                cost = 20;
+
                 attackRange = 35f;
                 break;
             case "Heavy":
@@ -58,7 +62,7 @@ public class AIUnit : MonoBehaviour
                 Hp = 200;
                 Dmg = 50;
                 attackRange = 15f;
-                cost = 40;
+
                 break;
             default:
                 speed = 5;
@@ -66,7 +70,7 @@ public class AIUnit : MonoBehaviour
                 Hp = 50;
                 Dmg = 5;
                 attackRange = 5f;
-                cost = 20;
+
                 break;
         }
     }
@@ -83,7 +87,7 @@ public class AIUnit : MonoBehaviour
                 StopAllCoroutines();
                 break;
         }
-
+         
     }
 
     public void StartWandering()
@@ -324,13 +328,11 @@ public class AIUnit : MonoBehaviour
 
             Destroy(currentTile);  // Clean up the temporary target tile GameObject
         }
-        ActionValue -= 1;
+        ActionValue = 0;
+        Debug.Log(ActionValue); 
         Debug.Log("Reached the target near the enemy.");
-        if (ActionValue < 0)
-        {
-            GetComponent<Animator>().SetTrigger("Aiming");
-            ActionValue = 0;
-        }
+        GetComponent<Animator>().SetTrigger("Aiming");
+         
     }
 
 
@@ -345,30 +347,20 @@ public class AIUnit : MonoBehaviour
         // Step 1: Calculate the direction to the enemy
         Vector3 directionToEnemy = enemy.position - transform.position;
         directionToEnemy.y = 0;  // Ignore vertical movement, keep horizontal rotation
-        
+
         if (tag == "Ground")
         {
-             rotationAngle = 50f;
+            rotationAngle = 50f;
         }
-        else { rotationAngle = 0;}
-        // Step 2: Apply the 45-degree offset to the Y-axis rotation
-          // 45 degrees offset
+        else { rotationAngle = 0; }
+         
         directionToEnemy = Quaternion.Euler(0, rotationAngle, 0) * directionToEnemy; // Apply rotation offset to direction
 
         // Step 3: Make the unit look towards the new direction
         transform.LookAt(transform.position + directionToEnemy);  // Rotate towards the modified direction
+
+
     }
-
-
-
-
-
-
-
-    // Helper method to stop the wandering coroutine properly
-
-
-    // Helper method to stop the path-following coroutine properly
 
 
 
@@ -391,19 +383,115 @@ public class AIUnit : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.TryGetComponent(out UnitController enemyController))
+        if (other.CompareTag("WallTall") || other.CompareTag("WallShort"))
+        {
+            if (!detectedWalls.Contains(other.transform))
+            {
+                detectedWalls.Add(other.transform);
+                Debug.Log($"Detected wall: {other.name}");
+                StopAllCoroutines();
+                UpdateTargetWall();
+                SetTargetNearWall();
+                BehindWall = true;
+                 
+            }
+        }
+        else if (other.TryGetComponent(out UnitController enemyController))
         {
             if (!detectedEnemies.Contains(other.transform))
             {
                 detectedEnemies.Add(other.transform);
                 Debug.Log($"Detected enemy: {other.name}");
-                StopAllCoroutines();
-                UpdateTargetEnemy();
-                SetTargetNearEnemy();
+
                 
+                UpdateTargetEnemy();
+                
+                SeeEnemy = true;
+
+                if (SeeEnemy || BehindWall)
+                {
+                    GetComponent<Animator>().SetTrigger("Aiming");
+                    enemyController.TakeDamage(Dmg);
+                }
+                else if (SeeEnemy || !BehindWall)
+                {
+                    SetTargetNearEnemy();
+                }
             }
         }
+
     }
+
+    private void UpdateTargetWall()
+    {
+        detectedWalls = detectedWalls
+            .Where(wall => wall != null)
+            .ToList();
+
+        if (detectedWalls.Count == 0)
+        {
+            chosenWall = null;
+            return;
+        }
+
+        // If walls are detected, just pick the first one for simplicity or prioritize based on some logic (distance, etc.)
+        chosenWall = detectedWalls.FirstOrDefault();
+    }
+
+    private void SetTargetNearWall()
+{
+    // Stop any wandering if currently in progress
+    isWandering = false;
+
+    // Stop any active coroutines
+    StopAllCoroutines();
+
+    if (chosenWall == null)
+    {
+        Debug.LogError("No wall chosen to target.");
+        return;
+    }
+
+    // Get the wall's position
+    Vector3 wallPosition = chosenWall.position;
+
+    // Determine a nearby position to move towards (e.g., 10 units in front of the wall)
+    Vector3 targetPosition = wallPosition + new Vector3(0, 0, 0);  // Adjust as needed based on wall type
+
+    // Create a list to store the movement path
+    List<Vector3> pathToTarget = new List<Vector3>();
+
+    // Simulate tile-based movement by adding steps towards the target in increments of 10 units
+    Vector3 currentPos = transform.position;
+    while (Vector3.Distance(currentPos, targetPosition) > 0.1f)
+    {
+        // Move 10 units in X or Z direction, whichever is closer to the target
+        if (Mathf.Abs(targetPosition.x - currentPos.x) > Mathf.Abs(targetPosition.z - currentPos.z))
+        {
+            currentPos.x = Mathf.MoveTowards(currentPos.x, targetPosition.x, 10);
+        }
+        else
+        {
+            currentPos.z = Mathf.MoveTowards(currentPos.z, targetPosition.z, 10);
+        }
+
+        // Add the calculated step position to the path
+        pathToTarget.Add(currentPos);
+    }
+
+    // Convert path positions to GameObjects (temporary objects for movement)
+    List<GameObject> pathObjects = pathToTarget.Select(pos =>
+    {
+        GameObject stepObject = new GameObject("PathStep");
+        stepObject.transform.position = pos;
+        return stepObject;
+    }).ToList();
+
+    // Move along the generated path
+    StartCoroutine(FollowPath(pathObjects));
+
+    Debug.Log("Approaching wall to a position near it.");
+}
 
     private void OnDestroy()
     {
@@ -421,6 +509,11 @@ public class AIUnit : MonoBehaviour
         }
     }
 
+    private void Attack(Transform enemy)
+    {
+        GetComponent<Animator>().SetTrigger("Aiming");
+        unitController.TakeDamage(Dmg);
+    }
     private void Die()
     {
         Debug.Log($"{gameObject.name} has been defeated.");
