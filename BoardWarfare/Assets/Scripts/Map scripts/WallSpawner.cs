@@ -32,9 +32,9 @@ public class WallSpawner : MonoBehaviour
         int columns = gridSpawner.columns;
 
         // Collect all unoccupied positions in the grid
-        for (int x = 0; x < columns; x++)
+        for (int x = 0; x < columns -1; x++)
         {
-            for (int y = 0; y < rows; y++)
+            for (int y = 0; y < rows -1; y++)
             {
                 GameObject tileObject = gridSpawner.gridArray[x, y];
                 if (tileObject != null && !tileObject.GetComponent<GridStat>().IsOccupied)
@@ -70,10 +70,10 @@ public class WallSpawner : MonoBehaviour
 
                 // Set the spawn position, ensuring the wall is always at Y=10
                 Vector3 spawnPosition = tileObject.transform.position;
-                spawnPosition.y = 10f; // Set height to 10
+                spawnPosition.y = 5f; // Set height to 10
 
-                // Randomize rotation between 0 and 90 degrees (for variety in wall orientation)
-                float randomYRotation = Random.Range(0, 2) * 90; // 0 or 90 degrees
+                // Randomize rotation between 0 and 180 degrees (for variety in wall orientation)
+                float randomYRotation = Random.Range(0, 2) * 180; // 0 or 90 degrees
                 Quaternion rotation = Quaternion.Euler(0, randomYRotation, 0);
 
                 // Instantiate the wall at the chosen position and rotation

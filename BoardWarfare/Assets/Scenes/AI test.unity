@@ -695,6 +695,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: WallSmalll
       objectReference: {fileID: 0}
+    - target: {fileID: 7587549640004663015, guid: 2e13b3f2f1701d446852a819ed7e78d1, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     m_RemovedComponents:
     - {fileID: 1628902240963691763, guid: 2e13b3f2f1701d446852a819ed7e78d1, type: 3}
   m_SourcePrefab: {fileID: 100100000, guid: 2e13b3f2f1701d446852a819ed7e78d1, type: 3}

@@ -1,7 +1,9 @@
+using Microsoft.Win32.SafeHandles;
 using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEditor;
 using UnityEngine;
 
 public class AIUnit : MonoBehaviour
@@ -26,8 +28,8 @@ public class AIUnit : MonoBehaviour
     UnitController unitController;
     private Transform chosenWall;  // Reference for the wall unit will approach
     private List<Transform> detectedWalls = new List<Transform>();  // List of walls detected by the unit
-    bool BehindWall;
-    bool SeeEnemy;
+    public bool BehindWall = false;
+    public bool SeeEnemy = false;
     void Start()
     {
         InitializeUnitStats();
@@ -87,6 +89,7 @@ public class AIUnit : MonoBehaviour
                 StopAllCoroutines();
                 break;
         }
+
          
     }
 
@@ -248,13 +251,13 @@ public class AIUnit : MonoBehaviour
         Vector3 enemyPosition = chosenEnemy.position;
 
         // Determine a nearby position to move towards (e.g., 10 units to the right of the enemy)
-        Vector3 targetPosition = enemyPosition + new Vector3(10, 0, 0);// Adjust this to any side if needed
+        Vector3 targetPosition = enemyPosition + new Vector3(0, 0, 0);// Adjust this to any side if needed
         // Create a list to store the movement path
         List<Vector3> pathToTarget = new List<Vector3>();
 
         // Simulate tile-based movement by adding steps towards the target in increments of 10 units
         Vector3 currentPos = transform.position;
-        while (Vector3.Distance(currentPos, targetPosition) > 0.1f)
+        while (Vector3.Distance(currentPos, targetPosition) > 10f)
         {
             // Move 10 units in X or Z direction, whichever is closer to the target
             if (Mathf.Abs(targetPosition.x - currentPos.x) > Mathf.Abs(targetPosition.z - currentPos.z))
@@ -283,6 +286,8 @@ public class AIUnit : MonoBehaviour
 
         Debug.Log("Chasing enemy to a position near them.");
     }
+
+    
 
     private IEnumerator FollowPath(List<GameObject> path)
     {
@@ -383,21 +388,42 @@ public class AIUnit : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
+        //Do we see a wall?
         if (other.CompareTag("WallTall") || other.CompareTag("WallShort"))
         {
+            //finding transform of wall to understand it's position'
             if (!detectedWalls.Contains(other.transform))
             {
                 detectedWalls.Add(other.transform);
                 Debug.Log($"Detected wall: {other.name}");
-                StopAllCoroutines();
-                UpdateTargetWall();
-                SetTargetNearWall();
+                
+               
                 BehindWall = true;
-                 
+                //If no enemy around
+                if (!SeeEnemy)
+                {
+                    switch (other.tag)
+                    {
+                        case "WallTall":
+                            //stop, find wall, come to it
+                            StopAllCoroutines();
+                            UpdateTargetWall();
+                            SetTargetNearWall();
+                            break;
+                        case "WallShort":
+                            //same as previous one
+                            StopAllCoroutines();
+                            UpdateTargetWall();
+                            SetTargetNearWall();
+                            break;
+                    }
+                }
             }
         }
+        //Do we see enemy?
         else if (other.TryGetComponent(out UnitController enemyController))
         {
+            //searching  for enemy transform to find out who the enemy is
             if (!detectedEnemies.Contains(other.transform))
             {
                 detectedEnemies.Add(other.transform);
@@ -408,20 +434,57 @@ public class AIUnit : MonoBehaviour
                 
                 SeeEnemy = true;
 
-                if (SeeEnemy || BehindWall)
+               //detection wether is there any enemy in FOV
+                 
+                if (SeeEnemy || chosenEnemy != null)
                 {
-                    GetComponent<Animator>().SetTrigger("Aiming");
-                    enemyController.TakeDamage(Dmg);
+                    //detection of type of wall the acting according to it
+                    switch (BehindWall)
+                    {
+                        case true:
+                            switch (other.tag)
+                            {
+                                case "WallTall":
+                                    //stop, find wall, approach it, walk around and shoot enemy
+                                    StopAllCoroutines();
+                                    UpdateTargetWall();
+                                    SetTargetNearWall();
+                                    if (SeeEnemy) { StopAllCoroutines(); StopAllCoroutines(); }
+                                    StopAllCoroutines(); break;
+                                case "WallShort":
+                                    //stop, find wall, approach it, look at enemy and shoot
+                                    StopAllCoroutines();
+                                    UpdateTargetWall();
+                                    SetTargetNearWall();
+                                    GetComponent<Animator>().SetTrigger("Aiming");
+                                    enemyController.TakeDamage(Dmg); break;
+                            }
+                            break;
+                        case false:
+                            //if no walls, just shoot that mf
+                            StopAllCoroutines();
+                            SetTargetNearEnemy();
+                            GetComponent<Animator>().SetTrigger("Aiming");
+                            enemyController.TakeDamage(Dmg); break; 
+                    }
                 }
-                else if (SeeEnemy || !BehindWall)
-                {
-                    SetTargetNearEnemy();
-                }
+                 
             }
         }
 
     }
+    private void OnTriggerExit(Collider other)
+    {
+        switch (other.tag)
+        {
+            case ("WallTall" or "WallSmall"): BehindWall = false; break;
+        }
+        if (other.TryGetComponent(out UnitController enemyController))
+        {
+            SeeEnemy = false;
+        }
 
+    }
     private void UpdateTargetWall()
     {
         detectedWalls = detectedWalls
