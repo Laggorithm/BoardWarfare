@@ -32,14 +32,21 @@ public class WallSpawner : MonoBehaviour
         int columns = gridSpawner.columns;
 
         // Collect all unoccupied positions in the grid
-        for (int x = 0; x < columns -1; x++)
+        for (int x = 0; x < columns; x++)
         {
-            for (int y = 0; y < rows -1; y++)
+            for (int y = 0; y < rows; y++)
             {
                 GameObject tileObject = gridSpawner.gridArray[x, y];
                 if (tileObject != null && !tileObject.GetComponent<GridStat>().IsOccupied)
                 {
-                    availablePositions.Add(new Vector2Int(x, y));
+                    Vector3 tilePosition = tileObject.transform.position;
+
+                    // Ensure the position meets the coordinate constraints
+                    if (tilePosition.x >= 0 && tilePosition.x <= 90 &&
+                        tilePosition.z >= 0 && tilePosition.z <= 90)
+                    {
+                        availablePositions.Add(new Vector2Int(x, y));
+                    }
                 }
             }
         }
@@ -52,6 +59,7 @@ public class WallSpawner : MonoBehaviour
         SpawnSpecificWall(TallWall, tallWallCount, availablePositions);
         SpawnSpecificWall(Smolwall, smolWallCount, availablePositions);
     }
+    
 
     private void SpawnSpecificWall(GameObject wallPrefab, int count, List<Vector2Int> availablePositions)
     {
