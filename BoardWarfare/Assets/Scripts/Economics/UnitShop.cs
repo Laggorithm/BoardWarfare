@@ -49,10 +49,10 @@ public class UnitShop : MonoBehaviour
 
     void Update()
     {
-        HandlePlacement();
+        //HandlePlacement();
     }
 
-    void HandlePlacement()
+   /* void HandlePlacement()
     {
         // клик мыши для размещения юнита
         if (Input.GetMouseButtonDown(0))
@@ -70,7 +70,7 @@ public class UnitShop : MonoBehaviour
                 }
             }
         }
-    }
+    }*/
 
     void PlaceUnitOnCell()
     {

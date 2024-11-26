@@ -44,12 +44,12 @@ public class UnitController : MonoBehaviour
         // Если юнит еще не выбран, игрок может выбрать юнита кликом
         if (!isSelected)
         {
-            SelectUnit();
+            //SelectUnit();
         }
         // Если юнит выбран, можно выбрать цель и начать движение
         else if (!isTarget)
         {
-            SelectTarget();
+            //SelectTarget();
 
             // Если цель выбрана и у юнита есть действия
             if (target != null && unitActions > 0)
@@ -131,7 +131,7 @@ public class UnitController : MonoBehaviour
     }
 
 
-    void SelectUnit()
+    /*void SelectUnit()
     {
         if (Input.GetMouseButtonDown(0))
         {
@@ -181,7 +181,7 @@ public class UnitController : MonoBehaviour
                 }
             }
         }
-    }
+    }*/
     void AttackTarget()
     {
         // Проверяем, есть ли цель
