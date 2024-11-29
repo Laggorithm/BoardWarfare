@@ -44,7 +44,7 @@ public class UnitController : MonoBehaviour
         // Если юнит еще не выбран, игрок может выбрать юнита кликом
         if (!isSelected)
         {
-            //SelectUnit();
+            //  SelectUnit();
         }
         // Если юнит выбран, можно выбрать цель и начать движение
         else if (!isTarget)
@@ -194,7 +194,7 @@ public class UnitController : MonoBehaviour
                 if (unitActions > 0)
                 {
                     // Наносим урон цели
-                    target.GetComponent<AIUnit>().TakeDamage(attackDamage);
+                    //target.GetComponent<AIUnit>().TakeDamage(attackDamage);
 
                     // Уменьшаем количество действий
                     unitActions -= 1;

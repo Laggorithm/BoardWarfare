@@ -10,6 +10,7 @@ TagManager:
   - Heavy
   - WallTall
   - WallShort
+  - Obstacle
   layers:
   - Default
   - TransparentFX

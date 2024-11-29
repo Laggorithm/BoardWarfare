@@ -15,12 +15,46 @@ public class Bullet : MonoBehaviour
 
     void OnTriggerEnter(Collider other)
     {
-        other.TryGetComponent(out AIUnit AIController);
-        // Check if the projectile collided with an object tagged as "enemy"
-        switch (other.tag)
+        // Attempt to get the AIUnit component from the collided object
+        if (other.TryGetComponent(out AIUnit AIController))
         {
-            case "ground": Object.Destroy(other); break;
-            case "heavy": AIController.TakeDamage(damage); break;
+            // Reference to the player (or the object firing the projectile)
+            Movement playerMovement = FindObjectOfType<Movement>(); // Finds the Movement component in the scene (the player object)
+
+            // Ensure the playerMovement is found (in case there are multiple objects or none with the Movement script)
+            if (playerMovement != null)
+            {
+                // Check the tag of the collided object and apply the corresponding damage
+                switch (other.tag)
+                {
+                    case "heavy":
+                        // Apply damage with player's crit rate and crit damage stats
+                        AIController.TakeDamage(damage, AIController.ArmorStat, AIController.ArmorToughness, playerMovement.critRate, playerMovement.critDamage);
+                        break;
+
+                    case "ground":
+                    case "air":
+                        // For ground and air units, we apply damage the same way as for the heavy units
+                        AIController.TakeDamage(damage, AIController.ArmorStat, AIController.ArmorToughness, playerMovement.critRate, playerMovement.critDamage);
+                        break;
+
+                    default:
+                        // Handle other cases (if any)
+                        break;
+                }
+            }
+            else
+            {
+                Debug.LogWarning("Player Movement not found!");
+            }
+        }
+
+        // Optional: Destroy the projectile if it collides with an object tagged as "ground"
+        if (other.CompareTag("ground"))
+        {
+            Destroy(other.gameObject);
         }
     }
+
+
 }

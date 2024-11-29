@@ -1,5 +1,4 @@
-﻿using System.Threading;
-using UnityEngine;
+﻿using UnityEngine;
 
 public class Movement : MonoBehaviour
 {
@@ -25,12 +24,15 @@ public class Movement : MonoBehaviour
     public float rotationTorque = 5.0f; // Torque applied for rotation effect
 
     public float health = 100;
-    float armor = 20;
+    public float armor = 20; // Armor stat
+    public float armorToughness = 5; // Armor toughness stat
+    public float critRate = 30f; // Player's critical hit rate (out of 100)
+    public float critDamage = 150f; // Player's critical damage multiplier (150% = 1.5)
+
     void Start()
     {
         rb = GetComponent<Rigidbody>();
         barrel = barrelTransform.GetComponent<Barrel>(); // Get the Barrel script from the barrel transform
-        
     }
 
     void Update()
@@ -135,16 +137,24 @@ public class Movement : MonoBehaviour
 
     public void TakeDamage(float damage)
     {
-        // Рассчитываем урон с учетом брони
-        float finalDamage = damage * (100 / (100 + armor));
+        // Calculate damage with armor and armor toughness
+        float finalDamage = damage - (armor * armorToughness);
 
-        // Уменьшаем здоровье при получении урона
+        // Check for critical hit
+        if (Random.Range(1, 11) <= critRate / 10) // Critical hit if random number <= crit rate / 10
+        {
+            finalDamage *= (critDamage / 100 + 1); // Apply critical damage multiplier
+            Debug.Log("Critical hit! Damage multiplied by " + (critDamage / 100 + 1));
+        }
+
+        // Apply the final damage
         health -= finalDamage;
 
-        // Проверяем, умер ли юнит
+        // Check if the player is dead
         if (health <= 0)
         {
-            Destroy(gameObject); // Уничтожаем объект при смерти
+            Destroy(gameObject); // Destroy the player object upon death
+            Debug.Log("Player has died!");
         }
     }
 }

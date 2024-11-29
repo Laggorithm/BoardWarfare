@@ -1,179 +1,274 @@
 using System.Collections;
+using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 
 public class AIUnit : MonoBehaviour
 {
-    private bool IsWandering; // Determine if the unit is in wandering or combat state
-    private bool IsAiming; // Determine if the unit is aiming and cannot move
-    private Vector3 desiredPosition; // The position the unit moves towards
-    private int rotationSpeed = 150; // Speed of the unit's rotation
-    private float wanderRange = 15f; // Range within which the unit can wander
-    private int speed; // Speed of the unit movement
-    private float attackRange; // Attack range of the unit
-    private float Dmg = 10; // Damage dealt by the unit
-    private Transform ChosenEnemyUnit; // Target enemy unit
-    private string unitClass; // Class of the unit
-    private Rigidbody rb;
+    private Queue<IEnumerator> actionQueue = new Queue<IEnumerator>();
+    private bool isPerformingAction = false; // Tracks if an action is being executed
+
+    private Vector3 desiredPosition;
+    private int rotationSpeed = 150;
+    private float wanderRange = 15f;
+    private int speed;
+    private float attackRange;
+    private float Dmg = 10;
+    private Transform ChosenEnemyUnit;
+    private Transform TargetWallShort;
+    private string unitClass;
+    private List<GameObject> wallShorts = new List<GameObject>();
+    private float wallDetectionRange = 100f;
+    private float health;
+    public float ArmorStat;
+    public float ArmorToughness;
+
     void Start()
     {
-        IsWandering = true;
-        IsAiming = false;
         InitializeUnitStats();
-        StartCoroutine(Wandering());
+        CacheWallShorts();
+        StartCoroutine(CheckConditions()); // Periodically check for walls or enemies
     }
 
     private void InitializeUnitStats()
     {
-        // Initialize stats based on the unit's class
         unitClass = gameObject.tag;
-
         switch (unitClass)
         {
             case "Ground":
+                health = 100;
                 speed = 5;
-                attackRange = 10f;
+                attackRange = 30f;
                 break;
             case "Air":
+                health = 60;
                 speed = 10;
                 attackRange = 35f;
                 break;
             case "Heavy":
+                health = 250;
                 speed = 3;
-                attackRange = 15f;
+                attackRange = 45f;
                 break;
             default:
+                health = 100;
                 speed = 5;
                 attackRange = 5f;
                 break;
         }
     }
 
-    private IEnumerator Wandering()
+    private void CacheWallShorts()
     {
-        while (IsWandering && !IsAiming) // Prevent wandering while aiming
+        wallShorts.Clear();
+        GameObject[] walls = GameObject.FindGameObjectsWithTag("WallShort");
+        foreach (GameObject wall in walls)
         {
-            // Randomize a position within the wander range
-            float randomX = Random.Range(-wanderRange, wanderRange);
-            float randomZ = Random.Range(-wanderRange, wanderRange);
+            wallShorts.Add(wall);
+        }
+    }
 
-            desiredPosition = new Vector3(
-                transform.position.x + randomX,
-                transform.position.y,
-                transform.position.z + randomZ
-            );
+    private IEnumerator CheckConditions()
+    {
+        while (true)
+        {
+            // Check for nearby enemies
+            if (CheckForEnemies(out Transform enemy))
+            {
+                ChosenEnemyUnit = enemy;
+                EnqueueAction(() => AttackEnemy(enemy));
+            }
+            // Check for nearby walls
+            else if (CheckForWalls(out Transform wall))
+            {
+                TargetWallShort = wall;
+                EnqueueAction(() => MoveToWallShort(wall));
+            }
+            // If no actions are pending, wander
+            else if (actionQueue.Count == 0)
+            {
+                EnqueueAction(Wander);
+            }
 
-            Debug.Log("New desired position: " + desiredPosition);
+            yield return new WaitForSeconds(2f); // Re-evaluate conditions periodically
+        }
+    }
 
-            // Rotate towards the desired position
-            Vector3 direction = desiredPosition - transform.position;
-            direction.y = 0; // Prevent vertical rotation
+    private bool CheckForEnemies(out Transform nearestEnemy)
+    {
+        GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
+        nearestEnemy = null;
+        float nearestDistance = float.MaxValue;
+
+        foreach (GameObject player in players)
+        {
+            float distance = Vector3.Distance(transform.position, player.transform.position);
+            if (distance < nearestDistance)
+            {
+                nearestDistance = distance;
+                nearestEnemy = player.transform;
+            }
+        }
+
+        return nearestEnemy != null && nearestDistance <= attackRange;
+    }
+
+    private bool CheckForWalls(out Transform nearestWall)
+    {
+        nearestWall = null;
+        float nearestDistance = float.MaxValue;
+
+        foreach (GameObject wall in wallShorts)
+        {
+            float distance = Vector3.Distance(transform.position, wall.transform.position);
+            if (distance < nearestDistance && distance <= wallDetectionRange)
+            {
+                nearestDistance = distance;
+                nearestWall = wall.transform;
+            }
+        }
+
+        return nearestWall != null;
+    }
+
+    private void EnqueueAction(System.Func<IEnumerator> action)
+    {
+        actionQueue.Enqueue(action());
+        if (!isPerformingAction)
+        {
+            StartCoroutine(ExecuteActions());
+        }
+    }
+
+    private IEnumerator ExecuteActions()
+    {
+        isPerformingAction = true;
+        while (actionQueue.Count > 0)
+        {
+            yield return StartCoroutine(actionQueue.Dequeue());
+        }
+        isPerformingAction = false;
+    }
+
+    private IEnumerator MoveToWallShort(Transform wall)
+    {
+        while (Vector3.Distance(transform.position, wall.position) > 0.5f)
+        {
+            Vector3 direction = wall.position - transform.position;
+            direction.y = 0;
             Quaternion rotation = Quaternion.LookRotation(direction);
             transform.rotation = Quaternion.Slerp(transform.rotation, rotation, Time.deltaTime * rotationSpeed);
 
-            // Move towards the desired position
-            while (Vector3.Distance(transform.position, desiredPosition) > 0.1f)
-            {
-                GetComponent<Animator>().SetBool("Walking", true);
-                transform.position = Vector3.MoveTowards(transform.position, desiredPosition, Time.deltaTime * speed);
-                yield return null;
-            }
-            GetComponent<Animator>().SetBool("Walking", false);
-            // Wait for 5 seconds before choosing a new spot
-            yield return new WaitForSeconds(5f);
+            GetComponent<Animator>().SetBool("Walking", true);
+            transform.position = Vector3.MoveTowards(transform.position, wall.position, Time.deltaTime * speed);
+
+            yield return null;
         }
+
+        GetComponent<Animator>().SetBool("Walking", false);
     }
 
-    private IEnumerator Approaching()
+    private IEnumerator AttackEnemy(Transform enemy)
     {
-        while (ChosenEnemyUnit != null)
+        while (enemy != null && Vector3.Distance(transform.position, enemy.position) <= attackRange)
         {
-            float distanceToEnemy = Vector3.Distance(transform.position, ChosenEnemyUnit.position);
+            Vector3 direction = enemy.position - transform.position;
+            direction.y = 0;
+            Quaternion rotation = Quaternion.LookRotation(direction);
+            transform.rotation = Quaternion.Slerp(transform.rotation, rotation, Time.deltaTime * rotationSpeed);
 
-            // Move towards the enemy until within attack range
-            while (distanceToEnemy > attackRange && ChosenEnemyUnit != null && !IsAiming)
-            {
-                Vector3 direction = ChosenEnemyUnit.position - transform.position;
-                direction.y = 0; // Prevent vertical rotation
-                Quaternion rotation = Quaternion.LookRotation(direction);
-                transform.rotation = Quaternion.Slerp(transform.rotation, rotation, Time.deltaTime * rotationSpeed);
+            Debug.Log("Attacking enemy.");
+            GetComponent<Animator>().SetTrigger("Aiming");
+            enemy.GetComponent<Movement>().TakeDamage(Dmg);
 
-                transform.position = Vector3.MoveTowards(transform.position, ChosenEnemyUnit.position, Time.deltaTime * speed);
-                distanceToEnemy = Vector3.Distance(transform.position, ChosenEnemyUnit.position);
-
-                yield return null;
-            }
-
-            if (distanceToEnemy <= attackRange && ChosenEnemyUnit != null)
-            {
-                Debug.Log("Enemy in range. Maintaining focus on target.");
-                IsAiming = true;
-
-                // Stop moving and look at the enemy while aiming
-                while (distanceToEnemy <= attackRange && ChosenEnemyUnit != null)
-                {
-                    Vector3 lookDirection = ChosenEnemyUnit.position - transform.position;
-                    lookDirection.y = 0; // Prevent vertical rotation
-                    Quaternion lookRotation = Quaternion.LookRotation(lookDirection);
-                    transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, Time.deltaTime * rotationSpeed);
-                    rb = GetComponent<Rigidbody>();
-
-                    // Freeze position on all axes (X, Y, Z)
-                    rb.constraints = RigidbodyConstraints.FreezePosition;
-                    // Attack the enemy
-                    Debug.Log("Attacking enemy.");
-                    GetComponent<Animator>().SetTrigger("Aiming");
-                    ChosenEnemyUnit.GetComponent<Movement>().TakeDamage(Dmg);
-
-                    // Wait for 2 seconds between attacks
-                    yield return new WaitForSeconds(2f);
-
-                    // Update distance to enemy
-                    distanceToEnemy = Vector3.Distance(transform.position, ChosenEnemyUnit.position);
-                }
-
-                IsAiming = false; // Reset aiming state
-            }
+            yield return new WaitForSeconds(2f); // Simulate attack delay
         }
     }
 
-    private void OnTriggerExit(Collider other)
+    private IEnumerator Wander()
     {
-        if (other.GetComponent<Movement>() != null && other.transform == ChosenEnemyUnit)
+        float randomX = Random.Range(-wanderRange, wanderRange);
+        float randomZ = Random.Range(-wanderRange, wanderRange);
+
+        desiredPosition = new Vector3(transform.position.x + randomX, transform.position.y, transform.position.z + randomZ);
+        while (Vector3.Distance(transform.position, desiredPosition) > 0.1f)
         {
-            ChosenEnemyUnit = null;
-            IsAiming = false;
-            IsWandering = true;
+            Vector3 direction = desiredPosition - transform.position;
+            direction.y = 0;
+            Quaternion rotation = Quaternion.LookRotation(direction);
+            transform.rotation = Quaternion.Slerp(transform.rotation, rotation, Time.deltaTime * rotationSpeed);
 
-            // Stop approaching coroutine
-            StopCoroutine(Approaching());
+            GetComponent<Animator>().SetBool("Walking", true);
+            transform.position = Vector3.MoveTowards(transform.position, desiredPosition, Time.deltaTime * speed);
 
-            // Resume wandering
-            StartCoroutine(Wandering());
+            yield return null;
         }
+
+        GetComponent<Animator>().SetBool("Walking", false);
+        yield return new WaitForSeconds(5f); // Pause before wandering again
     }
 
-
-    private void OnTriggerEnter(Collider other)
+    private void OnCollisionEnter(Collision collision)
     {
-        Movement enemyUnit = other.GetComponent<Movement>();
-
-        if (enemyUnit != null)
+        if (collision.gameObject.CompareTag("Obstacle"))
         {
-            StopCoroutine(Wandering());
-
-            if (ChosenEnemyUnit == null)
-            {
-                ChosenEnemyUnit = other.transform;
-            }
-
-            IsWandering = false;
-            StartCoroutine(Approaching());
+            EnqueueAction(() => JumpOverObstacle(collision.transform));
         }
     }
 
-    public void TakeDamage(float damage)
+    private IEnumerator JumpOverObstacle(Transform obstacle)
     {
-        // Handle receiving damage
-        Debug.Log($"Took {damage} damage.");
+        Vector3 jumpTarget = transform.position + transform.forward * 2f;
+        float jumpHeight = Mathf.Max(obstacle.localScale.y + 1f, 2f);
+
+        float elapsedTime = 0f;
+        float duration = 1f;
+        Vector3 startPosition = transform.position;
+        Vector3 peakPosition = new Vector3(jumpTarget.x, jumpTarget.y + jumpHeight, jumpTarget.z);
+
+        while (elapsedTime < duration)
+        {
+            elapsedTime += Time.deltaTime;
+            float t = elapsedTime / duration;
+
+            Vector3 currentPos = Vector3.Lerp(startPosition, peakPosition, t);
+            currentPos.y = Mathf.Sin(t * Mathf.PI) * jumpHeight + startPosition.y;
+            transform.position = currentPos;
+
+            yield return null;
+        }
     }
+
+    public void TakeDamage(float damage, float armorStat, float armorToughness, float critRate, float critDamageStat)
+    {
+        // Step 1: Calculate the initial damage after armor reduction
+        int takenDamage = Mathf.Max(0, Mathf.FloorToInt(damage - (armorStat * armorToughness)));
+
+        // Step 2: Check for critical hit based on the player's crit rate
+        float critChance = critRate / 10f; // Convert critRate to a percentage (1 to 10 scale)
+        int randomValue = Random.Range(0, 10); // Random value between 1 and 10
+
+        // Step 3: Apply crit damage if the random value is within the crit chance
+        if (randomValue <= critChance)
+        {
+            // Apply critical damage
+            takenDamage = Mathf.FloorToInt(takenDamage * (critDamageStat / 100f + 1));
+            Debug.Log("Critical Hit! Damage: " + takenDamage); // Debug log for critical hit
+        }
+        else
+        {
+            Debug.Log("Normal Hit! Damage: " + takenDamage); // Debug log for normal hit
+        }
+
+        // Step 4: Apply damage to the unit's health or other effects here
+        // Assuming the AIUnit has a health variable
+        health -= takenDamage;
+
+        // Ensure health doesn't go below zero
+        health = Mathf.Max(0, health);
+
+        // Optionally, log the final health value here for debugging
+        Debug.Log("Unit's Remaining Health: " + health);
+    }
+
 }
