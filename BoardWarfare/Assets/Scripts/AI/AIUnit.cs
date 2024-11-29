@@ -22,7 +22,8 @@ public class AIUnit : MonoBehaviour
     private float health;
     public float ArmorStat;
     public float ArmorToughness;
-
+    private float critRate;
+    private float critDamage;
     void Start()
     {
         InitializeUnitStats();
@@ -36,16 +37,22 @@ public class AIUnit : MonoBehaviour
         switch (unitClass)
         {
             case "Ground":
+                critDamage = 20;
+                critRate = 30;
                 health = 100;
                 speed = 5;
                 attackRange = 30f;
                 break;
             case "Air":
+                critDamage = 10;
+                critRate = 40;
                 health = 60;
                 speed = 10;
                 attackRange = 35f;
                 break;
             case "Heavy":
+                critDamage = 70;
+                critRate = 30;
                 health = 250;
                 speed = 3;
                 attackRange = 45f;
@@ -179,7 +186,13 @@ public class AIUnit : MonoBehaviour
 
             Debug.Log("Attacking enemy.");
             GetComponent<Animator>().SetTrigger("Aiming");
-            enemy.GetComponent<Movement>().TakeDamage(Dmg);
+            Movement playerMovement = enemy.GetComponent<Movement>();
+
+            if (playerMovement != null)
+            {
+                // Call TakeDamage with the necessary parameters, passing armor from the player's Movement
+                playerMovement.TakeDamage(Dmg, playerMovement.armor, playerMovement.armorToughness, critRate, critDamage);
+            }
 
             yield return new WaitForSeconds(2f); // Simulate attack delay
         }

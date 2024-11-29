@@ -24,10 +24,11 @@ public class Movement : MonoBehaviour
     public float rotationTorque = 5.0f; // Torque applied for rotation effect
 
     public float health = 100;
-    public float armor = 20; // Armor stat
-    public float armorToughness = 5; // Armor toughness stat
-    public float critRate = 30f; // Player's critical hit rate (out of 100)
-    public float critDamage = 150f; // Player's critical damage multiplier (150% = 1.5)
+    public float maxHealth = 100;
+    public float armor = 20;
+    public float armorToughness = 10;  // Placeholder value for armor toughness
+    public float critRate = 30.0f;     // Placeholder crit rate
+    public float critDamage = 150.0f;  // Placeholder crit damage
 
     void Start()
     {
@@ -135,26 +136,52 @@ public class Movement : MonoBehaviour
         }
     }
 
-    public void TakeDamage(float damage)
+    public void TakeDamage(float damage, float armorStat, float armorToughness, float critRate, float critDamage)
     {
-        // Calculate damage with armor and armor toughness
-        float finalDamage = damage - (armor * armorToughness);
+        // Calculate the damage taken after applying armor and toughness
+        float finalDamage = damage * (100 / (100 + armorStat * armorToughness));
 
-        // Check for critical hit
-        if (Random.Range(1, 11) <= critRate / 10) // Critical hit if random number <= crit rate / 10
+        // Check for crit chance
+        bool isCriticalHit = Random.Range(0f, 1f) <= critRate / 100f;
+        if (isCriticalHit)
         {
-            finalDamage *= (critDamage / 100 + 1); // Apply critical damage multiplier
-            Debug.Log("Critical hit! Damage multiplied by " + (critDamage / 100 + 1));
+            finalDamage *= (critDamage / 100f + 1);
+            Debug.Log("Critical hit! Damage multiplied by " + (critDamage / 100f + 1));
         }
 
-        // Apply the final damage
+        // Apply the damage
         health -= finalDamage;
 
-        // Check if the player is dead
+        // Ensure health doesn't go below zero
+        health = Mathf.Max(health, 0);
+
+        // Debug log to track health and damage
+        Debug.Log($"Damage taken: {finalDamage}. Health: {health}/{maxHealth}");
+
+        // Check if health has dropped to zero or below
         if (health <= 0)
         {
-            Destroy(gameObject); // Destroy the player object upon death
-            Debug.Log("Player has died!");
+            Destroy(gameObject); // Destroy the object upon death
         }
+    }
+
+    // Effect methods (placeholder effects for increasing stats)
+    public void EffectHP()
+    {
+        maxHealth += 10;
+        health = Mathf.Min(health + 10, maxHealth);
+        Debug.Log($"Health increased to {health}/{maxHealth}");
+    }
+
+    public void EffectDef()
+    {
+        armor += 5;
+        Debug.Log($"Armor increased to {armor}");
+    }
+
+    public void EffectSpeed()
+    {
+        speed += 2;
+        Debug.Log($"Speed increased to {speed}");
     }
 }
