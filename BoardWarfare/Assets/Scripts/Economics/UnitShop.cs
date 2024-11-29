@@ -5,107 +5,32 @@ using UnityEngine;
 
 public class UnitShop : MonoBehaviour
 {
-    public GameObject dronePrefab;
-    public GameObject standartPrefab;
-    public GameObject mechPrefab;
-
-    public int droneCost = 50;
-    public int standartCost = 50;
-    public int mechCost = 50;
-
-    public GameObject unitPrefab; // Префаб юнита для размещения
-    private GameObject selectedCell; // Выбранная клетка для размещения
-    public int unitCost; // Стоимость юнита
-
-    private EconomyManager economyManager; // Ссылка на менеджер экономики
+    //  buttons
+    [SerializeField] private GameObject[] prefabs;
+    public Transform parentObject;
 
     void Start()
     {
-        economyManager = FindObjectOfType<EconomyManager>();
-        if (economyManager == null)
+        if (prefabs.Length == 0)
         {
-            Debug.LogError("EconomyManager не найден!");
+            Debug.LogError("Something is missing mate");
+            return;
         }
+        ResetCard();
     }
-
-    // устанавливаем префаб для размещения, но не тратим золото
-    public void SelectDrone()
+    void ResetCard()
     {
-        unitPrefab = dronePrefab;
-        unitCost = droneCost; // Устанавливаем стоимость для этого юнита
-    }
+        // Randomly activate one prefab
+        int randomIndex = Random.Range(0, prefabs.Length);
+        GameObject selectedPrefab = prefabs[randomIndex];
 
-    public void SelectStandart()
-    {
-        unitPrefab = standartPrefab;
-        unitCost = standartCost; // Устанавливаем стоимость для этого юнита
-    }
-
-    public void SelectMech()
-    {
-        unitPrefab = mechPrefab;
-        unitCost = mechCost; // Устанавливаем стоимость для этого юнита
-    }
-
-    void Update()
-    {
-        //HandlePlacement();
-    }
-
-   /* void HandlePlacement()
-    {
-        // клик мыши для размещения юнита
-        if (Input.GetMouseButtonDown(0))
+        if (selectedPrefab != null)
         {
-            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-            RaycastHit hit;
+            selectedPrefab.SetActive(true);
 
-            if (Physics.Raycast(ray, out hit))
-            {
-                // Проверяем, была ли кликнута клетка
-                if (hit.collider.CompareTag("Cell"))
-                {
-                    selectedCell = hit.collider.gameObject;
-                    PlaceUnitOnCell();
-                }
-            }
-        }
-    }*/
-
-    void PlaceUnitOnCell()
-    {
-        if (selectedCell != null && unitPrefab != null)
-        {
-            Debug.Log("Попытка размещения юнита на клетке " + selectedCell.name);
-            Vector3 position = selectedCell.transform.position;
-
-            // Проверяем, есть ли уже юнит на клетке
-            if (selectedCell.GetComponentInChildren<UnitController>() == null)
-            {
-                // Проверяем, достаточно ли у игрока золота
-                if (economyManager.playerGold >= unitCost)
-                {
-                    // Тратим золото и размещаем юнита
-                    economyManager.SpendPlayerGold(unitCost);
-
-                    GameObject newUnit = Instantiate(unitPrefab, position, Quaternion.identity);
-                    newUnit.transform.SetParent(selectedCell.transform);
-
-                    Debug.Log("Юнит размещён на клетке за " + unitCost + " золота.");
-                }
-                else
-                {
-                    Debug.Log("Недостаточно золота для размещения юнита!");
-                }
-            }
-            else
-            {
-                Debug.Log("Клетка уже занята!");
-            }
-        }
-        else
-        {
-            Debug.LogError("Клетка или префаб юнита не выбраны!");
+            // Set the selected prefab's parent and position
+            selectedPrefab.transform.SetParent(parentObject);
+            selectedPrefab.transform.localPosition = Vector3.zero;
         }
     }
 }

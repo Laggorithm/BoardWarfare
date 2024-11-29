@@ -8,6 +8,7 @@ public class ToggleUI : MonoBehaviour
     public GameObject Menu;
     public Button showButton;
     public Button hideButton;
+    public Movement movement;
 
     public void ShowElement()
     {
@@ -28,5 +29,25 @@ public class ToggleUI : MonoBehaviour
     public void Quit()
     {
         Application.Quit();
+    }
+    public void HP()
+    {
+        Debug.Log("Hp");
+        movement.EffectHP();
+    }
+    public void Def()
+    {
+        Debug.Log("Def");
+        movement.EffectDef();
+    }
+    public void Speed()
+    {
+        Debug.Log("Speed");
+        movement.EffectSpeed();
+    }
+    public void Free()
+    {
+        Debug.Log("Free");
+        // effect
     }
 }
