@@ -25,6 +25,7 @@ public class Movement : MonoBehaviour
     public float rotationTorque = 5.0f; // Torque applied for rotation effect
 
     public float health = 100;
+    public float maxHealth = 100;
     float armor = 20;
     void Start()
     {
@@ -146,5 +147,23 @@ public class Movement : MonoBehaviour
         {
             Destroy(gameObject); // Уничтожаем объект при смерти
         }
+    }
+    public void EffectHP()
+    {
+        maxHealth += 10;
+        health = Mathf.Min(health + 10, maxHealth);
+        Debug.Log($"Health increased to {health}/{maxHealth}");
+    }
+
+    public void EffectDef()
+    {
+        armor += 5;
+        Debug.Log($"Armor increased to {armor}");
+    }
+
+    public void EffectSpeed()
+    {
+        speed += 2;
+        Debug.Log($"Speed increased to {speed}");
     }
 }
