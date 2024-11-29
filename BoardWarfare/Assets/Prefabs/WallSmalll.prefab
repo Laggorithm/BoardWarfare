@@ -55,6 +55,10 @@ PrefabInstance:
       propertyPath: m_Center.z
       value: -0.063316345
       objectReference: {fileID: 0}
+    - target: {fileID: 3856594485559605231, guid: 321c438a512b00b429760c5e1d806b9a, type: 3}
+      propertyPath: m_Constraints
+      value: 126
+      objectReference: {fileID: 0}
     - target: {fileID: 5074474524248991451, guid: 321c438a512b00b429760c5e1d806b9a, type: 3}
       propertyPath: m_TagString
       value: Obstacle
@@ -69,7 +73,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5074474524552094601, guid: 321c438a512b00b429760c5e1d806b9a, type: 3}
       propertyPath: m_TagString
-      value: WallShort
+      value: Obstacle
+      objectReference: {fileID: 0}
+    - target: {fileID: 5074474524552094607, guid: 321c438a512b00b429760c5e1d806b9a, type: 3}
+      propertyPath: m_IsTrigger
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5074474524872362564, guid: 321c438a512b00b429760c5e1d806b9a, type: 3}
       propertyPath: m_TagString
@@ -127,7 +135,8 @@ PrefabInstance:
       propertyPath: m_Name
       value: WallShort
       objectReference: {fileID: 0}
-    m_RemovedComponents: []
+    m_RemovedComponents:
+    - {fileID: -11432964626259994, guid: 321c438a512b00b429760c5e1d806b9a, type: 3}
   m_SourcePrefab: {fileID: 100100000, guid: 321c438a512b00b429760c5e1d806b9a, type: 3}
 --- !u!4 &3395788351910324588 stripped
 Transform:
