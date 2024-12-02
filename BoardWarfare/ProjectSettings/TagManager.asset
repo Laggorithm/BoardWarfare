@@ -11,11 +11,12 @@ TagManager:
   - WallTall
   - WallShort
   - Obstacle
+  - ShootingPoint
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - Teammates
   - Water
   - UI
   - 

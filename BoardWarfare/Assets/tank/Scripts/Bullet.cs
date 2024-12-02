@@ -4,7 +4,7 @@ using UnityEngine;
 
 public class Bullet : MonoBehaviour
 {
-    int damage = 40;
+    int damage = 70;
     public float lifetime = 5.0f; // Time in seconds before the projectile is destroyed
 
     void Start()
