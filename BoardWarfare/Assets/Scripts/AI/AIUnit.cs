@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
-using UnityEditor;
 using UnityEngine;
+using UnityEngine.AI;
 
 public class AIUnit : MonoBehaviour
 {
@@ -17,15 +17,16 @@ public class AIUnit : MonoBehaviour
     private Transform ChosenEnemyUnit;
     private Transform TargetWallShort;
     private string unitClass;
-    private List<GameObject> wallShorts = new List<GameObject>();
-    private float wallDetectionRange = 100f;
     private float health;
     public float ArmorStat;
     public float ArmorToughness;
     private float critRate;
     private float critDamage;
+    private NavMeshAgent navMeshAgent;
+
     void Start()
-    {
+    {   
+        navMeshAgent = GetComponent<NavMeshAgent>();
         InitializeUnitStats();
         StartCoroutine(CheckConditions()); // Periodically check for walls or enemies
     }
@@ -77,8 +78,8 @@ public class AIUnit : MonoBehaviour
                 ChosenEnemyUnit = enemy;
                 EnqueueAction(() => AttackEnemy(enemy));
             }
-            // If no actions are pending, wander
-            else if (actionQueue.Count == 0)
+            // If no enemies are nearby and no actions are pending, enqueue wandering
+            else if (actionQueue.Count == 0 && !isPerformingAction)
             {
                 EnqueueAction(Wander);
             }
@@ -86,6 +87,8 @@ public class AIUnit : MonoBehaviour
             yield return new WaitForSeconds(2f); // Re-evaluate conditions periodically
         }
     }
+
+
 
     private bool CheckForEnemies(out Transform nearestEnemy)
     {
@@ -106,8 +109,6 @@ public class AIUnit : MonoBehaviour
         return nearestEnemy != null && nearestDistance <= attackRange;
     }
 
-
-
     private void EnqueueAction(System.Func<IEnumerator> action)
     {
         actionQueue.Enqueue(action());
@@ -127,44 +128,24 @@ public class AIUnit : MonoBehaviour
         isPerformingAction = false;
     }
 
-    private static Dictionary<Transform, AIUnit> wallOccupancy = new Dictionary<Transform, AIUnit>();
-
     private IEnumerator MoveToWallShort(Transform wall)
     {
-        // Check if the wall is already occupied by another unit
-        if (wallOccupancy.ContainsKey(wall))
-        {
-            // If another unit is already approaching this wall, avoid it
-            Debug.Log("Wall is occupied. Re-routing.");
-            EnqueueAction(Wander); // Re-route to wander instead
-            yield break;
-        }
-
-        // Mark this wall as occupied
-        wallOccupancy[wall] = this;
-
         // Start the walking animation only once when movement begins
         Animator animator = GetComponent<Animator>();
         animator.SetBool("Walking", true);
 
-        // Move towards the wall
+        // Set the NavMeshAgent's destination to the wall position
+        navMeshAgent.SetDestination(wall.position);
+
+        // Wait until the agent reaches the wall
         while (Vector3.Distance(transform.position, wall.position) > 0.5f)
         {
-            Vector3 direction = wall.position - transform.position;
-            direction.y = 0;
-            Quaternion rotation = Quaternion.LookRotation(direction);
-            transform.rotation = Quaternion.Slerp(transform.rotation, rotation, Time.deltaTime * rotationSpeed);
-
-            transform.position = Vector3.MoveTowards(transform.position, wall.position, Time.deltaTime * speed);
-
             yield return null;
         }
 
+        Debug.Log("BehindWall");
         // Stop the walking animation when movement finishes
         animator.SetBool("Walking", false);
-
-        // Mark the wall as unoccupied after reaching it
-        wallOccupancy.Remove(wall);
 
         // Wait for the cooldown before resuming wandering
         yield return new WaitForSeconds(5f); // 5-second cooldown
@@ -172,8 +153,6 @@ public class AIUnit : MonoBehaviour
         // After cooldown, resume wandering by enqueuing the Wander action
         EnqueueAction(Wander);
     }
-
-
 
     private void OnTriggerEnter(Collider other)
     {
@@ -194,28 +173,7 @@ public class AIUnit : MonoBehaviour
                 EnqueueAction(() => AttackEnemy(ChosenEnemyUnit));
             }
         }
-
-        // Handle collision with other types of objects (WallTall, WallBreakable, etc.)
-        else
-        {
-            switch (other.tag)
-            {
-                case "WallTall":
-                    // Handle WallTall behavior
-                    break;
-
-                case "WallBreakable":
-                    // Handle WallBreakable behavior
-                    break;
-
-                // Additional cases can be added for more object types
-                default:
-                    Debug.Log("Unknown object detected: " + other.tag);
-                    break;
-            }
-        }
     }
-
 
     private IEnumerator AttackEnemy(Transform enemy)
     {
@@ -232,20 +190,17 @@ public class AIUnit : MonoBehaviour
             direction.y = 0;  // Keep the rotation on the X and Z axes
             Quaternion rotation = Quaternion.LookRotation(direction);
             transform.rotation = Quaternion.Slerp(transform.rotation, rotation, Time.deltaTime * rotationSpeed);
-            
+
             // Trigger aiming animation
-            
+            animator.SetTrigger("Aiming");
 
             // Aiming time
             yield return new WaitForSeconds(waitTime);
 
-
-            
             Movement playerMovement = enemy.GetComponent<Movement>();
             if (playerMovement != null)
             {
                 animator.SetBool("Walking", false);
-                animator.SetTrigger("Aiming");
                 playerMovement.TakeDamage(Dmg, playerMovement.armor, playerMovement.armorToughness, critRate, critDamage);
             }
 
@@ -254,96 +209,43 @@ public class AIUnit : MonoBehaviour
         }
     }
 
-
-
-
-
-
-
     private IEnumerator Wander()
     {
-        // Wander in a random direction but check for teammates
+        Animator animator = GetComponent<Animator>();
+
+        // Define the map boundaries
+        float minX = 63f, maxX = 310f;
+        float minZ = -110f, maxZ = 20f;
+
+        // Randomly select a position within the wander range
         float randomX = Random.Range(-wanderRange, wanderRange);
         float randomZ = Random.Range(-wanderRange, wanderRange);
 
+        // Calculate the desired position
         desiredPosition = new Vector3(transform.position.x + randomX, transform.position.y, transform.position.z + randomZ);
 
-        // Avoid teammates during wandering, but ensure they don't immediately start spinning
-        bool isTooCloseToTeammate = false;
-        float checkRadius = 2f; // Radius within which to check for teammates
+        // Ensure the desired position stays within the map boundaries
+        desiredPosition.x = Mathf.Clamp(desiredPosition.x, minX, maxX);
+        desiredPosition.z = Mathf.Clamp(desiredPosition.z, minZ, maxZ);
 
-        // We will check if any teammate is too close (and avoid spinning)
-        Collider[] teammates = Physics.OverlapSphere(transform.position, checkRadius, LayerMask.GetMask("Teammates"));
-        foreach (Collider teammate in teammates)
+        // Set the NavMeshAgent's destination to the desired position
+        navMeshAgent.SetDestination(desiredPosition);
+
+        // Wait until the agent reaches the destination
+        animator.SetBool("Walking", true);
+        while (navMeshAgent.pathPending || navMeshAgent.remainingDistance > navMeshAgent.stoppingDistance)
         {
-            if (teammate.gameObject != gameObject) // Ignore self
-            {
-                // If a teammate is too close, avoid collision by adjusting the wander position
-                isTooCloseToTeammate = true;
-                break;
-            }
-        }
-
-        if (isTooCloseToTeammate)
-        {
-            // Adjust desired position if a teammate is too close (reroute)
-            randomX = Random.Range(-wanderRange, wanderRange);
-            randomZ = Random.Range(-wanderRange, wanderRange);
-            desiredPosition = new Vector3(transform.position.x + randomX, transform.position.y, transform.position.z + randomZ);
-        }
-
-        // Move towards the desired position
-        while (Vector3.Distance(transform.position, desiredPosition) > 0.1f)
-        {
-            // Calculate direction and rotate smoothly
-            Vector3 direction = desiredPosition - transform.position;
-            direction.y = 0; // Keep the AI level to the ground
-            Quaternion rotation = Quaternion.LookRotation(direction);
-            transform.rotation = Quaternion.Slerp(transform.rotation, rotation, Time.deltaTime * rotationSpeed);
-
-            GetComponent<Animator>().SetBool("Walking", true);
-            transform.position = Vector3.MoveTowards(transform.position, desiredPosition, Time.deltaTime * speed);
-
             yield return null;
         }
 
-        GetComponent<Animator>().SetBool("Walking", false);
-        yield return new WaitForSeconds(5f); // Pause before wandering again
+        // Stop the walking animation when the unit arrives
+        animator.SetBool("Walking", false);
+
+        // Wait before wandering again
+        yield return new WaitForSeconds(1f); // Pause before the next wander action
     }
 
 
-
-
-    private void OnCollisionEnter(Collision collision)
-    {
-        if (collision.gameObject.CompareTag("Obstacle"))
-        {
-            EnqueueAction(() => JumpOverObstacle(collision.transform));
-        }
-    }
-
-    private IEnumerator JumpOverObstacle(Transform obstacle)
-    {
-        Vector3 jumpTarget = transform.position + transform.forward * 2f;
-        float jumpHeight = Mathf.Max(obstacle.localScale.y + 1f, 2f);
-
-        float elapsedTime = 0f;
-        float duration = 1f;
-        Vector3 startPosition = transform.position;
-        Vector3 peakPosition = new Vector3(jumpTarget.x, jumpTarget.y + jumpHeight, jumpTarget.z);
-
-        while (elapsedTime < duration)
-        {
-            elapsedTime += Time.deltaTime;
-            float t = elapsedTime / duration;
-
-            Vector3 currentPos = Vector3.Lerp(startPosition, peakPosition, t);
-            currentPos.y = Mathf.Sin(t * Mathf.PI) * jumpHeight + startPosition.y;
-            transform.position = currentPos;
-
-            yield return null;
-        }
-    }
 
     public void TakeDamage(float damage, float armorStat, float armorToughness, float critRate, float critDamageStat)
     {
@@ -367,7 +269,6 @@ public class AIUnit : MonoBehaviour
         }
 
         // Step 4: Apply damage to the unit's health or other effects here
-        // Assuming the AIUnit has a health variable
         health -= takenDamage;
 
         // Ensure health doesn't go below zero
@@ -376,5 +277,4 @@ public class AIUnit : MonoBehaviour
         // Optionally, log the final health value here for debugging
         Debug.Log("Unit's Remaining Health: " + health);
     }
-
 }
