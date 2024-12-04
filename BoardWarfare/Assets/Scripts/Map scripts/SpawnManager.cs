@@ -18,6 +18,23 @@ public class SpawnManager : MonoBehaviour
     public GameObject TallWallPrefab;
     public GameObject HealPrefab;
 
+    private void Start()
+    {
+        Debug.Log("SpawnManager Start called.");
+
+        if (WallAndTallWallSpots.Count == 0)
+        {
+            Debug.LogError("WallAndTallWallSpots is empty. Assign spawn spots in the Inspector.");
+        }
+
+        if (WallPrefab == null || TallWallPrefab == null)
+        {
+            Debug.LogError("WallPrefab or TallWallPrefab is not assigned in the Inspector.");
+        }
+
+        SpawnRandomizedWallPrefabs();
+    }
+
     public void SpawnPrefabs()
     {
         // Check if minimum requirements for wall spots are met
@@ -36,26 +53,43 @@ public class SpawnManager : MonoBehaviour
 
     private void SpawnRandomizedWallPrefabs()
     {
-        // Shuffle the spots for randomness
         List<SpawnSpot> shuffledSpots = new List<SpawnSpot>(WallAndTallWallSpots);
         ShuffleList(shuffledSpots);
 
-        // Determine the random number of walls and tall walls
-        int totalSpawns = Mathf.Clamp(Random.Range(3, shuffledSpots.Count + 1), 3, shuffledSpots.Count);
+        int totalSpawns = Random.Range(3, shuffledSpots.Count + 1);
         int wallCount = Random.Range(0, totalSpawns + 1);
         int tallWallCount = totalSpawns - wallCount;
+
+        Debug.Log($"Total spots: {shuffledSpots.Count}, Walls: {wallCount}, Tall Walls: {tallWallCount}");
 
         int spawned = 0;
         foreach (SpawnSpot spot in shuffledSpots)
         {
-            if (spawned >= totalSpawns) break; // Stop if the total number is reached
+            if (spawned >= totalSpawns) break;
 
             if (!spot.isOccupied)
             {
                 GameObject prefabToSpawn = spawned < wallCount ? WallPrefab : TallWallPrefab;
-                Instantiate(prefabToSpawn, spot.spotTransform.position, spot.spotTransform.rotation);
-                spot.isOccupied = true; // Mark spot as occupied
+                Debug.Log($"Attempting to spawn {prefabToSpawn.name} at {spot.spotTransform.position}");
+
+                // Instantiate the prefab and mark the spot as occupied, adjusting Y to 0.6f for walls
+                Vector3 spawnPosition = new Vector3(spot.spotTransform.position.x, 0.6f, spot.spotTransform.position.z);
+                GameObject spawnedPrefab = Instantiate(prefabToSpawn, spawnPosition, spot.spotTransform.rotation);
+
+                // If the prefab is a Wall, rotate it by -90 degrees on the Y-axis
+                if (prefabToSpawn == WallPrefab)
+                {
+                    spawnedPrefab.transform.Rotate(0f, -90f, 0f);
+                }
+
+                spot.isOccupied = true;
+
+                Debug.Log($"Spot at {spot.spotTransform.position} marked as occupied.");
                 spawned++;
+            }
+            else
+            {
+                Debug.Log($"Spot at {spot.spotTransform.position} is already occupied.");
             }
         }
     }
@@ -76,7 +110,9 @@ public class SpawnManager : MonoBehaviour
 
             if (!spot.isOccupied)
             {
-                Instantiate(prefab, spot.spotTransform.position, spot.spotTransform.rotation);
+                // Adjust the Y position to 5 before spawning
+                Vector3 spawnPosition = new Vector3(spot.spotTransform.position.x, 5f, spot.spotTransform.position.z);
+                Instantiate(prefab, spawnPosition, spot.spotTransform.rotation);
                 spot.isOccupied = true; // Mark spot as occupied
                 spawned++;
             }
