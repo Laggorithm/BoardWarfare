@@ -214,8 +214,8 @@ public class AIUnit : MonoBehaviour
         Animator animator = GetComponent<Animator>();
 
         // Define the map boundaries
-        float minX = 63f, maxX = 310f;
-        float minZ = -110f, maxZ = 20f;
+        float minX = 145f, maxX = 180f;
+        float minZ = -83f, maxZ = 0f;
 
         // Randomly select a position within the wander range
         float randomX = Random.Range(-wanderRange, wanderRange);
