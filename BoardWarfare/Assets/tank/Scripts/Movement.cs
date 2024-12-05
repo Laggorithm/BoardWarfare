@@ -1,4 +1,6 @@
-﻿using UnityEngine;
+﻿using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
 
 public class Movement : MonoBehaviour
 {
@@ -30,10 +32,13 @@ public class Movement : MonoBehaviour
     public float critRate = 30.0f;     // Placeholder crit rate
     public float critDamage = 150.0f;  // Placeholder crit damage
 
+    public Image healthBar;
+    public TextMeshProUGUI healthText;
     void Start()
     {
         rb = GetComponent<Rigidbody>();
         barrel = barrelTransform.GetComponent<Barrel>(); // Get the Barrel script from the barrel transform
+        UpdateHealthUI();
     }
 
     void Update()
@@ -41,7 +46,6 @@ public class Movement : MonoBehaviour
         // Get input for movement
         float moveX = Input.GetAxis("Horizontal");
         float moveZ = Input.GetAxis("Vertical");
-
         // Rotate player based on horizontal input
         if (moveX != 0)
         {
@@ -158,6 +162,8 @@ public class Movement : MonoBehaviour
         // Debug log to track health and damage
         Debug.Log($"Damage taken: {finalDamage}. Health: {health}/{maxHealth}");
 
+        UpdateHealthUI();
+
         // Check if health has dropped to zero or below
         if (health <= 0)
         {
@@ -171,6 +177,7 @@ public class Movement : MonoBehaviour
         maxHealth += 10;
         health = Mathf.Min(health + 10, maxHealth);
         Debug.Log($"Health increased to {health}/{maxHealth}");
+        UpdateHealthUI();
     }
 
     public void EffectDef()
@@ -183,5 +190,24 @@ public class Movement : MonoBehaviour
     {
         speed += 2;
         Debug.Log($"Speed increased to {speed}");
+    }
+    public void Heal()
+    {
+        health += 20;
+        if (health > maxHealth)
+        {
+            health = maxHealth;
+            Debug.Log("Player HP restored");
+        }
+        UpdateHealthUI();
+        Debug.Log("Player healed!");
+    }
+    private void UpdateHealthUI()
+    {
+        if (healthBar != null)
+        {
+            healthBar.fillAmount = health / maxHealth;
+            healthText.text = $"{health}/{maxHealth}";
+        }
     }
 }
