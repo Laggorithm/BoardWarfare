@@ -23,10 +23,18 @@ public class AIUnit : MonoBehaviour
     private float critRate;
     private float critDamage;
     private NavMeshAgent navMeshAgent;
+    private GameObject player;
 
     void Start()
-    {   
+    {
+
+        player = FindObjectOfType<Movement>().gameObject;
+
         navMeshAgent = GetComponent<NavMeshAgent>();
+        NavMeshAgent agent = GetComponent<NavMeshAgent>();
+        agent.radius = 0.5f; // Adjust the radius based on your unit size
+        agent.avoidancePriority = Random.Range(0, 99); // Randomize or set priorities
+                                                       // Random priority between 1 and 100
         InitializeUnitStats();
         StartCoroutine(CheckConditions()); // Periodically check for walls or enemies
     }
@@ -213,20 +221,28 @@ public class AIUnit : MonoBehaviour
     {
         Animator animator = GetComponent<Animator>();
 
-        // Define the map boundaries
+        // Define the map boundaries and player position
         float minX = 145f, maxX = 180f;
         float minZ = -83f, maxZ = 0f;
 
-        // Randomly select a position within the wander range
-        float randomX = Random.Range(-wanderRange, wanderRange);
-        float randomZ = Random.Range(-wanderRange, wanderRange);
+        GameObject player = FindObjectOfType<Movement>().gameObject;  // Assuming the player object is set correctly
+
+        // Calculate direction towards the player
+        Vector3 playerDirection = player.transform.position - transform.position;
+
+        // Add randomness to the direction within a cone (e.g., +/- 30 degrees)
+        float randomAngle = Random.Range(-30f, 30f); // Adjust the range as needed
+        playerDirection = Quaternion.Euler(0, randomAngle, 0) * playerDirection;
 
         // Calculate the desired position
-        desiredPosition = new Vector3(transform.position.x + randomX, transform.position.y, transform.position.z + randomZ);
+        Vector3 desiredPosition = transform.position + playerDirection.normalized * Random.Range(5f, 10f); // Keep distance from the player
 
         // Ensure the desired position stays within the map boundaries
         desiredPosition.x = Mathf.Clamp(desiredPosition.x, minX, maxX);
         desiredPosition.z = Mathf.Clamp(desiredPosition.z, minZ, maxZ);
+
+        // Check for nearby units and adjust if necessary
+        AvoidNearbyUnits(desiredPosition);
 
         // Set the NavMeshAgent's destination to the desired position
         navMeshAgent.SetDestination(desiredPosition);
@@ -244,6 +260,31 @@ public class AIUnit : MonoBehaviour
         // Wait before wandering again
         yield return new WaitForSeconds(1f); // Pause before the next wander action
     }
+
+    private void AvoidNearbyUnits(Vector3 desiredPosition)
+    {
+        // Find all units within a certain range
+        float avoidRadius = 3f;  // Radius to check for nearby units
+        Collider[] nearbyUnits = Physics.OverlapSphere(transform.position, avoidRadius);
+
+        foreach (Collider unit in nearbyUnits)
+        {
+            if (unit != null && unit.gameObject != gameObject)  // Avoid self
+            {
+                // Calculate the distance and direction from the nearby unit
+                Vector3 directionToUnit = unit.transform.position - transform.position;
+                float distance = directionToUnit.magnitude;
+
+                // If the distance is too small, adjust the desired position to avoid overlap
+                if (distance < avoidRadius)
+                {
+                    desiredPosition += directionToUnit.normalized * (avoidRadius - distance);
+                }
+            }
+        }
+    }
+
+
 
 
 
