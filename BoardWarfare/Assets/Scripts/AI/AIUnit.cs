@@ -199,16 +199,30 @@ public class AIUnit : MonoBehaviour
             Quaternion rotation = Quaternion.LookRotation(direction);
             transform.rotation = Quaternion.Slerp(transform.rotation, rotation, Time.deltaTime * rotationSpeed);
 
+            // Cast a ray to check if there's a wall in the way
+            RaycastHit hit;
+            if (Physics.Raycast(transform.position, direction, out hit, attackRange))
+            {
+                if (hit.collider.CompareTag("WallTall"))
+                {
+                    // Wall is in the way, so wander and check again
+                    animator.SetBool("Walking", true);
+                    yield return StartCoroutine(Wander());  // Assuming Wander method exists
+                    continue;  // Skip the attack logic if there's a wall
+                }
+            }
+
             // Trigger aiming animation
             animator.SetTrigger("Aiming");
 
             // Aiming time
             yield return new WaitForSeconds(waitTime);
 
+            // If no wall was hit, perform the attack
             Movement playerMovement = enemy.GetComponent<Movement>();
             if (playerMovement != null)
             {
-                animator.SetBool("Walking", false);
+                animator.SetBool("Walking", false);  // Stop walking animation
                 playerMovement.TakeDamage(Dmg, playerMovement.armor, playerMovement.armorToughness, critRate, critDamage);
             }
 
@@ -216,6 +230,7 @@ public class AIUnit : MonoBehaviour
             yield return new WaitForSeconds(2f);  // Adjust based on your needs
         }
     }
+
 
     private IEnumerator Wander()
     {
