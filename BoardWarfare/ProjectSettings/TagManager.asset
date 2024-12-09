@@ -12,6 +12,7 @@ TagManager:
   - WallShort
   - Obstacle
   - ShootingPoint
+  - Projectile
   layers:
   - Default
   - TransparentFX

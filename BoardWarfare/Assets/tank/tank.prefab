@@ -201,11 +201,22 @@ MonoBehaviour:
   barrelTransform: {fileID: 4902987385638965102}
   turretRotationSpeed: 100
   barrelRotationSpeed: 50
+  shootingPoint: {fileID: 5320901811866270911}
+  projectilePrefab: {fileID: 4870452158686795928, guid: 431f8045e3d3725429fd272ea13717fd, type: 3}
+  shootForce: 10
   maxBarrelRotation: 10
   minBarrelRotation: -12
   recoilForce: 3
   forwardForce: 2
   rotationTorque: 5
+  health: 100
+  maxHealth: 100
+  armor: 20
+  armorToughness: 10
+  critRate: 30
+  critDamage: 150
+  healthBar: {fileID: 0}
+  healthText: {fileID: 0}
 --- !u!1001 &312812868977459222
 PrefabInstance:
   m_ObjectHideFlags: 0

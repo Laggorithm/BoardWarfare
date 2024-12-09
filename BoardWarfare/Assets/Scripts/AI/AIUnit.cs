@@ -332,5 +332,9 @@ public class AIUnit : MonoBehaviour
 
         // Optionally, log the final health value here for debugging
         Debug.Log("Unit's Remaining Health: " + health);
+        switch (health)
+        {
+            case 0: Destroy(gameObject); break;
+        }
     }
 }

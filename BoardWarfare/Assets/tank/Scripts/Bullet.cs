@@ -13,10 +13,10 @@ public class Bullet : MonoBehaviour
         Destroy(gameObject, lifetime);
     }
 
-    void OnTriggerEnter(Collider other)
+    void OnCollisionEnter(Collision other)
     {
-        // Attempt to get the AIUnit component from the collided object
-        if (other.TryGetComponent(out AIUnit AIController))
+        // Attempt to get the AIUnit component from the collided object's GameObject
+        if (other.gameObject.TryGetComponent(out AIUnit AIController))
         {
             // Reference to the player (or the object firing the projectile)
             Movement playerMovement = FindObjectOfType<Movement>(); // Finds the Movement component in the scene (the player object)
@@ -25,17 +25,15 @@ public class Bullet : MonoBehaviour
             if (playerMovement != null)
             {
                 // Check the tag of the collided object and apply the corresponding damage
-                switch (other.tag)
+                switch (other.gameObject.tag) // Access the tag via other.gameObject
                 {
-                    case "heavy":
-                        // Apply damage with player's crit rate and crit damage stats
-                        AIController.TakeDamage(damage, AIController.ArmorStat, AIController.ArmorToughness, playerMovement.critRate, playerMovement.critDamage);
-                        break;
-
-                    case "ground":
-                    case "air":
+                    case "Heavy":
+                    case "Ground":
+                    case "Air":
                         // For ground and air units, we apply damage the same way as for the heavy units
+                        Debug.Log("HitEnemy");
                         AIController.TakeDamage(damage, AIController.ArmorStat, AIController.ArmorToughness, playerMovement.critRate, playerMovement.critDamage);
+                        Destroy(gameObject); // Destroy the projectile instead of the collided object
                         break;
 
                     default:
@@ -48,13 +46,13 @@ public class Bullet : MonoBehaviour
                 Debug.LogWarning("Player Movement not found!");
             }
         }
-
-        // Optional: Destroy the projectile if it collides with an object tagged as "ground"
-        if (other.CompareTag("ground"))
+        else
         {
-            Destroy(other.gameObject);
+            Debug.LogWarning("Collided object does not have an AIUnit component.");
         }
     }
+
+
 
 
 }

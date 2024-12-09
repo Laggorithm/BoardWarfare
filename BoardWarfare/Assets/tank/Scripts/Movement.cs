@@ -12,7 +12,10 @@ public class Movement : MonoBehaviour
     public Transform barrelTransform;  // Reference to the barrel's transform
     public float turretRotationSpeed = 100.0f; // Speed of turret rotation
     public float barrelRotationSpeed = 50.0f;  // Speed of barrel rotation
+    public Transform shootingPoint;
 
+    public GameObject projectilePrefab;
+    public float shootForce = 100f;
     // Rotation limits
     public float maxBarrelRotation = 10.0f; // Maximum upward rotation in degrees
     public float minBarrelRotation = -12.0f; // Maximum downward rotation in degrees
@@ -39,10 +42,12 @@ public class Movement : MonoBehaviour
         rb = GetComponent<Rigidbody>();
         barrel = barrelTransform.GetComponent<Barrel>(); // Get the Barrel script from the barrel transform
         UpdateHealthUI();
+
     }
 
     void Update()
     {
+
         // Get input for movement
         float moveX = Input.GetAxis("Horizontal");
         float moveZ = Input.GetAxis("Vertical");
@@ -118,7 +123,26 @@ public class Movement : MonoBehaviour
             barrelTransform.localRotation = Quaternion.Euler(newRotation, barrelTransform.localEulerAngles.y, barrelTransform.localEulerAngles.z);
         }
     }
+     public void Shoot()
+    {
+        if (shootingPoint != null && projectilePrefab != null)
+        {
+            // Instantiate the projectile at the shooting point's position and rotation
+            GameObject projectile = Instantiate(projectilePrefab, shootingPoint.position, shootingPoint.rotation);
 
+            // Get the Rigidbody component of the projectile to apply force
+            Rigidbody rb = projectile.GetComponent<Rigidbody>();
+            if (rb != null)
+            {
+                // Apply a forward force based on the shootForce value
+                rb.AddForce(shootingPoint.forward * shootForce, ForceMode.VelocityChange);
+            }
+        }
+        else
+        {
+            Debug.LogWarning("Shooting point or projectile prefab not assigned.");
+        }
+    }
     void ApplyRecoil()
     {
         if (rb != null && barrel != null)
@@ -135,6 +159,7 @@ public class Movement : MonoBehaviour
 
             // Trigger the recoil animation via the Barrel script
             barrel.TriggerRecoil();
+            Shoot();
 
             Debug.Log("Recoil applied: Force = " + recoilForce + ", Rotation Torque = " + rotationTorque);
         }
