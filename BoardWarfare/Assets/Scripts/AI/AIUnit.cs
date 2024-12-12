@@ -24,10 +24,11 @@ public class AIUnit : MonoBehaviour
     private float critDamage;
     private NavMeshAgent navMeshAgent;
     private GameObject player;
-
+    private float StatMultiplier;
     void Start()
     {
-
+        StatMultiplier = SpawnManager.Wave.WaveHardnessLevel / 10 + 1;
+        Debug.Log(StatMultiplier);
         player = FindObjectOfType<Movement>().gameObject;
 
         navMeshAgent = GetComponent<NavMeshAgent>();
@@ -36,12 +37,19 @@ public class AIUnit : MonoBehaviour
         agent.avoidancePriority = Random.Range(0, 99); // Randomize or set priorities
                                                        // Random priority between 1 and 100
         InitializeUnitStats();
+        ChangeStats(StatMultiplier);
+       
         StartCoroutine(CheckConditions()); // Periodically check for walls or enemies
     }
-
+        
     private void InitializeUnitStats()
     {
+        
         unitClass = gameObject.tag;
+        switch (SpawnManager.Wave.WaveHardnessLevel)
+        {
+            case 1: break;
+        }
         switch (unitClass)
         {
             case "Ground":
@@ -76,6 +84,15 @@ public class AIUnit : MonoBehaviour
         }
     }
 
+    void ChangeStats(float multiplier)
+    {
+        health *= multiplier;
+        critDamage *= multiplier;
+        critRate *= multiplier;
+        health *= multiplier;
+        Debug.Log(health);
+        attackRange *= multiplier;
+    }
     private IEnumerator CheckConditions()
     {
         while (true)

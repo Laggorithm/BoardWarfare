@@ -13,7 +13,7 @@ public class Movement : MonoBehaviour
     public float turretRotationSpeed = 100.0f; // Speed of turret rotation
     public float barrelRotationSpeed = 50.0f;  // Speed of barrel rotation
     public Transform shootingPoint;
-
+    public bool IsAiming = false;
     public GameObject projectilePrefab;
     public float shootForce = 100f;
     // Rotation limits
@@ -27,7 +27,8 @@ public class Movement : MonoBehaviour
     public float recoilForce = 3.0f; // Adjusted recoil force
     public float forwardForce = 2.0f; // Forward force applied after recoil
     public float rotationTorque = 5.0f; // Torque applied for rotation effect
-
+    public Camera cam1;
+    public Camera cam2;
     public float health = 100;
     public float maxHealth = 100;
     public float armor = 20;
@@ -39,6 +40,7 @@ public class Movement : MonoBehaviour
     public TextMeshProUGUI healthText;
     void Start()
     {
+       
         rb = GetComponent<Rigidbody>();
         barrel = barrelTransform.GetComponent<Barrel>(); // Get the Barrel script from the barrel transform
         UpdateHealthUI();
@@ -91,6 +93,11 @@ public class Movement : MonoBehaviour
         {
             RotateBarrel(-barrelRotationSpeed);
         }
+        if (Input.GetKey(KeyCode.C))
+        {
+        
+            IsAiming = true;
+        }
     }
 
     void FixedUpdate()
@@ -101,7 +108,6 @@ public class Movement : MonoBehaviour
             ApplyRecoil();
         }
     }
-
     void RotateTurret(float amount)
     {
         if (turret != null)

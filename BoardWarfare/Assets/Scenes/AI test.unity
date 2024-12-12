@@ -123,6 +123,16 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 23800000, guid: 3587ffcccb4ce09468db32e34dc61f90, type: 2}
+--- !u!20 &1246566584 stripped
+Camera:
+  m_CorrespondingSourceObject: {fileID: 48226345092543446, guid: b216352d0b7c73746847d8f54083ad12, type: 3}
+  m_PrefabInstance: {fileID: 1664140442741523573}
+  m_PrefabAsset: {fileID: 0}
+--- !u!20 &1679368835 stripped
+Camera:
+  m_CorrespondingSourceObject: {fileID: 1664140442884568166, guid: b216352d0b7c73746847d8f54083ad12, type: 3}
+  m_PrefabInstance: {fileID: 1664140442741523573}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1001 &1664140442741523573
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -182,10 +192,22 @@ PrefabInstance:
       propertyPath: m_Name
       value: Map
       objectReference: {fileID: 0}
+    - target: {fileID: 1664140442535547354, guid: b216352d0b7c73746847d8f54083ad12, type: 3}
+      propertyPath: HealPrefab
+      value: 
+      objectReference: {fileID: 4396887310947243203, guid: 25639045aaff78148b7226d44fc5111d, type: 3}
     - target: {fileID: 1664140442535547355, guid: b216352d0b7c73746847d8f54083ad12, type: 3}
       propertyPath: m_IsActive
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 1664140442741523575, guid: b216352d0b7c73746847d8f54083ad12, type: 3}
+      propertyPath: cam1
+      value: 
+      objectReference: {fileID: 1679368835}
+    - target: {fileID: 1664140442741523575, guid: b216352d0b7c73746847d8f54083ad12, type: 3}
+      propertyPath: cam2
+      value: 
+      objectReference: {fileID: 1246566584}
     - target: {fileID: 1664140442741523575, guid: b216352d0b7c73746847d8f54083ad12, type: 3}
       propertyPath: armor
       value: 2000
@@ -197,6 +219,46 @@ PrefabInstance:
     - target: {fileID: 1664140442741523575, guid: b216352d0b7c73746847d8f54083ad12, type: 3}
       propertyPath: armorToughness
       value: 10000
+      objectReference: {fileID: 0}
+    - target: {fileID: 1664140442884568165, guid: b216352d0b7c73746847d8f54083ad12, type: 3}
+      propertyPath: m_Name
+      value: cam1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1664140442884568165, guid: b216352d0b7c73746847d8f54083ad12, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 1664140442884568165, guid: b216352d0b7c73746847d8f54083ad12, type: 3}
+      propertyPath: m_TagString
+      value: MainCamera
+      objectReference: {fileID: 0}
+    - target: {fileID: 8090042506324935202, guid: b216352d0b7c73746847d8f54083ad12, type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 8600191300141048344, guid: b216352d0b7c73746847d8f54083ad12, type: 3}
+      propertyPath: offset.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8600191300141048344, guid: b216352d0b7c73746847d8f54083ad12, type: 3}
+      propertyPath: offset.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8600191300141048344, guid: b216352d0b7c73746847d8f54083ad12, type: 3}
+      propertyPath: offset.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8745756745368227715, guid: b216352d0b7c73746847d8f54083ad12, type: 3}
+      propertyPath: m_Name
+      value: cam2
+      objectReference: {fileID: 0}
+    - target: {fileID: 8745756745368227715, guid: b216352d0b7c73746847d8f54083ad12, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8745756745368227715, guid: b216352d0b7c73746847d8f54083ad12, type: 3}
+      propertyPath: m_TagString
+      value: MainCamera
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: b216352d0b7c73746847d8f54083ad12, type: 3}

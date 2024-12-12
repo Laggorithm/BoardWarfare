@@ -17,6 +17,7 @@ public class SpawnManager : MonoBehaviour
         public int GroundMobs; // Number of ground mobs
         public int HeavyMobs; // Number of heavy mobs
         public int AirMobs; // Number of air mobs
+        public static float WaveHardnessLevel;
     }
 
     // Unified spawn spots for walls and tall walls
@@ -65,6 +66,8 @@ public class SpawnManager : MonoBehaviour
 
     public void ExecuteWave(int waveID)
     {
+        Wave.WaveHardnessLevel = Random.Range(1, 3);
+        Debug.Log(Wave.WaveHardnessLevel);
         // Find the wave with the given ID
         Wave wave = Waves.Find(w => w.ID == waveID);
         if (wave == null)
@@ -113,6 +116,8 @@ public class SpawnManager : MonoBehaviour
 
         ExecuteWave(selectedWave.ID);
     }
+
+
     private void SpawnRandomizedWallPrefabs()
     {
         List<SpawnSpot> shuffledSpots = new List<SpawnSpot>(WallAndTallWallSpots);
