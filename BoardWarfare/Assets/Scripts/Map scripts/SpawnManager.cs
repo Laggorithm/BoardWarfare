@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
@@ -36,8 +37,17 @@ public class SpawnManager : MonoBehaviour
     public GameObject HeavyMobPrefab;
     public GameObject AirMobPrefab;
 
+    private List<GameObject> spawnedWalls = new List<GameObject>();
+    private List<GameObject> spawnedTallWalls = new List<GameObject>();
+    private List<GameObject> spawnedMobs = new List<GameObject>();
+
+    public int waveEffectValue = 0;
+    public string WaveEffectName;
+    public Movement movement;
     private void Start()
     {
+        
+
         Debug.Log("SpawnManager Start called.");
 
         if (WallAndTallWallSpots.Count == 0)
@@ -53,6 +63,93 @@ public class SpawnManager : MonoBehaviour
 
         // Randomly pick and execute a wave
         ExecuteRandomWave();
+        RollWaveEffect();
+        StartCoroutine(CheckMapForMobs());
+        
+    }
+    private IEnumerator CheckMapForMobs()
+    {
+        while (true)
+        {
+            // Remove null (destroyed) entries from the list
+            spawnedMobs.RemoveAll(mob => mob == null);
+
+            // If all tracked mobs are destroyed, clear the map and start a new wave
+            if (spawnedMobs.Count == 0)
+            {
+                Debug.Log("All tracked mobs are destroyed. Clearing the map and spawning a new wave.");
+
+                ClearSpawnedObjects(); // Clear the map
+                yield return new WaitForSeconds(1f); // Small delay for clearing
+
+                SpawnRandomizedWallPrefabs(); // Spawn new walls and tall walls
+                ExecuteRandomWave(); // Spawn a new random wave
+                RollWaveEffect();
+                 
+                
+            }
+
+            // Wait before the next check
+            yield return new WaitForSeconds(1f);
+        }
+    }
+
+    public int RollWaveEffect()
+    {
+        int rolledNumber = Random.Range(1, 5);  // Generates a number between 1 and 4
+        waveEffectValue = rolledNumber;  // Set the wave effect value to the rolled number
+
+        Debug.Log($"Wave Effect Rolled: {rolledNumber}. Current total: {waveEffectValue}");
+        
+
+        return rolledNumber;  // Return the rolled number
+    }
+
+    private void ClearSpawnedObjects()
+    {
+        // Destroy all mobs
+        foreach (GameObject mob in spawnedMobs)
+        {
+            if (mob != null) Destroy(mob);
+        }
+        spawnedMobs.Clear(); // Clear the tracking list for mobs
+
+        // Destroy all walls
+        foreach (GameObject wall in spawnedWalls)
+        {
+            if (wall != null) Destroy(wall);
+        }
+        spawnedWalls.Clear(); // Clear the tracking list for walls
+
+        // Destroy all tall walls
+        foreach (GameObject tallWall in spawnedTallWalls)
+        {
+            if (tallWall != null) Destroy(tallWall);
+        }
+        spawnedTallWalls.Clear(); // Clear the tracking list for tall walls
+
+        // Reset the "isOccupied" flag for all spawn spots
+        foreach (SpawnSpot spot in WallAndTallWallSpots)
+            spot.isOccupied = false;
+
+        foreach (SpawnSpot spot in HealSpots)
+            spot.isOccupied = false;
+
+        foreach (SpawnSpot spot in MobSpots)
+            spot.isOccupied = false;
+
+        Debug.Log("Cleared all spawned objects and reset spawn spots.");
+    }
+
+
+
+    private void DestroyAllWithTag(string tag)
+    {
+        GameObject[] objects = GameObject.FindGameObjectsWithTag(tag);
+        foreach (GameObject obj in objects)
+        {
+            Destroy(obj);
+        }
     }
 
     public void SpawnPrefabs()
@@ -139,7 +236,7 @@ public class SpawnManager : MonoBehaviour
                 GameObject prefabToSpawn = spawned < wallCount ? WallPrefab : TallWallPrefab;
                 Debug.Log($"Attempting to spawn {prefabToSpawn.name} at {spot.spotTransform.position}");
 
-                // Instantiate the prefab and mark the spot as occupied, adjusting Y to 0.6f for walls
+                // Instantiate the prefab and adjust Y to 0.6f for walls
                 Vector3 spawnPosition = new Vector3(spot.spotTransform.position.x, 0.6f, spot.spotTransform.position.z);
                 GameObject spawnedPrefab = Instantiate(prefabToSpawn, spawnPosition, spot.spotTransform.rotation);
 
@@ -147,6 +244,11 @@ public class SpawnManager : MonoBehaviour
                 if (prefabToSpawn == WallPrefab)
                 {
                     spawnedPrefab.transform.Rotate(0f, -90f, 0f);
+                    spawnedWalls.Add(spawnedPrefab); // Track spawned wall
+                }
+                else
+                {
+                    spawnedTallWalls.Add(spawnedPrefab); // Track spawned tall wall
                 }
 
                 spot.isOccupied = true;
@@ -160,6 +262,7 @@ public class SpawnManager : MonoBehaviour
             }
         }
     }
+
 
     private void SpawnRandomizedPrefabs(List<SpawnSpot> spots, GameObject prefab, int minCount, int maxCount)
     {
@@ -203,14 +306,19 @@ public class SpawnManager : MonoBehaviour
             {
                 // Adjust the Y position to 5 for spawning mobs
                 Vector3 spawnPosition = new Vector3(spot.spotTransform.position.x, 5f, spot.spotTransform.position.z);
-                Instantiate(prefab, spawnPosition, spot.spotTransform.rotation);
+                GameObject mob = Instantiate(prefab, spawnPosition, spot.spotTransform.rotation);
+
+                // Add the mob to the list for tracking
+                spawnedMobs.Add(mob);
+
                 spot.isOccupied = true; // Mark spot as occupied
                 spawned++;
             }
         }
 
         Debug.Log($"Spawned {spawned}/{count} {prefab.name}(s).");
-    }
+    }   
+
 
     private void ShuffleList<T>(List<T> list)
     {

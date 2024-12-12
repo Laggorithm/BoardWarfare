@@ -1,6 +1,8 @@
 ﻿using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
+using System.Collections;
 
 public class Movement : MonoBehaviour
 {
@@ -35,11 +37,14 @@ public class Movement : MonoBehaviour
     public float armorToughness = 10;  // Placeholder value for armor toughness
     public float critRate = 30.0f;     // Placeholder crit rate
     public float critDamage = 150.0f;  // Placeholder crit damage
-
+    float MaxHp;
     public Image healthBar;
     public TextMeshProUGUI healthText;
+    SpawnManager spawnManager;
+    bool isBuffApplied;
     void Start()
     {
+        MaxHp = health;
        
         rb = GetComponent<Rigidbody>();
         barrel = barrelTransform.GetComponent<Barrel>(); // Get the Barrel script from the barrel transform
@@ -49,7 +54,7 @@ public class Movement : MonoBehaviour
 
     void Update()
     {
-
+        
         // Get input for movement
         float moveX = Input.GetAxis("Horizontal");
         float moveZ = Input.GetAxis("Vertical");
@@ -99,7 +104,45 @@ public class Movement : MonoBehaviour
             IsAiming = true;
         }
     }
+    public IEnumerator AddBuffs()
+    {
+        yield return new WaitForSeconds(2);
+        // Set the flag to true so buffs won't be applied again
+        isBuffApplied = true;
+        Debug.Log("Applying Debuffs..");
+        Debug.Log(spawnManager.waveEffectValue);
+        // Apply buffs based on the wave effect
+        switch (spawnManager.waveEffectValue)
+        {
+            case 1:
+                // Buff 1: Increase health by max health + 20
+                Debug.Log("Buff 1 applied!");
+                health += maxHealth + 20;
+                break;
 
+            case 2:
+                // Buff 2: Increase armor by 10
+                Debug.Log("Buff 2 applied!");
+                armor += 10;
+                break;
+
+            case 3:
+                // Buff 3: Speed boost (call a function to apply speed effect)
+                Debug.Log("Buff 3 applied!");
+                EffectSpeed();
+                break;
+
+            case 4:
+                // Buff 4: Increase health by 10
+                Debug.Log("Buff 4 applied!");
+                health += 10;
+                break;
+
+            default:
+                Debug.Log("No buff applied.");
+                break;
+        }
+    }
     void FixedUpdate()
     {
         // Apply recoil in FixedUpdate for accurate physics
@@ -198,16 +241,17 @@ public class Movement : MonoBehaviour
         // Check if health has dropped to zero or below
         if (health <= 0)
         {
-            Destroy(gameObject); // Destroy the object upon death
+            SceneManager.LoadScene("MainMenu"); // Destroy the object upon death
         }
     }
+    
+    
 
     // Effect methods (placeholder effects for increasing stats)
     public void EffectHP()
     {
-        maxHealth += 10;
-        health = Mathf.Min(health + 10, maxHealth);
-        Debug.Log($"Health increased to {health}/{maxHealth}");
+        health = MaxHp + 10;
+        Debug.Log($"Health increased to {health}/{MaxHp}");
         UpdateHealthUI();
     }
 
