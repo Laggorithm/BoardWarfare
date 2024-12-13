@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
@@ -17,7 +17,7 @@ public class AIUnit : MonoBehaviour
     private Transform ChosenEnemyUnit;
     private Transform TargetWallShort;
     private string unitClass;
-    private float health;
+    public float health;
     public float ArmorStat;
     public float ArmorToughness;
     private float critRate;

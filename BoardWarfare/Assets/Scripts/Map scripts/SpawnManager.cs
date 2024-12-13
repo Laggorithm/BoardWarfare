@@ -289,7 +289,7 @@ public class SpawnManager : MonoBehaviour
         }
     }
 
-    private void SpawnMobs(GameObject prefab, int count)
+    public void SpawnMobs(GameObject prefab, int count)
     {
         if (count <= 0 || prefab == null) return;
 

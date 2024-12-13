@@ -9,6 +9,7 @@ public class ToggleUI : MonoBehaviour
     public Button showButton;
     public Button hideButton;
     public Movement movement;
+    public GameObject Storee;
 
     public void ShowElement()
     {
@@ -34,20 +35,24 @@ public class ToggleUI : MonoBehaviour
     {
         Debug.Log("Hp");
         movement.EffectHP();
+        Storee.SetActive(false);
     }
     public void Def()
     {
         Debug.Log("Def");
         movement.EffectDef();
+        Storee.SetActive(false);
     }
     public void Speed()
     {
         Debug.Log("Speed");
         movement.EffectSpeed();
+        Storee.SetActive(false);
     }
     public void Free()
     {
         Debug.Log("Free");
+        Storee.SetActive(false);
         // effect
     }
 }

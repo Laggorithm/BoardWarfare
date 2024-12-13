@@ -3,6 +3,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using System.Collections;
+using UnityEngine.SceneManagement;
 
 public class Movement : MonoBehaviour
 {
@@ -37,15 +38,18 @@ public class Movement : MonoBehaviour
     public float armorToughness = 10;  // Placeholder value for armor toughness
     public float critRate = 30.0f;     // Placeholder crit rate
     public float critDamage = 150.0f;  // Placeholder crit damage
-    float MaxHp;
     public Image healthBar;
     public TextMeshProUGUI healthText;
     SpawnManager spawnManager;
     bool isBuffApplied;
+    public GameObject Store;
     void Start()
     {
-        MaxHp = health;
-       
+        maxHealth = health;
+        if (Store == null)
+        {
+            Debug.LogWarning("Store object is not assigned!");
+        }
         rb = GetComponent<Rigidbody>();
         barrel = barrelTransform.GetComponent<Barrel>(); // Get the Barrel script from the barrel transform
         UpdateHealthUI();
@@ -54,7 +58,7 @@ public class Movement : MonoBehaviour
 
     void Update()
     {
-        
+        CheckEnemies();
         // Get input for movement
         float moveX = Input.GetAxis("Horizontal");
         float moveZ = Input.GetAxis("Vertical");
@@ -118,6 +122,11 @@ public class Movement : MonoBehaviour
                 // Buff 1: Increase health by max health + 20
                 Debug.Log("Buff 1 applied!");
                 health += maxHealth + 20;
+                if (health > maxHealth)
+                {
+                    health = maxHealth;
+                }
+                UpdateHealthUI();
                 break;
 
             case 2:
@@ -136,6 +145,11 @@ public class Movement : MonoBehaviour
                 // Buff 4: Increase health by 10
                 Debug.Log("Buff 4 applied!");
                 health += 10;
+                if (health > maxHealth)
+                {
+                    health = maxHealth;
+                }
+                UpdateHealthUI();
                 break;
 
             default:
@@ -241,7 +255,7 @@ public class Movement : MonoBehaviour
         // Check if health has dropped to zero or below
         if (health <= 0)
         {
-            SceneManager.LoadScene("MainMenu"); // Destroy the object upon death
+            ChangeScene("GameOver");
         }
     }
     
@@ -250,8 +264,9 @@ public class Movement : MonoBehaviour
     // Effect methods (placeholder effects for increasing stats)
     public void EffectHP()
     {
-        health = MaxHp + 10;
-        Debug.Log($"Health increased to {health}/{MaxHp}");
+        maxHealth = maxHealth + 10;
+        health = health + 10;
+        Debug.Log($"Health increased to {health}/{maxHealth}");
         UpdateHealthUI();
     }
 
@@ -284,5 +299,28 @@ public class Movement : MonoBehaviour
             healthBar.fillAmount = health / maxHealth;
             healthText.text = $"{health}/{maxHealth}";
         }
+    }
+    public void CheckEnemies()
+    {
+        if (AreAIUnitsPresent())
+        {
+            Debug.Log("Enemies are still present!");
+        }
+        else
+        {
+            Debug.Log("No enemies remaining!");
+            Store.SetActive(true);
+        }
+    }
+
+    public bool AreAIUnitsPresent()
+    {
+        // Check if there are any AI units in the scene
+        AIUnit[] aiUnits = FindObjectsOfType<AIUnit>();
+        return aiUnits != null && aiUnits.Length > 0;
+    }
+    public void ChangeScene(string sceneName)
+    {
+        SceneManager.LoadScene(sceneName);
     }
 }
