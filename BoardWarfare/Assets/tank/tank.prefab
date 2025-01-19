@@ -220,6 +220,7 @@ MonoBehaviour:
   critDamage: 150
   healthBar: {fileID: 0}
   healthText: {fileID: 0}
+  Store: {fileID: 0}
 --- !u!1 &7946352529670243082
 GameObject:
   m_ObjectHideFlags: 0
