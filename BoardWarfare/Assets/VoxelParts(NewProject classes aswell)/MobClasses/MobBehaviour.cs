@@ -26,9 +26,10 @@ public class MobBehaviour : MonoBehaviour
         navMeshAgent = GetComponent<NavMeshAgent>();
         navMeshAgent.radius = 0.5f; // Adjust the radius based on your unit size
         navMeshAgent.avoidancePriority = Random.Range(0, 99); // Randomize or set priorities
+        navMeshAgent.updateRotation = false; // Disable automatic rotation to manually handle it
 
         // Start the wandering behavior
-        StartCoroutine(CheckConditions());
+        StartCoroutine(Wander());
     }
 
     private void InitializeUnitStats()
@@ -62,68 +63,50 @@ public class MobBehaviour : MonoBehaviour
         }
     }
 
-    private IEnumerator CheckConditions()
-    {
-        while (true)
-        {
-            // If no actions are pending, enqueue wandering
-            if (actionQueue.Count == 0 && !isPerformingAction)
-            {
-                EnqueueAction(Wander);
-            }
-
-            yield return new WaitForSeconds(2f); // Re-evaluate conditions periodically
-        }
-    }
-
-    private void EnqueueAction(System.Func<IEnumerator> action)
-    {
-        actionQueue.Enqueue(action());
-        if (!isPerformingAction)
-        {
-            StartCoroutine(ExecuteActions());
-        }
-    }
-
-    private IEnumerator ExecuteActions()
-    {
-        isPerformingAction = true;
-        while (actionQueue.Count > 0)
-        {
-            yield return StartCoroutine(actionQueue.Dequeue());
-        }
-        isPerformingAction = false;
-    }
-
     private IEnumerator Wander()
     {
-        Animator animator = GetComponent<Animator>();
+        // Define the area where the mob will wander
+        float minX = transform.position.x - wanderRange;
+        float maxX = transform.position.x + wanderRange;
+        float minZ = transform.position.z - wanderRange;
+        float maxZ = transform.position.z + wanderRange;
 
-        // Define the map boundaries
-        float minX = 145f, maxX = 180f;
-        float minZ = -83f, maxZ = 0f;
-
-        // Calculate a random wander position
-        desiredPosition = new Vector3(
-            Random.Range(minX, maxX),
-            transform.position.y, // Keep the current Y position
-            Random.Range(minZ, maxZ)
-        );
-
-        // Set the NavMeshAgent's destination to the desired position
-        navMeshAgent.SetDestination(desiredPosition);
-
-        // Wait until the agent reaches the destination
-        animator.SetBool("Walking", true);
-        while (navMeshAgent.pathPending || navMeshAgent.remainingDistance > navMeshAgent.stoppingDistance)
+        while (true)
         {
-            yield return null;
+            // Choose a random position within the wander range
+            desiredPosition = new Vector3(
+                Random.Range(minX, maxX),
+                transform.position.y, // Keep the current Y position
+                Random.Range(minZ, maxZ)
+            );
+
+            // Ensure the chosen position is on the NavMesh
+            NavMeshHit hit;
+            if (NavMesh.SamplePosition(desiredPosition, out hit, wanderRange, NavMesh.AllAreas))
+            {
+                // Set the NavMeshAgent's destination
+                navMeshAgent.SetDestination(hit.position);
+
+                // Manually rotate the mob to face the new direction
+                while (navMeshAgent.pathPending || navMeshAgent.remainingDistance > navMeshAgent.stoppingDistance)
+                {
+                    // Get direction of movement
+                    Vector3 direction = -navMeshAgent.velocity;
+
+                    // If the velocity direction is not zero, rotate the mob
+                    if (direction != Vector3.zero)
+                    {
+                        // Make the mob rotate smoothly towards the direction of movement
+                        Quaternion toRotation = Quaternion.LookRotation(direction);
+                        transform.rotation = Quaternion.RotateTowards(transform.rotation, toRotation, rotationSpeed * Time.deltaTime);
+                    }
+
+                    yield return null;
+                }
+            }
+
+            // Wait before choosing a new destination
+            yield return new WaitForSeconds(2f);
         }
-
-        // Stop the walking animation when the unit arrives
-        animator.SetBool("Walking", false);
-
-        // Wait before wandering again
-        yield return new WaitForSeconds(1f); // Pause before the next wander action
     }
 }

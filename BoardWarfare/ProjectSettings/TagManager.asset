@@ -13,6 +13,7 @@ TagManager:
   - Obstacle
   - ShootingPoint
   - Projectile
+  - MobSpawn
   layers:
   - Default
   - TransparentFX
