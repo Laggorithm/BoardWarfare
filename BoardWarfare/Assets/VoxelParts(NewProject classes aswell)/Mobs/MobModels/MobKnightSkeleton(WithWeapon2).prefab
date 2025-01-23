@@ -10,7 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2043843540517612454}
   m_Layer: 0
-  m_Name: PivotFinger1R
+  m_Name: PivotFinger1R 4
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -56,7 +56,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2043843541622192628}
-  m_LocalRotation: {x: 0, y: -1, z: 0, w: 0}
+  m_LocalRotation: {x: 0.15320218, y: -0.77783793, z: -0.25155905, w: -0.5551714}
   m_LocalPosition: {x: -0.137, y: -0.06610261, z: -0.12710302}
   m_LocalScale: {x: 0.7, y: 0.7, z: 0.7}
   m_ConstrainProportionsScale: 1
@@ -65,7 +65,7 @@ Transform:
   - {fileID: 2043843541875568473}
   m_Father: {fileID: 8528373785913074345}
   m_RootOrder: 5
-  m_LocalEulerAnglesHint: {x: 0, y: -180, z: 0}
+  m_LocalEulerAnglesHint: {x: -34.156, y: -251.906, z: 2.839}
 --- !u!1 &2043843541875568474
 GameObject:
   m_ObjectHideFlags: 0
@@ -76,7 +76,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2043843541875568473}
   m_Layer: 0
-  m_Name: PivotFinger2L
+  m_Name: PivotFinger2LThumb
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -89,7 +89,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2043843541875568474}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: 0.0000000074505797, z: -0.39524606, w: 0.9185753}
   m_LocalPosition: {x: 0, y: -0.11989683, z: -0.0038988143}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -97,7 +97,7 @@ Transform:
   - {fileID: 2006223488071951964}
   m_Father: {fileID: 2043843541622192635}
   m_RootOrder: 1
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: -46.563}
 --- !u!1 &2043843542246522798
 GameObject:
   m_ObjectHideFlags: 0
@@ -108,7 +108,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2043843542246522797}
   m_Layer: 0
-  m_Name: PivotFinger2R
+  m_Name: PivotFinger2R 3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -205,7 +205,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8528373784332314159}
   m_Layer: 0
-  m_Name: PivotFinger2R
+  m_Name: PivotFinger2R 4
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -368,7 +368,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8528373784770472999}
   m_Layer: 0
-  m_Name: PivotFinger2R
+  m_Name: PivotFinger2R Thumb
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -413,7 +413,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8528373784895435872}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0.00000007205735, y: 0.00000007327092, z: -0.3768153, w: 0.9262884}
   m_LocalPosition: {x: 0, y: -0.11999855, z: -0.0033977777}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -421,7 +421,7 @@ Transform:
   - {fileID: 8201168963600101939}
   m_Father: {fileID: 8528373786046830410}
   m_RootOrder: 1
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: -44.273}
 --- !u!1 &8528373784898135811
 GameObject:
   m_ObjectHideFlags: 0
@@ -506,7 +506,7 @@ NavMeshAgent:
   m_AngularSpeed: 120
   m_StoppingDistance: 0
   m_AutoTraverseOffMeshLink: 1
-  m_AutoBraking: 1
+  m_AutoBraking: 0
   m_AutoRepath: 1
   m_Height: 3
   m_BaseOffset: 0
@@ -537,7 +537,7 @@ Animator:
   m_Controller: {fileID: 9100000, guid: e50085098cf5f1a449f6efbc06c80d79, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 0
-  m_ApplyRootMotion: 0
+  m_ApplyRootMotion: 1
   m_LinearVelocityBlending: 0
   m_StabilizeFeet: 0
   m_WarningMessage: 
@@ -632,7 +632,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8528373784936091393}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0.00000007205735, y: 0.00000007327092, z: -0.3768153, w: 0.9262884}
   m_LocalPosition: {x: 0, y: -0.119697034, z: -0.0033972617}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -640,7 +640,7 @@ Transform:
   - {fileID: 8201168965153745337}
   m_Father: {fileID: 8528373785639213510}
   m_RootOrder: 1
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: -44.273}
 --- !u!1 &8528373784970404326
 GameObject:
   m_ObjectHideFlags: 0
@@ -685,7 +685,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8528373784980248773}
   m_Layer: 0
-  m_Name: PivotFinger2R
+  m_Name: PivotFinger2R 2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -851,7 +851,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8528373785415367000}
   m_Layer: 0
-  m_Name: PivotFinger2R
+  m_Name: PivotFinger2R 1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -915,7 +915,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8528373785510496132}
   m_Layer: 0
-  m_Name: PivotFinger1R
+  m_Name: PivotFinger1R 3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -948,7 +948,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8528373785639213510}
   m_Layer: 0
-  m_Name: PivotFinger1L
+  m_Name: PivotFinger1L1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -961,7 +961,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8528373785639213511}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: 0.000000007450579, y: -0, z: -0.2069936, w: 0.97834235}
   m_LocalPosition: {x: 0.1113013, y: -0.07030259, z: 0.025396539}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -970,7 +970,7 @@ Transform:
   - {fileID: 8528373784936091392}
   m_Father: {fileID: 8528373785913074345}
   m_RootOrder: 1
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: -23.892}
 --- !u!1 &8528373785650850941
 GameObject:
   m_ObjectHideFlags: 0
@@ -994,7 +994,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8528373785650850941}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0.00000007205735, y: 0.00000007327092, z: -0.3768153, w: 0.9262884}
   m_LocalPosition: {x: 0, y: -0.11989683, z: -0.0038988143}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -1002,7 +1002,7 @@ Transform:
   - {fileID: 8201168965026313804}
   m_Father: {fileID: 8528373786091089729}
   m_RootOrder: 1
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: -44.273}
 --- !u!1 &8528373785793185945
 GameObject:
   m_ObjectHideFlags: 0
@@ -1121,7 +1121,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8528373786046830410}
   m_Layer: 0
-  m_Name: PivotFinger1L
+  m_Name: PivotFinger1L2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1134,7 +1134,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8528373786046830411}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: 0.000000007450579, y: -0, z: -0.2069936, w: 0.97834235}
   m_LocalPosition: {x: 0.1113013, y: -0.06800196, z: -0.058602177}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -1143,7 +1143,7 @@ Transform:
   - {fileID: 8528373784895435875}
   m_Father: {fileID: 8528373785913074345}
   m_RootOrder: 2
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: -23.892}
 --- !u!1 &8528373786091089790
 GameObject:
   m_ObjectHideFlags: 0
@@ -1154,7 +1154,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8528373786091089729}
   m_Layer: 0
-  m_Name: PivotFinger1L
+  m_Name: PivotFinger1L3
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1167,7 +1167,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8528373786091089790}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: 0.000000007450579, y: -0, z: -0.2069936, w: 0.97834235}
   m_LocalPosition: {x: 0.1113013, y: -0.06610261, z: -0.12710302}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -1176,7 +1176,7 @@ Transform:
   - {fileID: 8528373785650850940}
   m_Father: {fileID: 8528373785913074345}
   m_RootOrder: 3
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: -23.892}
 --- !u!1 &8528373786172466015
 GameObject:
   m_ObjectHideFlags: 0
@@ -1187,7 +1187,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8528373786172466014}
   m_Layer: 0
-  m_Name: PivotFinger1L
+  m_Name: PivotFinger1L4
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1200,7 +1200,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8528373786172466015}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: 0.000000007450579, y: -0, z: -0.2069936, w: 0.97834235}
   m_LocalPosition: {x: 0.1113013, y: -0.07300081, z: 0.12200035}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -1209,7 +1209,7 @@ Transform:
   - {fileID: 8528373786280216965}
   m_Father: {fileID: 8528373785913074345}
   m_RootOrder: 4
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: -23.892}
 --- !u!1 &8528373786280216962
 GameObject:
   m_ObjectHideFlags: 0
@@ -1233,7 +1233,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8528373786280216962}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0.00000007205735, y: 0.00000007327092, z: -0.3768153, w: 0.9262884}
   m_LocalPosition: {x: 0, y: -0.12000003, z: -0.0030008778}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -1241,7 +1241,7 @@ Transform:
   - {fileID: 8201168963708051173}
   m_Father: {fileID: 8528373786172466014}
   m_RootOrder: 1
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: -44.273}
 --- !u!1 &8528373786344643076
 GameObject:
   m_ObjectHideFlags: 0
@@ -1252,7 +1252,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8528373786344643079}
   m_Layer: 0
-  m_Name: PivotFinger1R
+  m_Name: PivotFinger1R 1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1285,7 +1285,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8528373786347544005}
   m_Layer: 0
-  m_Name: PivotFinger1R
+  m_Name: PivotFinger1R 2
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
