@@ -1,4 +1,4 @@
-using System.Collections;
+﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
@@ -6,7 +6,7 @@ using UnityEngine.AI;
 public class MobBehaviour : MonoBehaviour
 {
     private Queue<IEnumerator> actionQueue = new Queue<IEnumerator>();
-    private bool isPerformingAction = false; // Tracks if an action is being executed
+    private bool isPerformingAction = false;
     private Vector3 desiredPosition;
     private int rotationSpeed = 150;
     private float wanderRange = 15f;
@@ -16,17 +16,21 @@ public class MobBehaviour : MonoBehaviour
     private string unitClass;
     private float health;
     private NavMeshAgent navMeshAgent;
+    private Animator animator; // Ссылка на Animator
 
     void Start()
     {
+        // Получаем компонент Animator
+        animator = GetComponent<Animator>();
+
         // Initialize stats based on wave difficulty and unit class
         InitializeUnitStats();
 
         // Initialize the NavMeshAgent for movement
         navMeshAgent = GetComponent<NavMeshAgent>();
-        navMeshAgent.radius = 0.5f; // Adjust the radius based on your unit size
-        navMeshAgent.avoidancePriority = Random.Range(0, 99); // Randomize or set priorities
-        navMeshAgent.updateRotation = false; // Disable automatic rotation to manually handle it
+        navMeshAgent.radius = 0.5f;
+        navMeshAgent.avoidancePriority = Random.Range(0, 99);
+        navMeshAgent.updateRotation = false;
 
         // Start the wandering behavior
         StartCoroutine(Wander());
@@ -65,7 +69,6 @@ public class MobBehaviour : MonoBehaviour
 
     private IEnumerator Wander()
     {
-        // Define the area where the mob will wander
         float minX = transform.position.x - wanderRange;
         float maxX = transform.position.x + wanderRange;
         float minZ = transform.position.z - wanderRange;
@@ -73,30 +76,33 @@ public class MobBehaviour : MonoBehaviour
 
         while (true)
         {
-            // Choose a random position within the wander range
+            // Включаем триггер для перехода к анимации ходьбы
+            animator.SetTrigger("InToWalking");
+            yield return new WaitForSeconds(2f); // Ждём 2 секунды (120 кадров, 60 FPS)
+
+            // Активируем анимацию ходьбы
+            animator.SetBool("Walking", true);
+
+            // Выбираем новую точку для движения
             desiredPosition = new Vector3(
                 Random.Range(minX, maxX),
-                transform.position.y, // Keep the current Y position
+                transform.position.y,
                 Random.Range(minZ, maxZ)
             );
 
-            // Ensure the chosen position is on the NavMesh
+            // Проверяем, находится ли позиция на NavMesh
             NavMeshHit hit;
             if (NavMesh.SamplePosition(desiredPosition, out hit, wanderRange, NavMesh.AllAreas))
             {
-                // Set the NavMeshAgent's destination
                 navMeshAgent.SetDestination(hit.position);
 
-                // Manually rotate the mob to face the new direction
+                // Поворачиваем персонажа к цели
                 while (navMeshAgent.pathPending || navMeshAgent.remainingDistance > navMeshAgent.stoppingDistance)
                 {
-                    // Get direction of movement
                     Vector3 direction = -navMeshAgent.velocity;
 
-                    // If the velocity direction is not zero, rotate the mob
                     if (direction != Vector3.zero)
                     {
-                        // Make the mob rotate smoothly towards the direction of movement
                         Quaternion toRotation = Quaternion.LookRotation(direction);
                         transform.rotation = Quaternion.RotateTowards(transform.rotation, toRotation, rotationSpeed * Time.deltaTime);
                     }
@@ -105,8 +111,11 @@ public class MobBehaviour : MonoBehaviour
                 }
             }
 
-            // Wait before choosing a new destination
-            yield return new WaitForSeconds(2f);
+            // Персонаж остановился, отключаем анимацию ходьбы
+            animator.SetBool("Walking", false);
+
+            // Ждём 7 секунд (420 кадров, 60 FPS) перед следующим циклом
+            yield return new WaitForSeconds(7f);
         }
     }
 }
