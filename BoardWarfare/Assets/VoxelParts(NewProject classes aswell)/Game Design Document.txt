@@ -1,6 +1,11 @@
 ----------
 Movement:
 ----------
+
+WASD
+Shift - Run
+Ctrl - crouch
+Shift + Ctrl - slide (possibly with short immunity to dodge)
 Player Movement System - `PlayerMovement` Class
 
 The `PlayerMovement` class is responsible for handling the player's movement, including walking, sprinting, crouching, sliding, and jumping. It uses Unity's `CharacterController` component for smooth and physics-based player movement. Below are the key features and behaviors of the system:
