@@ -166,6 +166,9 @@ MonoBehaviour:
     rectangleHeight: 2
     rectangleWidth: 2
     initialDamage: 3
+    spellDuration: 3
+    enableBlinking: 0
+    blinkCount: 3
     blinkFrequency: 0.1
     rectangleObject: {fileID: 1822598017}
 --- !u!4 &138097396
@@ -396,6 +399,7 @@ GameObject:
   - component: {fileID: 852839267}
   - component: {fileID: 852839272}
   - component: {fileID: 852839273}
+  - component: {fileID: 852839274}
   m_Layer: 0
   m_Name: Cylinder
   m_TagString: Untagged
@@ -520,11 +524,13 @@ MonoBehaviour:
   walkSpeed: 6
   sprintSpeed: 9
   crouchSpeed: 3
-  jumpForce: 8
   gravity: 20
   crouchHeight: 0.5
   slideDuration: 1
   slideSpeed: 25
+  dashDistance: 5
+  dashDuration: 0.5
+  dashCooldown: 0.1
 --- !u!114 &852839273
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -539,6 +545,20 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   spellQ: {fileID: 1872847156}
   spellE: {fileID: 138097395}
+--- !u!114 &852839274
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 852839266}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9ff89d39b04c21b449d9ec471f85efb6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  weapon1: {fileID: 0}
+  weapon2: {fileID: 0}
 --- !u!1 &912695532
 GameObject:
   m_ObjectHideFlags: 0
@@ -953,6 +973,54 @@ Transform:
   m_Father: {fileID: 264028971}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1728569596
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1728569598}
+  - component: {fileID: 1728569597}
+  m_Layer: 0
+  m_Name: MeleeWeapon
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1728569597
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1728569596}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b6b6b21d9e2c0534ebe82a841300e2e1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  weaponModel: {fileID: 0}
+  weaponAnimator: {fileID: 0}
+  attackDamage: 10
+  attackCooldown: 1
+--- !u!4 &1728569598
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1728569596}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 2.8653185, y: 2.2455266, z: 1.9566449}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 5
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1822598017
 GameObject:
   m_ObjectHideFlags: 0
@@ -964,7 +1032,7 @@ GameObject:
   - component: {fileID: 1822598019}
   - component: {fileID: 1822598018}
   m_Layer: 0
-  m_Name: GameObject
+  m_Name: Rectangle
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1041,6 +1109,9 @@ MonoBehaviour:
     rectangleHeight: 2
     rectangleWidth: 5
     initialDamage: 3
+    spellDuration: 3
+    enableBlinking: 0
+    blinkCount: 3
     blinkFrequency: 0.5
     rectangleObject: {fileID: 0}
 --- !u!4 &1872847157
