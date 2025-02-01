@@ -23,7 +23,14 @@ public class SingleShotSettings
 public class RectangleSettings
 {
     [Header("Rectangle Settings")]
+    public float rectangleLength = 5f;
+    public float rectangleHeight = 2f;
+    public float rectangleWidth = 10f;
     public float initialDamage = 3f;
+    public float spellDuration = 3f;
+    [Space]
+    public bool enableBlinking = false;
+    public int blinkCount = 3; 
     public float blinkFrequency = 0.5f;
     public GameObject rectangleObject;
 }
@@ -32,11 +39,11 @@ public class SpellConfigurator : MonoBehaviour
 {
     [Header("Общие настройки заклинания")]
     public SpellType spellType;
-    public float cooldown = 1.5f; // Время отката
+    public float cooldown = 1.5f;
     private bool isOnCooldown = false;
 
     [Space]
-    public Transform shootingPoint;  // Точка выстрела
+    public Transform shootingPoint;
 
     public SingleShotSettings singleShotSettings;
     public RectangleSettings rectangleSettings;
@@ -57,7 +64,7 @@ public class SpellConfigurator : MonoBehaviour
         if (shootingPoint == null)
         {
             Debug.LogWarning("Shooting Point не назначен! Выстрелы будут происходить из позиции объекта.");
-            shootingPoint = transform; // По умолчанию используется сам объект
+            shootingPoint = transform;
         }
     }
 
@@ -103,17 +110,20 @@ public class SpellConfigurator : MonoBehaviour
         }
     }
 
-    public void CastRectangle()
+    private void CastRectangle()
     {
         if (rectangleSettings.rectangleObject != null && rectangleCollider != null)
         {
-            // Убедимся, что объект не активен при старте
             if (!rectangleSettings.rectangleObject.activeSelf)
-            {
                 rectangleSettings.rectangleObject.SetActive(true);
-            }
 
-           
+            rectangleCollider.size = new Vector3(
+                rectangleSettings.rectangleWidth,
+                rectangleSettings.rectangleHeight,
+                rectangleSettings.rectangleLength
+            );
+
+            rectangleCollider.center = new Vector3(0, 0, rectangleSettings.rectangleLength / 2);
 
             StartCoroutine(HandleRectangleAttack());
         }
@@ -123,20 +133,21 @@ public class SpellConfigurator : MonoBehaviour
         }
     }
 
-
-
     private IEnumerator HandleRectangleAttack()
     {
-        float elapsed = 0f;
-        float attackDuration = 3f;
-        bool isActive = true;
-
-        while (elapsed < attackDuration)
+        if (rectangleSettings.enableBlinking)
         {
-            rectangleSettings.rectangleObject.SetActive(isActive);
-            yield return new WaitForSeconds(rectangleSettings.blinkFrequency);
-            isActive = !isActive;
-            elapsed += rectangleSettings.blinkFrequency;
+            bool isActive = true;
+            for (int i = 0; i < rectangleSettings.blinkCount; i++)
+            {
+                rectangleSettings.rectangleObject.SetActive(isActive);
+                yield return new WaitForSeconds(rectangleSettings.blinkFrequency);
+                isActive = !isActive;
+            }
+        }
+        else
+        {
+            yield return new WaitForSeconds(rectangleSettings.spellDuration);
         }
 
         rectangleSettings.rectangleObject.SetActive(false);
