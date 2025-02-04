@@ -14,6 +14,7 @@ TagManager:
   - ShootingPoint
   - Projectile
   - MobSpawn
+  - Special
   layers:
   - Default
   - TransparentFX

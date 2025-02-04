@@ -29,6 +29,8 @@ public class PlayerMovement : MonoBehaviour
     private bool isDashing = false;
     private Vector3 dashDirection;
 
+    private bool isStunned = false;  // Флаг для стана
+
     void Start()
     {
         controller = GetComponent<CharacterController>();
@@ -37,6 +39,8 @@ public class PlayerMovement : MonoBehaviour
 
     void Update()
     {
+        if (isStunned) return;  // Блокируем движение, если персонаж оглушен
+
         HandleMovement();
         HandleSprint();
         HandleCrouchAndSlide();
@@ -45,9 +49,10 @@ public class PlayerMovement : MonoBehaviour
         controller.Move(moveDirection * Time.deltaTime);
     }
 
-    void HandleMovement()
+    // Метод для обработки движения
+    public void HandleMovement()
     {
-        if (isSliding || isDashing) return;  // Если мы в процессе дэша, движение заблокировано
+        if (isSliding || isDashing) return;  // Если мы в процессе подката или дэша, движение заблокировано
 
         float moveX = Input.GetAxis("Horizontal");
         float moveZ = Input.GetAxis("Vertical");
@@ -57,6 +62,18 @@ public class PlayerMovement : MonoBehaviour
 
         moveDirection.x = move.x * currentSpeed;
         moveDirection.z = move.z * currentSpeed;
+    }
+
+    // Метод для начала стана
+    public void ApplyStun()
+    {
+        isStunned = true;
+    }
+
+    // Метод для снятия стана
+    public void RemoveStun()
+    {
+        isStunned = false;
     }
 
     void HandleSprint()

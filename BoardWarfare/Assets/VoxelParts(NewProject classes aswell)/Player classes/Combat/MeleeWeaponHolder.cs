@@ -9,72 +9,74 @@ public class MeleeWeaponHolder : MonoBehaviour
     [Tooltip("Второе оружие (активируется клавишей 3)")]
     public MeleeWeapon weapon2;
 
-    // Текущее активное оружие. Если null – пустая рука.
+    [Tooltip("Точка для крепления оружия (например, кость руки)")]
+    public Transform weaponMountPoint;
+
+    [Tooltip("Ссылка на SpellHolder, который будет отключаться")]
+    public SpellHolder spellHolder;
+
     private MeleeWeapon activeWeapon;
 
     void Start()
     {
-        // При старте активное оружие – пустая рука
         SetActiveWeapon(null);
     }
 
     void Update()
     {
-        // Смена оружия по клавишам 1, 2, 3
         if (Input.GetKeyDown(KeyCode.Alpha1))
         {
-            // Пустая рука
             SetActiveWeapon(null);
         }
-        else if (Input.GetKeyDown(KeyCode.Alpha2))
+        else if (Input.GetKeyDown(KeyCode.Alpha2) && weapon1 != null)
         {
-            if (weapon1 != null)
-                SetActiveWeapon(weapon1);
+            SetActiveWeapon(weapon1);
         }
-        else if (Input.GetKeyDown(KeyCode.Alpha3))
+        else if (Input.GetKeyDown(KeyCode.Alpha3) && weapon2 != null)
         {
-            if (weapon2 != null)
-                SetActiveWeapon(weapon2);
+            SetActiveWeapon(weapon2);
         }
 
-        // Вызов атаки активного оружия по ЛКМ
-        if (Input.GetMouseButtonDown(0))
+        if (Input.GetMouseButtonDown(0) && activeWeapon != null)
         {
-            if (activeWeapon != null)
-            {
-                activeWeapon.Attack();
-            }
-            else
-            {
-                Debug.Log("Пустая рука – атака не выполняется.");
-            }
+            activeWeapon.Attack();
         }
     }
 
-    /// <summary>
-    /// Метод для смены активного оружия.
-    /// Деактивирует модель предыдущего оружия и активирует новую.
-    /// </summary>
-    /// <param name="newWeapon">Новое оружие для активации (null – пустая рука).</param>
     private void SetActiveWeapon(MeleeWeapon newWeapon)
     {
-        // Деактивируем модель предыдущего оружия, если оно было активно
         if (activeWeapon != null)
         {
-            activeWeapon.DeactivateWeapon();
+            Destroy(activeWeapon.gameObject);
         }
 
-        activeWeapon = newWeapon;
-
-        // Активируем модель нового оружия, если оно не null
-        if (activeWeapon != null)
+        if (newWeapon != null && weaponMountPoint != null)
         {
-            activeWeapon.ActivateWeapon();
+            activeWeapon = Instantiate(newWeapon, weaponMountPoint);
+            activeWeapon.transform.localPosition = Vector3.zero;
+            activeWeapon.transform.localRotation = Quaternion.identity;
             Debug.Log($"Активировано оружие: {activeWeapon.name}");
+
+            // Проверяем тег экипированного оружия
+            if (activeWeapon.CompareTag("Special") && spellHolder != null)
+            {
+                spellHolder.enabled = false;
+                Debug.Log("SpellHolder отключен!");
+            }
+            else if (spellHolder != null)
+            {
+                spellHolder.enabled = true;
+                Debug.Log("SpellHolder включен!");
+            }
         }
         else
         {
+            activeWeapon = null;
             Debug.Log("Активирована пустая рука.");
+            if (spellHolder != null)
+            {
+                spellHolder.enabled = true; // Если убираем оружие, включаем SpellHolder обратно
+            }
         }
     }
 }

@@ -4,30 +4,41 @@ using System.Collections;
 public class MeleeWeapon : MonoBehaviour
 {
     [Header("Настройки оружия")]
-    [Tooltip("Модель оружия, которая показывается при выборе этого оружия")]
     public GameObject weaponModel;
-
-    [Tooltip("Ссылка на аниматор оружия")]
     public Animator weaponAnimator;
-
-    [Tooltip("Урон, наносимый атакой")]
     public float attackDamage = 10f;
-
-    [Tooltip("Кулдаун между атаками")]
     public float attackCooldown = 1.0f;
+    public SpellHolder playerSpellHolder; // Ссылка на SpellHolder игрока
 
     private bool isOnCooldown = false;
+    private SpellHolder weaponSpellHolder;
 
-    /// <summary>
-    /// Метод, запускающий атаку оружием.
-    /// Если кулдаун не завершён, метод ничего не делает.
-    /// </summary>
+    private void Start()
+    {
+        weaponSpellHolder = GetComponent<SpellHolder>();
+    }
+
+    public void EquipWeapon()
+    {
+        if (playerSpellHolder != null && weaponSpellHolder != null)
+        {
+            playerSpellHolder.enabled = false; // Отключаем SpellHolder у игрока
+        }
+    }
+
+    public void UnequipWeapon()
+    {
+        if (playerSpellHolder != null)
+        {
+            playerSpellHolder.enabled = true; // Включаем обратно при снятии оружия
+        }
+    }
+
     public void Attack()
     {
         if (isOnCooldown)
             return;
 
-        // Запускаем анимацию атаки, если аниматор назначен
         if (weaponAnimator != null)
         {
             weaponAnimator.SetTrigger("Attack");
@@ -37,15 +48,10 @@ public class MeleeWeapon : MonoBehaviour
             Debug.Log($"{name}: запуск атаки без анимации.");
         }
 
-        // Здесь можно добавить логику нанесения урона (например, через Raycast или проверку коллизий)
         Debug.Log($"{name} атакует и наносит {attackDamage} урона!");
-
         StartCoroutine(AttackCooldown());
     }
 
-    /// <summary>
-    /// Корутин для реализации кулдауна между атаками.
-    /// </summary>
     private IEnumerator AttackCooldown()
     {
         isOnCooldown = true;
@@ -53,18 +59,12 @@ public class MeleeWeapon : MonoBehaviour
         isOnCooldown = false;
     }
 
-    /// <summary>
-    /// Метод для активации оружия (отображение модели).
-    /// </summary>
     public void ActivateWeapon()
     {
         if (weaponModel != null)
             weaponModel.SetActive(true);
     }
 
-    /// <summary>
-    /// Метод для деактивации оружия (скрытие модели).
-    /// </summary>
     public void DeactivateWeapon()
     {
         if (weaponModel != null)

@@ -32,8 +32,6 @@ public class StoryModeSpawnManager : MonoBehaviour
 
     private List<GameObject> spawnedMobs = new List<GameObject>();
 
-    public Player player; // Reference to the Player class
-
     private void Start()
     {
         Debug.Log("StoryModeSpawnManager Start called.");
