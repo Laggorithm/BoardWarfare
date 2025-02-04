@@ -1,42 +1,161 @@
-----------
-Movement:
-----------
 
-WASD
-Shift - Run
-Ctrl - crouch
-Shift + Ctrl - slide (possibly with short immunity to dodge)
-Player Movement System - `PlayerMovement` Class
+---
+
+**Weapon System:**
+The weapon system in the game allows players to equip and use melee weapons with varying attack types and mechanics. Players can switch between two melee weapons and activate special abilities through the `SpellHolder` system, which is disabled when a weapon with special abilities is equipped. Below is an outline of the system's functionality, including the buttons and key features:
+
+---
+
+**Controls and Key Bindings:**
+
+- **1:** Equip Empty Hand (deactivates any active weapon)
+- **2:** Equip Weapon 1 (first melee weapon)
+- **3:** Equip Weapon 2 (second melee weapon)
+- **Left Mouse Button:** Attack with the currently equipped weapon
+
+---
+
+**Weapon Classes and Functionalities:**
+
+---
+
+**MeleeWeapon Class:**
+
+The `MeleeWeapon` class is responsible for handling the properties and behaviors of melee weapons. Each weapon has its own settings for damage, attack cooldown, and animation triggers.
+
+**Core Features:**
+- **Weapon Model:** The visual representation of the weapon.
+- **Weapon Animator:** Controls the animation for weapon attacks.
+- **Attack Damage:** Defines the amount of damage the weapon deals when used.
+- **Attack Cooldown:** Determines the time between consecutive attacks to prevent spamming.
+- **Attack:** Triggers the weapon’s attack animation and damage output.
+- **Cooldown Handling:** Prevents the weapon from attacking again before the cooldown expires.
+- **Equip/Unequip Weapon:** Allows the player to equip or unequip the weapon, disabling the spell holder when equipped.
+
+**Methods:**
+- **Attack()**: Initiates the weapon’s attack, triggering the animation and applying damage.
+- **EquipWeapon()**: Disables the player's `SpellHolder` component if equipped.
+- **UnequipWeapon()**: Re-enables the `SpellHolder` when the weapon is unequipped.
+- **ActivateWeapon()**: Activates the weapon model, making it visible in the game.
+- **DeactivateWeapon()**: Deactivates the weapon model, making it invisible in the game.
+- **AttackCooldown()**: Implements the cooldown after an attack to prevent spamming.
+
+---
+
+**MeleeWeaponHolder Class:**
+
+The `MeleeWeaponHolder` class handles the switching between two melee weapons and attaches them to the player character’s designated weapon mount point. It also manages the activation and deactivation of weapon-specific abilities.
+
+**Core Features:**
+- **Weapon Mount Point:** Defines where the weapon will attach to the player character (e.g., hand or body).
+- **Active Weapon:** Keeps track of the currently equipped weapon.
+- **Weapon Switching:** Allows switching between the two melee weapons (Weapon 1 and Weapon 2) using number keys (1, 2, and 3).
+- **Weapon Attack:** Triggers the attack action when the player presses the left mouse button.
+
+**Methods:**
+- **SetActiveWeapon()**: Switches between weapons by instantiating the selected weapon at the mount point and destroying the previous one.
+- **Update()**: Monitors input for weapon switching (1, 2, 3) and attacks with the left mouse button.
+
+---
+
+**SpellHolder Class:**
+
+The `SpellHolder` class allows the player to activate spells. It holds references to spells that are mapped to specific keys (Q and E) and can be cast in response to input.
+
+**Core Features:**
+- **Spell Activation:** Spells are activated using the Q and E keys.
+- **Spell Casting:** The player can use the assigned spells, such as single-shot or area-effect spells, depending on the weapon equipped.
+
+**Methods:**
+- **Update()**: Monitors the player input for spell activation and calls the corresponding spell’s `CastSpell()` method.
+
+---
+
+**SpellConfigurator Class:**
+
+The `SpellConfigurator` class handles the configuration and casting of different spell types, such as single-shot and area-effect spells (rectangular spells). This class includes settings for projectile speed, damage, and special effects like blinking for area spells.
+
+**Core Features:**
+- **Spell Types:** Supports different spell types:
+  - **Single Shot:** Fires a single projectile with customizable speed, damage, and burst options.
+  - **Rectangle:** Affects an area with a defined size, duration, and optional blinking effect.
+- **Cooldown:** Ensures spells can’t be cast repeatedly before their cooldown period has expired.
+- **Projectile & Area Effects:** Configures and instantiates projectiles for single-shot spells or handles the area-effect spells' behavior.
+
+**Methods:**
+- **CastSpell()**: Handles the logic of casting a spell based on its type (Single Shot or Rectangle).
+- **CastSingleShot()**: Instantiates a projectile and applies speed and damage settings.
+- **CastRectangle()**: Activates an area-effect spell, adjusting the collider size and applying the defined behavior, such as blinking.
+- **StartCooldown()**: Implements the cooldown between spell casts.
+
+---
+
+**System Overview:**
+
+1. **Weapon Switching:**
+   - The player can switch between two equipped melee weapons using the 2 and 3 keys.
+   - When switching to a weapon, the corresponding weapon is instantiated and attached to the player’s mount point.
+   - Only one weapon can be equipped at a time, and it replaces the previous one.
+
+2. **Weapon Attack:**
+   - When the left mouse button is pressed, the currently equipped weapon performs an attack, triggering its animation and applying damage.
+   - Each weapon has a cooldown between attacks to prevent spamming.
+
+3. **Spell Handling:**
+   - Spells can be cast using the Q and E keys.
+   - The `SpellHolder` and `SpellConfigurator` manage different types of spells (single-shot or area-effect), with specific cooldown times and effects.
+   - The spell system integrates with the weapon system, where some weapons may disable the spellcasting abilities (e.g., if a special weapon is equipped).
+
+4. **Cooldowns:**
+   - Both weapons and spells have cooldowns that prevent them from being used continuously. After each attack or spell cast, the system waits for the cooldown period before the action can be used again.
+
+---
+
+**Movement:**
+
+---
+
+**Controls and Key Bindings:**
+
+- **W, A, S, D:** Move (Forward, Left, Back, Right)
+- **Shift:** Run
+- **Ctrl:** Crouch
+- **Shift + Ctrl:** Slide (possibly with short immunity to dodge)
+- **Space:** Jump
+
+---
+
+**Player Movement System - `PlayerMovement` Class**
 
 The `PlayerMovement` class is responsible for handling the player's movement, including walking, sprinting, crouching, sliding, and jumping. It uses Unity's `CharacterController` component for smooth and physics-based player movement. Below are the key features and behaviors of the system:
 
-Core Parameters:
-- Walk Speed: The default movement speed when the player is walking.
-- Sprint Speed: The increased movement speed when the player is sprinting.
-- Crouch Speed: The reduced movement speed when the player is crouching.
-- Jump Force: The upward force applied when the player jumps.
-- Gravity: A constant force applied to the player's vertical movement when in the air, simulating gravity.
-- Crouch Height: The height of the player's character model when crouching.
-- Default Height: The character's standing height, which is restored after crouching.
+**Core Parameters:**
+- **Walk Speed:** The default movement speed when the player is walking.
+- **Sprint Speed:** The increased movement speed when the player is sprinting.
+- **Crouch Speed:** The reduced movement speed when the player is crouching.
+- **Jump Force:** The upward force applied when the player jumps.
+- **Gravity:** A constant force applied to the player's vertical movement when in the air, simulating gravity.
+- **Crouch Height:** The height of the player's character model when crouching.
+- **Default Height:** The character's standing height, which is restored after crouching.
 
-Slide (Roll) Parameters:
-- Slide Duration: The duration for which the player will perform the sliding action.
-- Slide Speed: The speed at which the player moves while sliding.
-- Is Sliding: A boolean flag that tracks whether the player is currently sliding or not.
-- Slide Timer: A timer that tracks the remaining time for the sliding action.
+**Slide (Roll) Parameters:**
+- **Slide Duration:** The duration for which the player will perform the sliding action.
+- **Slide Speed:** The speed at which the player moves while sliding.
+- **Is Sliding:** A boolean flag that tracks whether the player is currently sliding or not.
+- **Slide Timer:** A timer that tracks the remaining time for the sliding action.
 
-Main Movement:
+**Main Movement:**
 - The player’s movement is based on the input received from the keyboard (horizontal and vertical axes).
 - The player’s movement is adjusted according to whether they are walking, sprinting, or crouching.
     - Walking is the default movement mode.
     - Sprinting is activated when the player holds the Left Shift key while grounded.
     - Crouching is activated when the player presses the Left Control key (if not sprinting), and crouch height is adjusted accordingly.
 
-Jumping:
+**Jumping:**
 - Jumping is activated when the player presses the Space key while grounded.
 - The player's vertical movement is updated based on the defined jump force, providing a jump action.
 
-Crouching and Sliding:
+**Crouching and Sliding:**
 - When the player presses the Left Control key, the system checks if the player is sprinting or not:
     - If Sprinting: The player performs a slide (roll), which is a fast, low-to-the-ground movement. During the slide, the player’s height is adjusted to the crouching height, and gravity is ignored for the duration of the slide.
     - If Not Sprinting: The player performs a crouch, lowering the player’s height to the crouch height and adjusting their movement speed.
@@ -44,101 +163,9 @@ Crouching and Sliding:
     - Crouch: Stops when the player releases the Left Control key.
     - Slide: Automatically stops after the duration has elapsed, and the player is returned to the default height and regular movement state.
 
-Gravity:
+**Gravity:**
 - When the player is not grounded (i.e., in the air), gravity is applied to the player's vertical movement. The gravity makes the player fall at a constant rate, creating realistic jump physics.
 
-Additional Features:
+**Additional Features:**
 - The class ensures that no movement or gravity is applied while the player is in the middle of a slide.
-- When sliding, the player's velocity is set to a predefined speed and movement occurs in the direction the player is facing, ignoring vertical movement (keeping the player at the same height).
-
----
-
-This class essentially handles all the basic movement actions of the player, including different speeds for walking, sprinting, and crouching, as well as adding more dynamic movement through jumping and sliding. The system makes use of Unity’s physics and character controller to apply smooth transitions between states like walking, sprinting, crouching, and jumping, ensuring that the player has a fluid experience with natural movement behaviors.
-
-
-
-
-
-
------------
-Weapons:
------------
-
-
-1. Base Weapon Class
-Main Goal: Create a universal class for weapons that will contain basic parameters and methods shared across all weapon types.
-
-Core Parameters:
-
-Cooldown (time between shots) — the delay that must be waited before shooting again. This will be the same across all weapon types in the base class but can be adjusted in subclasses.
-ReloadTime (reload time) — the time it takes to reload the weapon. This will also vary for each weapon.
-BulletsPerShot (number of bullets per shot) — each weapon will have its own value. For example, the pistol fires 1 bullet, while the shotgun fires 12.
-Spread (shot spread) — the spread of bullets when firing. It will be defined as a range (e.g., -0.3 to 0.3 for the pistol, or -2 to 2 for the shotgun).
-MagazineSize (magazine size) — how many bullets the weapon can hold in its magazine. For the pistol, this could be 12, and for the shotgun, 8.
-Methods:
-
-Fire — the method for shooting. It checks whether the weapon can shoot (based on cooldown and reload status), and if conditions are met, it fires.
-Reload — the method for reloading the weapon. It initiates the reloading process if the weapon isn't already reloading and if the magazine isn't full.
-ShootBullets — the method to actually fire bullets. The way bullets are created and their trajectory will differ based on the weapon (e.g., for the shotgun, multiple bullets are fired at once).
-Bullet Parameters:
-
-The bullet direction will account for the spread, meaning that bullets won’t fly in a straight line but will have some random deviation along the X and Y axes.
-2. Weapon Subclasses
-Each weapon will inherit from the base class and modify certain parameters.
-
-Pistol
-Cooldown: The pistol will have a fast cooldown, e.g., 1 second, as it's designed to shoot quickly and precisely one bullet at a time.
-ReloadTime: The reload time for the pistol will be fast, e.g., 2 seconds.
-BulletsPerShot: The pistol shoots one bullet per shot.
-Spread: The spread will be small, e.g., from -0.3 to 0.3. The pistol is designed for accuracy.
-MagazineSize: The pistol will have a moderate magazine size, e.g., 12 rounds.
-
-Shotgun
-Cooldown: The shotgun will have a slower cooldown, e.g., 1.5 seconds, because shotguns often require a longer recovery time between shots.
-ReloadTime: The reload time will be longer, e.g., 6 seconds, since shotguns generally require a more thorough reloading process.
-BulletsPerShot: The shotgun will fire multiple bullets at once, e.g., 12 bullets. These will not be fired in a burst but as a spread of individual pellets.
-Spread: The spread for the shotgun will be much wider, e.g., from -2 to 2, to simulate the spread of multiple pellets.
-MagazineSize: The shotgun will have a smaller magazine, e.g., 8 rounds, due to the high impact of each pellet.
-
-Rifle (Assault Rifle)
-Cooldown: The rifle will have a fast cooldown, e.g., 0.2 seconds, as its role is to fire rapidly with more frequent shots.
-ReloadTime: The reload time will be standard, e.g., 3 seconds.
-BulletsPerShot: The rifle will fire several bullets at once, e.g., 3 bullets.
-Spread: The spread will be moderate, e.g., from -1 to 1, to simulate its burst fire mode.
-MagazineSize: The rifle will have a large magazine, e.g., 30 rounds.
-
-3. Shotgun Firing Mechanism
-When the player fires the shotgun, the weapon should fire multiple bullets at once.
-
-Multiple bullets will be created at the same time, each with a slightly different direction based on the spread range. This will create the effect of a "spread" or "pellet cluster."
-The bullets should not fly backwards; they will only move forward and in various directions, with the Z-axis direction staying constant.
-4. Weapon Management in PlayerWeaponManager
-The PlayerWeaponManager will contain multiple slots for weapons.
-
-At the start of the game, the player may have an empty hand (by default) or a pistol, which can be switched out for other weapons (e.g., shotgun or rifle).
-
-Weapon switching will be handled by pressing specific keys:
-
-0 — empty hand (no weapon).
-1 — pistol.
-2 — shotgun.
-3 — assault rifle.
-Each weapon will be activated by calling the EquipWeapon method, which will select the corresponding slot.
-
-5. Firing Process
-When the player presses the fire button:
-
-It will check whether the weapon can fire (based on cooldown and reload status).
-The shot will be performed depending on the weapon type, and for the shotgun, multiple bullets will be fired at once, creating the "pellet cluster" effect.
-6. Reloading
-When the weapon runs out of ammo, it will begin the reloading process:
-
-The player must wait for the reload to finish before they can shoot again.
-Each weapon will reload at its specified time, which will vary depending on the weapon type.
-Example of System in Action:
-The player starts with an empty hand (key 0).
-They press 1, and the pistol appears with 12 rounds in the magazine.
-The player fires, and the pistol shoots one bullet with a small spread.
-The player switches to the shotgun (key 2). Now the shotgun fires 12 bullets at once, creating a "pellet cluster."
-When ammo runs out, the player reloads the weapon (the reload time depends on the weapon).
-Once the reload finishes, the player can shoot again.
+- When sliding, the player's velocity is set to a predefined speed and movement occurs in the direction the player is facing, ignoring vertical movement (keeping the player at
