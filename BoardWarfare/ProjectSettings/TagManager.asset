@@ -15,6 +15,7 @@ TagManager:
   - Projectile
   - MobSpawn
   - Special
+  - HeavyWeapon
   layers:
   - Default
   - TransparentFX

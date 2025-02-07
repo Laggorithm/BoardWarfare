@@ -1,121 +1,168 @@
 ﻿using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
 public class MobBehaviour : MonoBehaviour
 {
-    private Queue<IEnumerator> actionQueue = new Queue<IEnumerator>();
-    private bool isPerformingAction = false;
-    private Vector3 desiredPosition;
-    private int rotationSpeed = 150;
+    private Vector3 wanderPosition;
+    private float rotationSpeed = 5f;
     private float wanderRange = 15f;
-    private int speed;
-    private float attackRange;
-    private float Dmg;
-    private string unitClass;
-    private float health;
+    private float attackRange = 5f;
+    private float detectionRange = 15f;
+    private float stopChaseRange = 5f;
+    private bool isAttacking = false;
+    private bool isWalking = false;
+    private bool isInToWalkingPlaying = false;
+
     private NavMeshAgent navMeshAgent;
-    private Animator animator; // Ссылка на Animator
+    private Animator animator;
+    private Transform playerTransform;
 
     void Start()
     {
-        // Получаем компонент Animator
         animator = GetComponent<Animator>();
-
-        // Initialize stats based on wave difficulty and unit class
-        InitializeUnitStats();
-
-        // Initialize the NavMeshAgent for movement
         navMeshAgent = GetComponent<NavMeshAgent>();
         navMeshAgent.radius = 0.5f;
         navMeshAgent.avoidancePriority = Random.Range(0, 99);
         navMeshAgent.updateRotation = false;
 
-        // Start the wandering behavior
+        GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+        if (playerObj != null)
+        {
+            playerTransform = playerObj.transform;
+        }
+
         StartCoroutine(Wander());
     }
 
-    private void InitializeUnitStats()
+    void Update()
     {
-        unitClass = gameObject.tag;
-        switch (unitClass)
+        if (playerTransform != null)
         {
-            case "Ground":
-                Dmg = 40;
-                health = 100;
-                speed = 5;
-                attackRange = 30f;
-                break;
-            case "Air":
-                Dmg = 30;
-                health = 60;
-                speed = 10;
-                attackRange = 35f;
-                break;
-            case "Heavy":
-                Dmg = 60;
-                health = 250;
-                speed = 3;
-                attackRange = 30f;
-                break;
-            default:
-                health = 100;
-                speed = 5;
-                attackRange = 5f;
-                break;
+            float distanceToPlayer = Vector3.Distance(transform.position, playerTransform.position);
+
+            if (distanceToPlayer <= attackRange)
+            {
+                if (!isAttacking)
+                {
+                    StartCoroutine(PerformAttack());
+                }
+            }
+            else
+            {
+                if (isAttacking)
+                {
+                    StopAttack();
+                }
+
+                if (distanceToPlayer <= detectionRange)
+                {
+                    MoveToPlayer();
+                }
+                else if (!isWalking)
+                {
+                    
+                    StartCoroutine(Wander());
+                }
+            }
         }
+
+        RotateTowardsTarget();
+    }
+
+    private IEnumerator PerformAttack()
+    {
+        isAttacking = true;
+        navMeshAgent.isStopped = true;
+
+        animator.SetBool("Walking", false);
+        animator.SetBool("SeeEnemy", true);
+        animator.SetTrigger("IsAttacking");
+
+        while (isAttacking)
+        {
+            yield return new WaitForSeconds(1f);
+        }
+    }
+
+    private void StopAttack()
+    {
+        isAttacking = false;
+        animator.SetBool("SeeEnemy", false);
+        navMeshAgent.isStopped = false;
+    }
+
+    private void MoveToPlayer()
+    {
+        if (!isWalking)
+        {
+            StartCoroutine(StartWalking(playerTransform.position));
+        }
+    }
+
+    private IEnumerator StartWalking(Vector3 targetPosition)
+    {
+        isWalking = true;
+        isInToWalkingPlaying = true;
+        navMeshAgent.isStopped = true;
+
+        animator.SetTrigger("InToWalking");
+        yield return new WaitForSeconds(2f);
+
+        animator.SetBool("Walking", true);
+        navMeshAgent.isStopped = false;
+        navMeshAgent.SetDestination(targetPosition);
+        isInToWalkingPlaying = false;
+
+        while (navMeshAgent.pathPending || navMeshAgent.remainingDistance > navMeshAgent.stoppingDistance)
+        {
+            yield return null;
+        }
+
+        animator.SetBool("Walking", false);
+        isWalking = false;
     }
 
     private IEnumerator Wander()
     {
-        float minX = transform.position.x - wanderRange;
-        float maxX = transform.position.x + wanderRange;
-        float minZ = transform.position.z - wanderRange;
-        float maxZ = transform.position.z + wanderRange;
+        yield return new WaitForSeconds(5);
+        isWalking = true;
 
-        while (true)
+        wanderPosition = new Vector3(
+            Random.Range(transform.position.x - wanderRange, transform.position.x + wanderRange),
+            transform.position.y,
+            Random.Range(transform.position.z - wanderRange, transform.position.z + wanderRange)
+        );
+
+        if (NavMesh.SamplePosition(wanderPosition, out NavMeshHit hit, wanderRange, NavMesh.AllAreas))
         {
-            // Включаем триггер для перехода к анимации ходьбы
-            animator.SetTrigger("InToWalking");
-            yield return new WaitForSeconds(2f); // Ждём 2 секунды (120 кадров, 60 FPS)
+            yield return StartWalking(hit.position);
+        }
 
-            // Активируем анимацию ходьбы
-            animator.SetBool("Walking", true);
+        yield return new WaitForSeconds(3f);
+        isWalking = false;
+        yield return new WaitForSeconds(3f);
+    }
 
-            // Выбираем новую точку для движения
-            desiredPosition = new Vector3(
-                Random.Range(minX, maxX),
-                transform.position.y,
-                Random.Range(minZ, maxZ)
-            );
+    private void RotateTowardsTarget()
+    {
+        Vector3 targetDirection = Vector3.zero;
 
-            // Проверяем, находится ли позиция на NavMesh
-            NavMeshHit hit;
-            if (NavMesh.SamplePosition(desiredPosition, out hit, wanderRange, NavMesh.AllAreas))
-            {
-                navMeshAgent.SetDestination(hit.position);
+        if (isAttacking)
+        {
+            targetDirection = playerTransform.position - transform.position;
+        }
+        else if (isWalking)
+        {
+            targetDirection = navMeshAgent.destination - transform.position;
+        }
 
-                // Поворачиваем персонажа к цели
-                while (navMeshAgent.pathPending || navMeshAgent.remainingDistance > navMeshAgent.stoppingDistance)
-                {
-                    Vector3 direction = -navMeshAgent.velocity;
+        targetDirection.y = 0;
 
-                    if (direction != Vector3.zero)
-                    {
-                        Quaternion toRotation = Quaternion.LookRotation(direction);
-                        transform.rotation = Quaternion.RotateTowards(transform.rotation, toRotation, rotationSpeed * Time.deltaTime);
-                    }
-
-                    yield return null;
-                }
-            }
-
-            // Персонаж остановился, отключаем анимацию ходьбы
-            animator.SetBool("Walking", false);
-
-            // Ждём 7 секунд (420 кадров, 60 FPS) перед следующим циклом
-            yield return new WaitForSeconds(7f);
+        if (targetDirection != Vector3.zero)
+        {
+            Quaternion targetRotation = Quaternion.LookRotation(-targetDirection);
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
         }
     }
 }
