@@ -4,165 +4,247 @@ using UnityEngine.AI;
 
 public class MobBehaviour : MonoBehaviour
 {
-    private Vector3 wanderPosition;
-    private float rotationSpeed = 5f;
-    private float wanderRange = 15f;
-    private float attackRange = 5f;
-    private float detectionRange = 15f;
-    private float stopChaseRange = 5f;
-    private bool isAttacking = false;
-    private bool isWalking = false;
-    private bool isInToWalkingPlaying = false;
+    // Режимы работы моба
+    private enum State
+    {
+        Patrol,   // Патруль
+        Follow,   // Следование за игроком
+        Attack    // Атака
+    }
+    [Header("Настройки модели")]
+    [Tooltip("Если установлено, модель моба будет повернута на 180 градусов, чтобы он шёл спиной.")]
+    public bool flipModel = false;
 
-    private NavMeshAgent navMeshAgent;
-    private Animator animator;
-    private Transform playerTransform;
+    [Header("Настройки патруля")]
+    [Tooltip("Массив точек патруля, между которыми будет перемещаться моб. Если не назначены, будет выбран случайный патрульный маршрут.")]
+    public Transform[] patrolPoints;
+    [Tooltip("Время ожидания в точке патруля (в секундах)")]
+    public float waitTimeAtPatrolPoint = 1000000f;
+
+    [Header("Настройки преследования")]
+    [Tooltip("Расстояние, на котором моб начинает замечать игрока")]
+    public float seeEnemyDistance = 15f;
+    [Tooltip("Расстояние до игрока, при котором моб начинает атаку")]
+    public float attackRange = 3f;
+    // (Если необходимо, можно добавить дистанцию, при которой моб прекращает преследование)
+
+    [Header("Ссылки на объекты")]
+    [Tooltip("Ссылка на игрока")]
+    public Transform player;
+
+    // Компоненты
+    private NavMeshAgent agent;
+    private Animator anim;
+
+    // Текущий режим и индекс патрульной точки
+    private State currentState = State.Patrol;
+    private int currentPatrolIndex = 0;
+
+    // Флаги для контроля состояний
+    private bool isWaiting = false;
+    private bool isAttacking = false;
+
+    [Header("Настройки поворота")]
+    [Tooltip("Скорость поворота моба.")]
+    public float rotationSpeed = 5f;
 
     void Start()
     {
-        animator = GetComponent<Animator>();
-        navMeshAgent = GetComponent<NavMeshAgent>();
-        navMeshAgent.radius = 0.5f;
-        navMeshAgent.avoidancePriority = Random.Range(0, 99);
-        navMeshAgent.updateRotation = false;
+        agent = GetComponent<NavMeshAgent>();
+        anim = GetComponent<Animator>();
 
-        GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
-        if (playerObj != null)
+        // Если заданы точки патруля, устанавливаем первую цель,
+        // иначе выбираем случайную точку
+        if (patrolPoints != null && patrolPoints.Length > 0)
         {
-            playerTransform = playerObj.transform;
+            SetDestination(patrolPoints[currentPatrolIndex].position);
+        }
+        else
+        {
+            SetDestination(GetRandomPatrolPoint());
         }
 
-        StartCoroutine(Wander());
+        // Отключаем автоматическое обновление поворота агента
+        agent.updateRotation = false;
     }
 
     void Update()
     {
-        if (playerTransform != null)
+        float distanceToPlayer = Vector3.Distance(transform.position, player.position);
+
+        // Если моб находится в режиме патруля и игрок попадает в зону обнаружения
+        if (currentState == State.Patrol && distanceToPlayer <= seeEnemyDistance)
         {
-            float distanceToPlayer = Vector3.Distance(transform.position, playerTransform.position);
-
-            if (distanceToPlayer <= attackRange)
-            {
-                if (!isAttacking)
-                {
-                    StartCoroutine(PerformAttack());
-                }
-            }
+            currentState = State.Follow;
+            anim.SetBool("SeeEnemy", true);
+        }
+        // Если моб в режиме преследования, но игрок убежал за пределы зоны видимости
+        else if (currentState == State.Follow && distanceToPlayer > seeEnemyDistance)
+        {
+            currentState = State.Patrol;
+            anim.SetBool("SeeEnemy", false);
+            // Возвращаемся к патрулю: если заданы точки, выбираем их, иначе генерируем случайную точку
+            if (patrolPoints != null && patrolPoints.Length > 0)
+                SetDestination(patrolPoints[currentPatrolIndex].position);
             else
-            {
-                if (isAttacking)
-                {
-                    StopAttack();
-                }
-
-                if (distanceToPlayer <= detectionRange)
-                {
-                    MoveToPlayer();
-                }
-                else if (!isWalking)
-                {
-                    
-                    StartCoroutine(Wander());
-                }
-            }
+                SetDestination(GetRandomPatrolPoint());
         }
 
-        RotateTowardsTarget();
+        // Обработка логики в зависимости от текущего режима
+        switch (currentState)
+        {
+            case State.Patrol:
+                Patrol();
+                break;
+            case State.Follow:
+                Follow();
+                break;
+            case State.Attack:
+                // Логика атаки реализована в корутине Attack()
+                break;
+        }
     }
 
-    private IEnumerator PerformAttack()
+    /// <summary>
+    /// Логика патруля:
+    /// 1. Моб выбирает точку патруля (либо из массива, либо случайную, если массив пуст)
+    /// 2. Поворачивается в сторону цели (реализовано внутри SetDestination)
+    /// 3. Передвигается к точке
+    /// 4. По достижении – останавливается на заданное время
+    /// </summary>
+    void Patrol()
+    {
+        // Если моб не движется (точка достигнута) и не находится в режиме ожидания
+        if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance && !isWaiting)
+        {
+            StartCoroutine(PatrolWait());
+        }
+        else
+        {
+            // Если моб движется, запускаем анимацию ходьбы
+            if (agent.velocity.sqrMagnitude > 0.1f)
+            {
+                anim.SetBool("Walking", true);
+                anim.SetBool("Idle", false);
+            }
+        }
+    }
+
+    /// <summary>
+    /// Корутина ожидания в точке патруля.
+    /// Моб ждёт заданное время, а затем выбирает новую точку: следующую из массива
+    /// или случайную, если массив не назначен.
+    /// </summary>
+    IEnumerator PatrolWait()
+    {
+        isWaiting = true;
+        agent.isStopped = true;
+        anim.SetBool("Idle", true);
+        anim.SetBool("Walking", false);
+
+        // Ждем указанное время (например, 5 секунд)
+        yield return new WaitForSeconds(waitTimeAtPatrolPoint);
+
+        agent.isStopped = false;
+        isWaiting = false;
+
+        // Если назначены патрульные точки, переходим к следующей, иначе генерируем случайную точку
+        if (patrolPoints != null && patrolPoints.Length > 0)
+        {
+            currentPatrolIndex = (currentPatrolIndex + 1) % patrolPoints.Length;
+            SetDestination(patrolPoints[currentPatrolIndex].position);
+        }
+        else
+        {
+            SetDestination(GetRandomPatrolPoint());
+        }
+    }
+
+    /// <summary>
+    /// Генерирует случайную точку для патруля в пределах 5-15 единиц от моба.
+    /// </summary>
+    Vector3 GetRandomPatrolPoint()
+    {
+        // Случайное расстояние от 5 до 15
+        float randomDistance = Random.Range(5f, 15f);
+        // Создаем случайное направление в пределах сферы
+        Vector3 randomDirection = Random.insideUnitSphere * randomDistance;
+        // Сохраняем текущий уровень по Y
+        randomDirection.y = 0;
+        Vector3 randomPoint = transform.position + randomDirection;
+        return randomPoint;
+    }
+
+    /// <summary>
+    /// Логика преследования:
+    /// 1. Цель – позиция игрока.
+    /// 2. Если расстояние до игрока становится <= attackRange, запускается атака.
+    /// 3. Если игрок немного дальше – продолжается движение к нему.
+    /// </summary>
+    void Follow()
+    {
+        if (isAttacking)
+            return; // Пока идёт атака, не обновляем цель
+
+        // Обновляем цель преследования
+        SetDestination(player.position);
+
+        // Если игрок достаточно близко – начинаем атаку
+        float distanceToPlayer = Vector3.Distance(transform.position, player.position);
+        if (distanceToPlayer <= attackRange)
+        {
+            StartCoroutine(Attack());
+        }
+        else
+        {
+            // Обновляем анимации
+            anim.SetBool("Walking", true);
+            anim.SetBool("Idle", false);
+        }
+    }
+
+    /// <summary>
+    /// Коррутина атаки:
+    /// 1. Останавливает движение моба.
+    /// 2. Запускает анимацию атаки (триггер "IsAttacking").
+    /// 3. Ждёт 3 секунды (время атаки), затем продолжает преследование.
+    /// </summary>
+    IEnumerator Attack()
     {
         isAttacking = true;
-        navMeshAgent.isStopped = true;
+        currentState = State.Attack;
+        agent.isStopped = true;
 
-        animator.SetBool("Walking", false);
-        animator.SetBool("SeeEnemy", true);
-        animator.SetTrigger("IsAttacking");
+        // Запускаем анимацию атаки
+        anim.SetTrigger("IsAttacking");
 
-        while (isAttacking)
-        {
-            yield return new WaitForSeconds(1f);
-        }
-    }
+        // Ждем 3 секунды (время атаки)
+        yield return new WaitForSeconds(3f);
 
-    private void StopAttack()
-    {
+        // После атаки возобновляем движение
+        agent.isStopped = false;
         isAttacking = false;
-        animator.SetBool("SeeEnemy", false);
-        navMeshAgent.isStopped = false;
+
+        // Если игрок всё ещё рядом, продолжаем преследование (режим Follow)
+        currentState = State.Follow;
     }
 
-    private void MoveToPlayer()
+    /// <summary>
+    /// Устанавливает новую цель для NavMeshAgent и выполняет поворот моба в её сторону.
+    /// Если flipModel == true, моб будет смотреть в противоположную сторону от цели.
+    /// </summary>
+    /// <param name="destination">Позиция цели</param>
+    void SetDestination(Vector3 destination)
     {
-        if (!isWalking)
+        // Поворот в сторону цели (скорость поворота можно регулировать)
+        Vector3 direction = destination - transform.position;
+        if (direction != Vector3.zero)
         {
-            StartCoroutine(StartWalking(playerTransform.position));
-        }
-    }
-
-    private IEnumerator StartWalking(Vector3 targetPosition)
-    {
-        isWalking = true;
-        isInToWalkingPlaying = true;
-        navMeshAgent.isStopped = true;
-
-        animator.SetTrigger("InToWalking");
-        yield return new WaitForSeconds(2f);
-
-        animator.SetBool("Walking", true);
-        navMeshAgent.isStopped = false;
-        navMeshAgent.SetDestination(targetPosition);
-        isInToWalkingPlaying = false;
-
-        while (navMeshAgent.pathPending || navMeshAgent.remainingDistance > navMeshAgent.stoppingDistance)
-        {
-            yield return null;
+            // Если flipModel включён, разворачиваем моба в противоположную сторону
+            Quaternion lookRotation = flipModel ? Quaternion.LookRotation(-direction) : Quaternion.LookRotation(direction);
+            transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, Time.deltaTime * rotationSpeed);
         }
 
-        animator.SetBool("Walking", false);
-        isWalking = false;
-    }
-
-    private IEnumerator Wander()
-    {
-        yield return new WaitForSeconds(5);
-        isWalking = true;
-
-        wanderPosition = new Vector3(
-            Random.Range(transform.position.x - wanderRange, transform.position.x + wanderRange),
-            transform.position.y,
-            Random.Range(transform.position.z - wanderRange, transform.position.z + wanderRange)
-        );
-
-        if (NavMesh.SamplePosition(wanderPosition, out NavMeshHit hit, wanderRange, NavMesh.AllAreas))
-        {
-            yield return StartWalking(hit.position);
-        }
-
-        yield return new WaitForSeconds(3f);
-        isWalking = false;
-        yield return new WaitForSeconds(3f);
-    }
-
-    private void RotateTowardsTarget()
-    {
-        Vector3 targetDirection = Vector3.zero;
-
-        if (isAttacking)
-        {
-            targetDirection = playerTransform.position - transform.position;
-        }
-        else if (isWalking)
-        {
-            targetDirection = navMeshAgent.destination - transform.position;
-        }
-
-        targetDirection.y = 0;
-
-        if (targetDirection != Vector3.zero)
-        {
-            Quaternion targetRotation = Quaternion.LookRotation(-targetDirection);
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
-        }
+        agent.SetDestination(destination);
     }
 }
