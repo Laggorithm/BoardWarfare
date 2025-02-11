@@ -1,0 +1,16 @@
+{
+    "items": [
+        {
+            "name": "Sword",
+            "description": "A sharp blade used for combat."
+        },
+        {
+            "name": "Shield",
+            "description": "A sturdy shield to block attacks."
+        },
+        {
+            "name": "Potion",
+            "description": "A healing potion to restore health."
+        }
+    ]
+}

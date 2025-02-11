@@ -52,7 +52,7 @@ public class DialogueManager : MonoBehaviour
     {
         if (dialogueData == null || dialogueData.dialogues.Count == 0)
         {
-            Debug.LogError("Диалоговые данные отсутствуют!");
+            Debug.LogError("Dialog not found!");
             return;
         }
 
