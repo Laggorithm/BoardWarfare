@@ -11,6 +11,7 @@ public class MobBehaviour : MonoBehaviour
         Follow,   // Следование за игроком
         Attack    // Атака
     }
+
     [Header("Настройки модели")]
     [Tooltip("Если установлено, модель моба будет повернута на 180 градусов, чтобы он шёл спиной.")]
     public bool flipModel = false;
@@ -53,6 +54,20 @@ public class MobBehaviour : MonoBehaviour
         agent = GetComponent<NavMeshAgent>();
         anim = GetComponent<Animator>();
 
+        // Если ссылка на игрока не задана в инспекторе, ищем его по тегу "Player"
+        if (player == null)
+        {
+            GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+            if (playerObj != null)
+            {
+                player = playerObj.transform;
+            }
+            else
+            {
+                Debug.LogWarning("Игрок с тегом 'Player' не найден!");
+            }
+        }
+
         // Если заданы точки патруля, устанавливаем первую цель,
         // иначе выбираем случайную точку
         if (patrolPoints != null && patrolPoints.Length > 0)
@@ -77,6 +92,12 @@ public class MobBehaviour : MonoBehaviour
         {
             currentState = State.Follow;
             anim.SetBool("SeeEnemy", true);
+            if (isWaiting)
+            {
+                StopCoroutine(PatrolWait());
+                isWaiting = false;
+                agent.isStopped = false;
+            }
         }
         // Если моб в режиме преследования, но игрок убежал за пределы зоны видимости
         else if (currentState == State.Follow && distanceToPlayer > seeEnemyDistance)

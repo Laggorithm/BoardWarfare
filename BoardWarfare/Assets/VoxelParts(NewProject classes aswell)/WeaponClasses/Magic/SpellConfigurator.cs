@@ -16,8 +16,11 @@ public class SingleShotSettings
     public float projectileDamage = 5f;
     public int projectileCount = 1;
     public bool burstMode = false;
+    public int burstCount = 3; // Количество выстрелов в бёрсте
+    public float burstDelay = 0.1f; // Задержка между выстрелами в бёрсте
     public GameObject projectilePrefab;
 }
+
 
 [Serializable]
 public class RectangleSettings
@@ -93,15 +96,13 @@ public class SpellConfigurator : MonoBehaviour
     {
         if (singleShotSettings.projectilePrefab != null)
         {
-            for (int i = 0; i < singleShotSettings.projectileCount; i++)
+            if (singleShotSettings.burstMode)
             {
-                GameObject projectile = Instantiate(singleShotSettings.projectilePrefab, shootingPoint.position, shootingPoint.rotation);
-                Rigidbody rb = projectile.GetComponent<Rigidbody>();
-
-                if (rb != null)
-                {
-                    rb.velocity = shootingPoint.forward * singleShotSettings.projectileSpeed;
-                }
+                StartCoroutine(BurstFire());
+            }
+            else
+            {
+                FireProjectile();
             }
         }
         else
@@ -109,6 +110,31 @@ public class SpellConfigurator : MonoBehaviour
             Debug.LogWarning("Projectile Prefab не назначен в SingleShotSettings");
         }
     }
+
+
+    private IEnumerator BurstFire()
+    {
+        for (int i = 0; i < singleShotSettings.burstCount; i++)
+        {
+            FireProjectile();
+            yield return new WaitForSeconds(singleShotSettings.burstDelay);
+        }
+    }
+
+
+    private void FireProjectile()
+    {
+        GameObject projectile = Instantiate(singleShotSettings.projectilePrefab, shootingPoint.position, shootingPoint.rotation);
+        Rigidbody rb = projectile.GetComponent<Rigidbody>();
+
+        if (rb != null)
+        {
+            rb.velocity = shootingPoint.forward * singleShotSettings.projectileSpeed;
+        }
+    }
+
+
+
 
     private void CastRectangle()
     {
