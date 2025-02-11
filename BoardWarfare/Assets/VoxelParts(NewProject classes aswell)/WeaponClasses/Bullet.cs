@@ -2,8 +2,8 @@
 
 public class Bullet : MonoBehaviour
 {
-    public float speed = 50f;
-    public float damage = 50f;
+    public float speed = 40f;
+    public float damage = 20f;
     public float lifetime = 2f; // Через сколько секунд уничтожится
 
     void Start()

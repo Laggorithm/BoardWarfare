@@ -153,14 +153,21 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   spellType: 1
+  projectileSpeed: 10
   cooldown: 5
   shootingPoint: {fileID: 1122441004}
   singleShotSettings:
-    projectileSpeed: 10
-    projectileDamage: 5
     projectileCount: 1
-    burstMode: 0
+    spreadHorizontal: 15
+    spreadVertical: 10
     projectilePrefab: {fileID: 0}
+  burstSettings:
+    burstCount: 3
+    burstDelay: 0.1
+  shotgunSettings:
+    pelletCount: 5
+    spreadHorizontal: 20
+    spreadVertical: 10
   rectangleSettings:
     rectangleLength: 15
     rectangleHeight: 2
@@ -560,7 +567,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!143 &852839267
 CharacterController:
   m_ObjectHideFlags: 0
@@ -1257,15 +1264,22 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 21112652a37d45a4d8d29d98ea93a9d5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  spellType: 0
+  spellType: 2
+  projectileSpeed: 1
   cooldown: 2
   shootingPoint: {fileID: 1122441004}
   singleShotSettings:
-    projectileSpeed: 10
-    projectileDamage: 5
     projectileCount: 1
-    burstMode: 1
+    spreadHorizontal: 2
+    spreadVertical: 0
     projectilePrefab: {fileID: 3294408018876436676, guid: 55841494a44dc80418a5a12afa2262d6, type: 3}
+  burstSettings:
+    burstCount: 3
+    burstDelay: 0.1
+  shotgunSettings:
+    pelletCount: 50
+    spreadHorizontal: 10
+    spreadVertical: 10
   rectangleSettings:
     rectangleLength: 10
     rectangleHeight: 2

@@ -5,6 +5,8 @@ using System.Collections;
 public enum SpellType
 {
     SingleShot,
+    Burst,
+    Shotgun,
     Rectangle
 }
 
@@ -12,15 +14,31 @@ public enum SpellType
 public class SingleShotSettings
 {
     [Header("Single Shot Settings")]
-    public float projectileSpeed = 10f;
-    public float projectileDamage = 5f;
-    public int projectileCount = 1;
-    public bool burstMode = false;
-    public int burstCount = 3; // Количество выстрелов в бёрсте
-    public float burstDelay = 0.1f; // Задержка между выстрелами в бёрсте
+    public int projectileCount = 1; // Количество снарядов за один выстрел
+
+    [Header("Spread Settings")]
+    public float spreadHorizontal = 15f; // Разброс по горизонтали
+    public float spreadVertical = 10f;   // Разброс по вертикали
+
     public GameObject projectilePrefab;
 }
 
+[Serializable]
+public class BurstSettings
+{
+    [Header("Burst Settings")]
+    public int burstCount = 3; // Количество выстрелов в очереди
+    public float burstDelay = 0.1f; // Задержка между выстрелами
+}
+
+[Serializable]
+public class ShotgunSettings
+{
+    [Header("Shotgun Settings")]
+    public int pelletCount = 5; // Количество пуль за раз
+    public float spreadHorizontal = 20f; // Разброс по горизонтали
+    public float spreadVertical = 10f;   // Разброс по вертикали
+}
 
 [Serializable]
 public class RectangleSettings
@@ -33,7 +51,7 @@ public class RectangleSettings
     public float spellDuration = 3f;
     [Space]
     public bool enableBlinking = false;
-    public int blinkCount = 3; 
+    public int blinkCount = 3;
     public float blinkFrequency = 0.5f;
     public GameObject rectangleObject;
 }
@@ -48,14 +66,17 @@ public class SpellConfigurator : MonoBehaviour
     [Space]
     public Transform shootingPoint;
 
+    // Настройки для разных типов стрельбы
     public SingleShotSettings singleShotSettings;
+    public BurstSettings burstSettings;
+    public ShotgunSettings shotgunSettings;
     public RectangleSettings rectangleSettings;
 
     private BoxCollider rectangleCollider;
 
     private void Start()
     {
-        if (rectangleSettings.rectangleObject != null)
+        if (rectangleSettings != null && rectangleSettings.rectangleObject != null)
         {
             rectangleCollider = rectangleSettings.rectangleObject.GetComponent<BoxCollider>();
             if (rectangleCollider == null)
@@ -84,25 +105,52 @@ public class SpellConfigurator : MonoBehaviour
             case SpellType.SingleShot:
                 CastSingleShot();
                 break;
+            case SpellType.Burst:
+                StartCoroutine(CastBurst());
+                break;
+            case SpellType.Shotgun:
+                CastShotgun();
+                break;
             case SpellType.Rectangle:
                 CastRectangle();
+                break;
+            default:
+                Debug.LogWarning("Неизвестный тип заклинания!");
                 break;
         }
 
         StartCoroutine(StartCooldown());
     }
 
+    #region Методы для каждого типа стрельбы
+
+    /// <summary>
+    /// Одиночный выстрел – просто стреляем одним снарядом без разброса.
+    /// </summary>
     private void CastSingleShot()
     {
         if (singleShotSettings.projectilePrefab != null)
         {
-            if (singleShotSettings.burstMode)
+            FireProjectile(shootingPoint.rotation);
+        }
+        else
+        {
+            Debug.LogWarning("Projectile Prefab не назначен в SingleShotSettings");
+        }
+    }
+
+    /// <summary>
+    /// Burst – стреляем серией выстрелов с заданной задержкой и разбросом.
+    /// </summary>
+    private IEnumerator CastBurst()
+    {
+        if (singleShotSettings.projectilePrefab != null)
+        {
+            for (int i = 0; i < burstSettings.burstCount; i++)
             {
-                StartCoroutine(BurstFire());
-            }
-            else
-            {
-                FireProjectile();
+                Quaternion spreadRotation = GetSpreadRotation(singleShotSettings.spreadHorizontal, singleShotSettings.spreadVertical);
+                FireProjectile(spreadRotation);
+                yield return new WaitForSeconds(burstSettings.burstDelay);
             }
         }
         else
@@ -111,34 +159,31 @@ public class SpellConfigurator : MonoBehaviour
         }
     }
 
-
-    private IEnumerator BurstFire()
+    /// <summary>
+    /// Shotgun – выстреливает заданное количество пуль с рандомным разбросом.
+    /// </summary>
+    private void CastShotgun()
     {
-        for (int i = 0; i < singleShotSettings.burstCount; i++)
+        if (singleShotSettings.projectilePrefab != null)
         {
-            FireProjectile();
-            yield return new WaitForSeconds(singleShotSettings.burstDelay);
+            for (int i = 0; i < shotgunSettings.pelletCount; i++)
+            {
+                Quaternion spreadRotation = GetSpreadRotation(shotgunSettings.spreadHorizontal, shotgunSettings.spreadVertical);
+                FireProjectile(spreadRotation);
+            }
+        }
+        else
+        {
+            Debug.LogWarning("Projectile Prefab не назначен (используется SingleShotSettings для Shotgun)");
         }
     }
 
-
-    private void FireProjectile()
-    {
-        GameObject projectile = Instantiate(singleShotSettings.projectilePrefab, shootingPoint.position, shootingPoint.rotation);
-        Rigidbody rb = projectile.GetComponent<Rigidbody>();
-
-        if (rb != null)
-        {
-            rb.velocity = shootingPoint.forward * singleShotSettings.projectileSpeed;
-        }
-    }
-
-
-
-
+    /// <summary>
+    /// Rectangle – активирует прямоугольный объект с заданными параметрами.
+    /// </summary>
     private void CastRectangle()
     {
-        if (rectangleSettings.rectangleObject != null && rectangleCollider != null)
+        if (rectangleSettings != null && rectangleSettings.rectangleObject != null && rectangleCollider != null)
         {
             if (!rectangleSettings.rectangleObject.activeSelf)
                 rectangleSettings.rectangleObject.SetActive(true);
@@ -159,6 +204,37 @@ public class SpellConfigurator : MonoBehaviour
         }
     }
 
+    #endregion
+
+    #region Вспомогательные методы
+
+    /// <summary>
+    /// Создаёт и запускает снаряд с указанной ротацией.
+    /// </summary>
+    private void FireProjectile(Quaternion rotation)
+    {
+        GameObject projectile = Instantiate(singleShotSettings.projectilePrefab, shootingPoint.position, rotation);
+        Rigidbody rb = projectile.GetComponent<Rigidbody>();
+
+        if (rb != null)
+        {
+            rb.velocity = rotation * Vector3.forward; // Используем общую скорость для всех типов выстрелов
+        }
+    }
+
+    /// <summary>
+    /// Возвращает рандомную ротацию с заданным разбросом по горизонтали и вертикали.
+    /// </summary>
+    private Quaternion GetSpreadRotation(float spreadH, float spreadV)
+    {
+        float randomYaw = UnityEngine.Random.Range(-spreadH, spreadH);
+        float randomPitch = UnityEngine.Random.Range(-spreadV, spreadV);
+        return Quaternion.Euler(randomPitch, randomYaw, 0) * shootingPoint.rotation;
+    }
+
+    /// <summary>
+    /// Обрабатывает поведение прямоугольного заклинания (мигание или длительность активации).
+    /// </summary>
     private IEnumerator HandleRectangleAttack()
     {
         if (rectangleSettings.enableBlinking)
@@ -179,10 +255,15 @@ public class SpellConfigurator : MonoBehaviour
         rectangleSettings.rectangleObject.SetActive(false);
     }
 
+    /// <summary>
+    /// Запускает кулдаун после активации заклинания.
+    /// </summary>
     private IEnumerator StartCooldown()
     {
         isOnCooldown = true;
         yield return new WaitForSeconds(cooldown);
         isOnCooldown = false;
     }
+
+    #endregion
 }
