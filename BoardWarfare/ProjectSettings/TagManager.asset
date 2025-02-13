@@ -16,6 +16,7 @@ TagManager:
   - MobSpawn
   - Special
   - HeavyWeapon
+  - Bullet
   layers:
   - Default
   - TransparentFX

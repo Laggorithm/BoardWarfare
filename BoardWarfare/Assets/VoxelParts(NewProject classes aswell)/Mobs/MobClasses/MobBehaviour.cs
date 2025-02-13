@@ -20,14 +20,13 @@ public class MobBehaviour : MonoBehaviour
     [Tooltip("Массив точек патруля, между которыми будет перемещаться моб. Если не назначены, будет выбран случайный патрульный маршрут.")]
     public Transform[] patrolPoints;
     [Tooltip("Время ожидания в точке патруля (в секундах)")]
-    public float waitTimeAtPatrolPoint = 1000000f;
+    public float waitTimeAtPatrolPoint;
 
     [Header("Настройки преследования")]
     [Tooltip("Расстояние, на котором моб начинает замечать игрока")]
     public float seeEnemyDistance = 15f;
     [Tooltip("Расстояние до игрока, при котором моб начинает атаку")]
     public float attackRange = 3f;
-    // (Если необходимо, можно добавить дистанцию, при которой моб прекращает преследование)
 
     [Header("Ссылки на объекты")]
     [Tooltip("Ссылка на игрока")]
@@ -41,20 +40,24 @@ public class MobBehaviour : MonoBehaviour
     private State currentState = State.Patrol;
     private int currentPatrolIndex = 0;
 
-    // Флаги для контроля состояний
+    // Флаги состояний
     private bool isWaiting = false;
     private bool isAttacking = false;
+    private bool isDead = false; // Если true — моб мёртв
 
     [Header("Настройки поворота")]
     [Tooltip("Скорость поворота моба.")]
     public float rotationSpeed = 5f;
+
+    // Здоровье моба
+    private float health = 10f;
 
     void Start()
     {
         agent = GetComponent<NavMeshAgent>();
         anim = GetComponent<Animator>();
 
-        // Если ссылка на игрока не задана в инспекторе, ищем его по тегу "Player"
+        // Если ссылка на игрока не задана, ищем его по тегу "Player"
         if (player == null)
         {
             GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
@@ -68,8 +71,7 @@ public class MobBehaviour : MonoBehaviour
             }
         }
 
-        // Если заданы точки патруля, устанавливаем первую цель,
-        // иначе выбираем случайную точку
+        // Если заданы патрульные точки, устанавливаем первую цель, иначе выбираем случайную точку
         if (patrolPoints != null && patrolPoints.Length > 0)
         {
             SetDestination(patrolPoints[currentPatrolIndex].position);
@@ -85,9 +87,15 @@ public class MobBehaviour : MonoBehaviour
 
     void Update()
     {
-        float distanceToPlayer = Vector3.Distance(transform.position, player.position);
+        // Если моб мёртв — прекращаем всю логику
+        if (isDead)
+            return;
 
-        // Если моб находится в режиме патруля и игрок попадает в зону обнаружения
+        // Отслеживание игрока только по горизонтали:
+        Vector3 horizontalPlayerPos = new Vector3(player.position.x, transform.position.y, player.position.z);
+        float distanceToPlayer = Vector3.Distance(transform.position, horizontalPlayerPos);
+
+        // Если моб патрулирует и замечает игрока — переключаемся в режим преследования
         if (currentState == State.Patrol && distanceToPlayer <= seeEnemyDistance)
         {
             currentState = State.Follow;
@@ -99,12 +107,11 @@ public class MobBehaviour : MonoBehaviour
                 agent.isStopped = false;
             }
         }
-        // Если моб в режиме преследования, но игрок убежал за пределы зоны видимости
+        // Если моб преследует, а игрок уже ушёл — возвращаемся к патрулю
         else if (currentState == State.Follow && distanceToPlayer > seeEnemyDistance)
         {
             currentState = State.Patrol;
             anim.SetBool("SeeEnemy", false);
-            // Возвращаемся к патрулю: если заданы точки, выбираем их, иначе генерируем случайную точку
             if (patrolPoints != null && patrolPoints.Length > 0)
                 SetDestination(patrolPoints[currentPatrolIndex].position);
             else
@@ -127,22 +134,16 @@ public class MobBehaviour : MonoBehaviour
     }
 
     /// <summary>
-    /// Логика патруля:
-    /// 1. Моб выбирает точку патруля (либо из массива, либо случайную, если массив пуст)
-    /// 2. Поворачивается в сторону цели (реализовано внутри SetDestination)
-    /// 3. Передвигается к точке
-    /// 4. По достижении – останавливается на заданное время
+    /// Логика патруля
     /// </summary>
     void Patrol()
     {
-        // Если моб не движется (точка достигнута) и не находится в режиме ожидания
         if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance && !isWaiting)
         {
             StartCoroutine(PatrolWait());
         }
         else
         {
-            // Если моб движется, запускаем анимацию ходьбы
             if (agent.velocity.sqrMagnitude > 0.1f)
             {
                 anim.SetBool("Walking", true);
@@ -152,9 +153,7 @@ public class MobBehaviour : MonoBehaviour
     }
 
     /// <summary>
-    /// Корутина ожидания в точке патруля.
-    /// Моб ждёт заданное время, а затем выбирает новую точку: следующую из массива
-    /// или случайную, если массив не назначен.
+    /// Корутина ожидания в точке патруля
     /// </summary>
     IEnumerator PatrolWait()
     {
@@ -163,13 +162,11 @@ public class MobBehaviour : MonoBehaviour
         anim.SetBool("Idle", true);
         anim.SetBool("Walking", false);
 
-        // Ждем указанное время (например, 5 секунд)
         yield return new WaitForSeconds(waitTimeAtPatrolPoint);
 
         agent.isStopped = false;
         isWaiting = false;
 
-        // Если назначены патрульные точки, переходим к следующей, иначе генерируем случайную точку
         if (patrolPoints != null && patrolPoints.Length > 0)
         {
             currentPatrolIndex = (currentPatrolIndex + 1) % patrolPoints.Length;
@@ -182,90 +179,112 @@ public class MobBehaviour : MonoBehaviour
     }
 
     /// <summary>
-    /// Генерирует случайную точку для патруля в пределах 5-15 единиц от моба.
+    /// Генерация случайной точки для патруля
     /// </summary>
     Vector3 GetRandomPatrolPoint()
     {
-        // Случайное расстояние от 5 до 15
         float randomDistance = Random.Range(5f, 15f);
-        // Создаем случайное направление в пределах сферы
         Vector3 randomDirection = Random.insideUnitSphere * randomDistance;
-        // Сохраняем текущий уровень по Y
         randomDirection.y = 0;
-        Vector3 randomPoint = transform.position + randomDirection;
-        return randomPoint;
+        return transform.position + randomDirection;
     }
 
     /// <summary>
-    /// Логика преследования:
-    /// 1. Цель – позиция игрока.
-    /// 2. Если расстояние до игрока становится <= attackRange, запускается атака.
-    /// 3. Если игрок немного дальше – продолжается движение к нему.
+    /// Логика преследования игрока
     /// </summary>
     void Follow()
     {
         if (isAttacking)
-            return; // Пока идёт атака, не обновляем цель
+            return;
 
-        // Обновляем цель преследования
-        SetDestination(player.position);
+        // Отслеживание цели только по горизонтали:
+        Vector3 horizontalPlayerPos = new Vector3(player.position.x, transform.position.y, player.position.z);
+        SetDestination(horizontalPlayerPos);
 
-        // Если игрок достаточно близко – начинаем атаку
-        float distanceToPlayer = Vector3.Distance(transform.position, player.position);
+        float distanceToPlayer = Vector3.Distance(transform.position, horizontalPlayerPos);
         if (distanceToPlayer <= attackRange)
         {
             StartCoroutine(Attack());
         }
         else
         {
-            // Обновляем анимации
             anim.SetBool("Walking", true);
             anim.SetBool("Idle", false);
         }
     }
 
     /// <summary>
-    /// Коррутина атаки:
-    /// 1. Останавливает движение моба.
-    /// 2. Запускает анимацию атаки (триггер "IsAttacking").
-    /// 3. Ждёт 3 секунды (время атаки), затем продолжает преследование.
+    /// Корутина атаки
     /// </summary>
     IEnumerator Attack()
     {
         isAttacking = true;
         currentState = State.Attack;
         agent.isStopped = true;
-
-        // Запускаем анимацию атаки
         anim.SetTrigger("IsAttacking");
 
-        // Ждем 3 секунды (время атаки)
         yield return new WaitForSeconds(3f);
 
-        // После атаки возобновляем движение
         agent.isStopped = false;
         isAttacking = false;
-
-        // Если игрок всё ещё рядом, продолжаем преследование (режим Follow)
         currentState = State.Follow;
     }
 
     /// <summary>
-    /// Устанавливает новую цель для NavMeshAgent и выполняет поворот моба в её сторону.
-    /// Если flipModel == true, моб будет смотреть в противоположную сторону от цели.
+    /// Устанавливает новую цель для NavMeshAgent и поворачивает моба в её сторону по горизонтали.
     /// </summary>
-    /// <param name="destination">Позиция цели</param>
     void SetDestination(Vector3 destination)
     {
-        // Поворот в сторону цели (скорость поворота можно регулировать)
+        // Отслеживание только по горизонтали: задаем Y равным Y моба
+        destination.y = transform.position.y;
         Vector3 direction = destination - transform.position;
-        if (direction != Vector3.zero)
+        if (direction.sqrMagnitude > 0.001f)
         {
-            // Если flipModel включён, разворачиваем моба в противоположную сторону
             Quaternion lookRotation = flipModel ? Quaternion.LookRotation(-direction) : Quaternion.LookRotation(direction);
             transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, Time.deltaTime * rotationSpeed);
         }
 
         agent.SetDestination(destination);
+    }
+
+    /// <summary>
+    /// Обработка столкновений (например, получение урона от пули)
+    /// </summary>
+    private void OnTriggerEnter(Collider other)
+    {
+        // Если моб уже мёртв, не обрабатываем столкновения
+        if (isDead)
+            return;
+
+        if (other.CompareTag("Bullet"))
+        {
+            Bullet bullet = other.GetComponent<Bullet>();
+            if (bullet != null)
+            {
+                health -= bullet.damage;
+                Debug.Log("Моб получил " + bullet.damage + " урона, оставшееся здоровье: " + health);
+
+                // Если здоровье меньше или равно 0, активируем режим смерти
+                if (health <= 0)
+                {
+                    isDead = true;
+                    agent.isStopped = true;  // Останавливаем движение сразу
+                    anim.SetTrigger("Die");  // Запускаем анимацию смерти (убедитесь, что в Animator есть триггер "Die")
+                    StartCoroutine(Die());
+                }
+            }
+        }
+    }
+
+    /// <summary>
+    /// Корутина смерти: после активации анимации смерти ждём 4 секунды и удаляем объект.
+    /// Пока isDead == true, все остальные действия прекращаются.
+    /// </summary>
+    IEnumerator Die()
+    {
+        // Можно дополнительно отключить коллайдер, чтобы не было лишних столкновений
+        GetComponent<Collider>().enabled = false;
+        yield return new WaitForSeconds(4f);
+        Destroy(gameObject);
     }
 }
