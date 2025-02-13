@@ -26,7 +26,7 @@ public class MobBehaviour : MonoBehaviour
     [Tooltip("Расстояние, на котором моб начинает замечать игрока")]
     public float seeEnemyDistance = 15f;
     [Tooltip("Расстояние до игрока, при котором моб начинает атаку")]
-    public float attackRange = 3f;
+    public float attackRange;
 
     [Header("Ссылки на объекты")]
     [Tooltip("Ссылка на игрока")]
