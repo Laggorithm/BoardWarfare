@@ -88,7 +88,7 @@ public class MobBehaviour : MonoBehaviour
     void Update()
     {
         // Если моб мёртв — прекращаем всю логику
-        if (isDead)
+        if (health <= 0)
             return;
 
         // Отслеживание игрока только по горизонтали:

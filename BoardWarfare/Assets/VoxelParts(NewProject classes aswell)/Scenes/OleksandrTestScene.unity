@@ -239,7 +239,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &264028970
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -317,6 +317,18 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1319282840584794034, guid: cfdea230c461ccd43830f898fec1eb1b, type: 3}
+      propertyPath: m_Constraints
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5792458769101529545, guid: cfdea230c461ccd43830f898fec1eb1b, type: 3}
+      propertyPath: m_IsTrigger
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 7640337091705941618, guid: cfdea230c461ccd43830f898fec1eb1b, type: 3}
+      propertyPath: m_ApplyRootMotion
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 8528373784599359968, guid: cfdea230c461ccd43830f898fec1eb1b, type: 3}
       propertyPath: m_LocalRotation.w
       value: 1
@@ -355,7 +367,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8528373784898135810, guid: cfdea230c461ccd43830f898fec1eb1b, type: 3}
       propertyPath: m_LocalPosition.y
-      value: 0
+      value: 12.76
       objectReference: {fileID: 0}
     - target: {fileID: 8528373784898135810, guid: cfdea230c461ccd43830f898fec1eb1b, type: 3}
       propertyPath: m_LocalPosition.z
@@ -395,10 +407,41 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8528373784898135811, guid: cfdea230c461ccd43830f898fec1eb1b, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: cfdea230c461ccd43830f898fec1eb1b, type: 3}
+--- !u!1 &610952600
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 610952602}
+  m_Layer: 0
+  m_Name: MobKnightSkeleton
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &610952602
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 610952600}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 4.9911647, y: 3.7678862, z: 0.63553864}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_RootOrder: 7
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!4 &628403748 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4226735536431436450, guid: 77124422d0837874fa3c20dd4f08ccd3, type: 3}
@@ -617,7 +660,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 852839266}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 2.3750217, z: -21.69}
+  m_LocalPosition: {x: 0, y: 12.11, z: -21.69}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -1420,9 +1463,21 @@ PrefabInstance:
       propertyPath: m_Name
       value: "\u0421olosseum"
       objectReference: {fileID: 0}
+    - target: {fileID: 4226735537132437423, guid: 77124422d0837874fa3c20dd4f08ccd3, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4226735538010178175, guid: 77124422d0837874fa3c20dd4f08ccd3, type: 3}
+      propertyPath: m_NavMeshData
+      value: 
+      objectReference: {fileID: 23800000, guid: 40c52aecc8f4207428bf2510615b8905, type: 2}
     - target: {fileID: 4226735538501580320, guid: 77124422d0837874fa3c20dd4f08ccd3, type: 3}
       propertyPath: m_LocalPosition.y
       value: 1.628
+      objectReference: {fileID: 0}
+    - target: {fileID: 4226735538501580323, guid: 77124422d0837874fa3c20dd4f08ccd3, type: 3}
+      propertyPath: m_IsActive
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4405321904922076571, guid: 77124422d0837874fa3c20dd4f08ccd3, type: 3}
       propertyPath: m_RootOrder
