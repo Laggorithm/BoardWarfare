@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.UIElements;
 
 public class MobBehaviour : MonoBehaviour
 {
@@ -12,9 +13,10 @@ public class MobBehaviour : MonoBehaviour
         Attack    // Атака
     }
 
-    [Header("Настройки модели")]
+    [Header("Настройки моба")]
     [Tooltip("Если установлено, модель моба будет повернута на 180 градусов, чтобы он шёл спиной.")]
     public bool flipModel = false;
+    public float health = 10f;
 
     [Header("Настройки патруля")]
     [Tooltip("Массив точек патруля, между которыми будет перемещаться моб. Если не назначены, будет выбран случайный патрульный маршрут.")]
@@ -50,7 +52,7 @@ public class MobBehaviour : MonoBehaviour
     public float rotationSpeed = 5f;
 
     // Здоровье моба
-    private float health = 10f;
+    
 
     void Start()
     {
@@ -88,9 +90,15 @@ public class MobBehaviour : MonoBehaviour
     void Update()
     {
         // Если моб мёртв — прекращаем всю логику
+        
         if (health <= 0)
+        {
+            isDead = true;
+            agent.isStopped = true; // Полностью отключает работу агента
+            StartCoroutine(Die());
+        }
+        if (isDead)
             return;
-
         // Отслеживание игрока только по горизонтали:
         Vector3 horizontalPlayerPos = new Vector3(player.position.x, transform.position.y, player.position.z);
         float distanceToPlayer = Vector3.Distance(transform.position, horizontalPlayerPos);

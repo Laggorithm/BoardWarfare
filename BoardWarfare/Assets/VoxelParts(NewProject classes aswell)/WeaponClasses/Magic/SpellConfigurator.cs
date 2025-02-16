@@ -20,7 +20,7 @@ public class SingleShotSettings
     public float spreadHorizontal = 15f; // Разброс по горизонтали
     public float spreadVertical = 10f;   // Разброс по вертикали
 
-    public GameObject projectilePrefab;
+    
 }
 
 [Serializable]
@@ -62,7 +62,7 @@ public class SpellConfigurator : MonoBehaviour
     public SpellType spellType;
     public float cooldown = 1.5f;
     private bool isOnCooldown = false;
-
+    public GameObject projectilePrefab;
     [Space]
     public Transform shootingPoint;
 
@@ -129,7 +129,7 @@ public class SpellConfigurator : MonoBehaviour
     /// </summary>
     private void CastSingleShot()
     {
-        if (singleShotSettings.projectilePrefab != null)
+        if (projectilePrefab != null)
         {
             FireProjectile(shootingPoint.rotation);
         }
@@ -144,7 +144,7 @@ public class SpellConfigurator : MonoBehaviour
     /// </summary>
     private IEnumerator CastBurst()
     {
-        if (singleShotSettings.projectilePrefab != null)
+        if (projectilePrefab != null)
         {
             for (int i = 0; i < burstSettings.burstCount; i++)
             {
@@ -164,7 +164,7 @@ public class SpellConfigurator : MonoBehaviour
     /// </summary>
     private void CastShotgun()
     {
-        if (singleShotSettings.projectilePrefab != null)
+        if (projectilePrefab != null)
         {
             for (int i = 0; i < shotgunSettings.pelletCount; i++)
             {
@@ -213,7 +213,7 @@ public class SpellConfigurator : MonoBehaviour
     /// </summary>
     private void FireProjectile(Quaternion rotation)
     {
-        GameObject projectile = Instantiate(singleShotSettings.projectilePrefab, shootingPoint.position, rotation);
+        GameObject projectile = Instantiate(projectilePrefab, shootingPoint.position, rotation);
         Rigidbody rb = projectile.GetComponent<Rigidbody>();
 
         if (rb != null)

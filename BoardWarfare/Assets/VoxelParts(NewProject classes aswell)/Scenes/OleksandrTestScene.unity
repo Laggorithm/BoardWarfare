@@ -154,12 +154,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   spellType: 1
   cooldown: 5
+  projectilePrefab: {fileID: 0}
   shootingPoint: {fileID: 1122441004}
   singleShotSettings:
     projectileCount: 1
     spreadHorizontal: 15
     spreadVertical: 10
-    projectilePrefab: {fileID: 0}
   burstSettings:
     burstCount: 3
     burstDelay: 0.1
@@ -367,7 +367,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8528373784898135811, guid: cfdea230c461ccd43830f898fec1eb1b, type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: cfdea230c461ccd43830f898fec1eb1b, type: 3}
@@ -412,6 +412,106 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 4226735536469228100, guid: 77124422d0837874fa3c20dd4f08ccd3, type: 3}
   m_PrefabInstance: {fileID: 4226735537059314822}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &775518498
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 775518499}
+  m_Layer: 0
+  m_Name: ShootingPoint (1)
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &775518499
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 775518498}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.894, y: 0.15, z: 0.544}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 852839271}
+  m_RootOrder: 7
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &796231811
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 796231812}
+  - component: {fileID: 796231813}
+  m_Layer: 0
+  m_Name: ShootSpell2
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &796231812
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 796231811}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: -2.103251, y: 0.10018897, z: -3.8320374}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 852839271}
+  m_RootOrder: 6
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &796231813
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 796231811}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 21112652a37d45a4d8d29d98ea93a9d5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  spellType: 1
+  cooldown: 3
+  projectilePrefab: {fileID: 3294408018876436676, guid: 6955d96f10fa5f647ae4d5a2cfaafebb, type: 3}
+  shootingPoint: {fileID: 775518499}
+  singleShotSettings:
+    projectileCount: 1
+    spreadHorizontal: 2
+    spreadVertical: 0
+  burstSettings:
+    burstCount: 3
+    burstDelay: 0.3
+  shotgunSettings:
+    pelletCount: 50
+    spreadHorizontal: 10
+    spreadVertical: 10
+  rectangleSettings:
+    rectangleLength: 10
+    rectangleHeight: 2
+    rectangleWidth: 5
+    initialDamage: 3
+    spellDuration: 3
+    enableBlinking: 0
+    blinkCount: 3
+    blinkFrequency: 0.5
+    rectangleObject: {fileID: 0}
 --- !u!1 &828156453
 GameObject:
   m_ObjectHideFlags: 0
@@ -630,6 +730,8 @@ Transform:
   - {fileID: 138097396}
   - {fileID: 1872847157}
   - {fileID: 1311411480}
+  - {fileID: 796231812}
+  - {fileID: 775518499}
   m_Father: {fileID: 0}
   m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -645,16 +747,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 7e7dd45156e286749bbc740aaff7e35c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  walkSpeed: 6
-  sprintSpeed: 9
-  crouchSpeed: 3
+  walkSpeed: 3
+  sprintSpeed: 6
+  crouchSpeed: 2
   gravity: 20
   crouchHeight: 0.5
-  slideDuration: 0.6
-  slideSpeed: 25
-  dashDistance: 10
+  slideDuration: 0.4
+  slideSpeed: 20
+  dashDistance: 7
   dashDuration: 0.5
-  dashCooldown: 0.1
+  dashCooldown: 1.5
 --- !u!114 &852839273
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -667,7 +769,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a798ed48757e9914cb3bb0bdb242dee3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  spellQ: {fileID: 1872847156}
+  spellQ: {fileID: 796231813}
   spellE: {fileID: 1872847156}
 --- !u!114 &852839274
 MonoBehaviour:
@@ -922,7 +1024,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1122441003}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -0.894, y: 0.15, z: 0.544}
+  m_LocalPosition: {x: 0.75, y: 0.15, z: 0.544}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1228,7 +1330,7 @@ GameObject:
   - component: {fileID: 1872847157}
   - component: {fileID: 1872847156}
   m_Layer: 0
-  m_Name: ShootSpell
+  m_Name: ShootSpell1
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1247,13 +1349,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   spellType: 0
-  cooldown: 0.1
+  cooldown: 1
+  projectilePrefab: {fileID: 3294408018876436676, guid: 55841494a44dc80418a5a12afa2262d6, type: 3}
   shootingPoint: {fileID: 1122441004}
   singleShotSettings:
     projectileCount: 1
     spreadHorizontal: 2
-    spreadVertical: 0
-    projectilePrefab: {fileID: 3294408018876436676, guid: 55841494a44dc80418a5a12afa2262d6, type: 3}
+    spreadVertical: 2
   burstSettings:
     burstCount: 330
     burstDelay: 0.1
@@ -1425,7 +1527,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4226735537132437423, guid: 77124422d0837874fa3c20dd4f08ccd3, type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4226735538010178175, guid: 77124422d0837874fa3c20dd4f08ccd3, type: 3}
       propertyPath: m_NavMeshData

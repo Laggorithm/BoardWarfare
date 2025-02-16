@@ -813,6 +813,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   flipModel: 1
+  health: 100
   patrolPoints: []
   waitTimeAtPatrolPoint: 9
   seeEnemyDistance: 15

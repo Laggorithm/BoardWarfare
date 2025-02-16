@@ -4,21 +4,21 @@ using UnityEngine;
 public class PlayerMovement : MonoBehaviour
 {
     [Header("Основные параметры")]
-    public float walkSpeed = 6f;
-    public float sprintSpeed = 9f;
-    public float crouchSpeed = 3f;
+    public float walkSpeed = 3f;
+    public float sprintSpeed = 6f;
+    public float crouchSpeed = 2f;
     public float gravity = 20f;
     public float crouchHeight = 0.5f;
     private float defaultHeight;
 
     [Header("Настройки подката")]
-    public float slideDuration = 1f;
-    public float slideSpeed = 25f;
+    public float slideDuration = 0.7f;
+    public float slideSpeed = 20f;
     private bool isSliding = false;
     private float slideTimer;
 
     [Header("Настройки дэша")]
-    public float dashDistance = 5f;
+    public float dashDistance = 7f;
     public float dashDuration = 0.5f;
     public float dashCooldown = 1.5f;
     private bool canDash = true;
