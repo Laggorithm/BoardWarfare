@@ -752,7 +752,7 @@ MonoBehaviour:
   crouchSpeed: 2
   gravity: 20
   crouchHeight: 0.5
-  slideDuration: 0.4
+  slideDuration: 0.7
   slideSpeed: 20
   dashDistance: 7
   dashDuration: 0.5
