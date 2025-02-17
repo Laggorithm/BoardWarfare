@@ -1,7 +1,6 @@
 ﻿using System.Collections;
 using UnityEngine;
 using UnityEngine.AI;
-using UnityEngine.UIElements;
 
 public class MobBehaviour : MonoBehaviour
 {
@@ -22,17 +21,21 @@ public class MobBehaviour : MonoBehaviour
     [Tooltip("Массив точек патруля, между которыми будет перемещаться моб. Если не назначены, будет выбран случайный патрульный маршрут.")]
     public Transform[] patrolPoints;
     [Tooltip("Время ожидания в точке патруля (в секундах)")]
-    public float waitTimeAtPatrolPoint;
+    public float waitTimeAtPatrolPoint = 2f;
 
     [Header("Настройки преследования")]
     [Tooltip("Расстояние, на котором моб начинает замечать игрока")]
     public float seeEnemyDistance = 15f;
     [Tooltip("Расстояние до игрока, при котором моб начинает атаку")]
-    public float attackRange;
+    public float attackRange = 2f;
 
     [Header("Ссылки на объекты")]
     [Tooltip("Ссылка на игрока")]
     public Transform player;
+
+    [Header("Настройки поворота")]
+    [Tooltip("Скорость поворота моба.")]
+    public float rotationSpeed = 5f;
 
     // Компоненты
     private NavMeshAgent agent;
@@ -45,14 +48,20 @@ public class MobBehaviour : MonoBehaviour
     // Флаги состояний
     private bool isWaiting = false;
     private bool isAttacking = false;
-    private bool isDead = false; // Если true — моб мёртв
+    private bool isDead = false; // Моб мёртв
+    private bool deathStarted = false; // Гарантирует, что смерть обрабатывается только один раз
 
-    [Header("Настройки поворота")]
-    [Tooltip("Скорость поворота моба.")]
-    public float rotationSpeed = 5f;
+    // Управление корутинами
+    private Coroutine patrolWaitCoroutine;
+    private Coroutine attackCoroutine;
+    private Coroutine hitTurnCoroutine;
 
-    // Здоровье моба
-    
+    // Параметры для реакции на удары
+    private float lastHitTime = 0f;
+    private bool isTakingHits = false;
+    private float turnCooldown = 0.3f; // Период между поворотами
+    private float hitDuration = 1f;    // Длительность эффекта удара
+    private float lastTurnTime = 0f;
 
     void Start()
     {
@@ -64,62 +73,64 @@ public class MobBehaviour : MonoBehaviour
         {
             GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
             if (playerObj != null)
-            {
                 player = playerObj.transform;
-            }
             else
-            {
                 Debug.LogWarning("Игрок с тегом 'Player' не найден!");
-            }
         }
 
-        // Если заданы патрульные точки, устанавливаем первую цель, иначе выбираем случайную точку
+        // Устанавливаем первую точку назначения
         if (patrolPoints != null && patrolPoints.Length > 0)
-        {
             SetDestination(patrolPoints[currentPatrolIndex].position);
-        }
         else
-        {
             SetDestination(GetRandomPatrolPoint());
-        }
 
-        // Отключаем автоматическое обновление поворота агента
+        // Отключаем автоматический поворот агента (поворот будем задавать вручную)
         agent.updateRotation = false;
     }
 
     void Update()
     {
-        // Если моб мёртв — прекращаем всю логику
-        
-        if (health <= 0)
+        // Если здоровье меньше или равно 0 и смерть ещё не начата, запускаем смерть один раз
+        if (health <= 0 && !deathStarted)
         {
+            deathStarted = true;
             isDead = true;
-            agent.isStopped = true; // Полностью отключает работу агента
+            agent.isStopped = true;
+            anim.SetTrigger("Die"); // Убедитесь, что в клипе смерти Loop Time отключён
             StartCoroutine(Die());
         }
         if (isDead)
             return;
-        // Отслеживание игрока только по горизонтали:
+
+        // Если моб получает удары, обновляем таймер; если прошло больше hitDuration, сбрасываем режим ударов
+        if (isTakingHits && Time.time - lastHitTime > hitDuration)
+        {
+            isTakingHits = false;
+            anim.SetBool("IsHit", false);
+        }
+
+        // Расстояние до игрока (рассчитываем только по горизонтали)
         Vector3 horizontalPlayerPos = new Vector3(player.position.x, transform.position.y, player.position.z);
         float distanceToPlayer = Vector3.Distance(transform.position, horizontalPlayerPos);
 
-        // Если моб патрулирует и замечает игрока — переключаемся в режим преследования
+        // Переходы между режимами
         if (currentState == State.Patrol && distanceToPlayer <= seeEnemyDistance)
         {
             currentState = State.Follow;
             anim.SetBool("SeeEnemy", true);
-            if (isWaiting)
+            if (isWaiting && patrolWaitCoroutine != null)
             {
-                StopCoroutine(PatrolWait());
+                StopCoroutine(patrolWaitCoroutine);
+                patrolWaitCoroutine = null;
                 isWaiting = false;
                 agent.isStopped = false;
             }
         }
-        // Если моб преследует, а игрок уже ушёл — возвращаемся к патрулю
         else if (currentState == State.Follow && distanceToPlayer > seeEnemyDistance)
         {
             currentState = State.Patrol;
             anim.SetBool("SeeEnemy", false);
+            // Возобновляем патруль, выбирая следующую точку
             if (patrolPoints != null && patrolPoints.Length > 0)
                 SetDestination(patrolPoints[currentPatrolIndex].position);
             else
@@ -141,14 +152,15 @@ public class MobBehaviour : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Логика патруля
-    /// </summary>
     void Patrol()
     {
         if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance && !isWaiting)
         {
-            StartCoroutine(PatrolWait());
+            if (patrolWaitCoroutine != null)
+            {
+                StopCoroutine(patrolWaitCoroutine);
+            }
+            patrolWaitCoroutine = StartCoroutine(PatrolWait());
         }
         else
         {
@@ -160,9 +172,6 @@ public class MobBehaviour : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Корутина ожидания в точке патруля
-    /// </summary>
     IEnumerator PatrolWait()
     {
         isWaiting = true;
@@ -184,11 +193,9 @@ public class MobBehaviour : MonoBehaviour
         {
             SetDestination(GetRandomPatrolPoint());
         }
+        patrolWaitCoroutine = null;
     }
 
-    /// <summary>
-    /// Генерация случайной точки для патруля
-    /// </summary>
     Vector3 GetRandomPatrolPoint()
     {
         float randomDistance = Random.Range(5f, 15f);
@@ -197,22 +204,22 @@ public class MobBehaviour : MonoBehaviour
         return transform.position + randomDirection;
     }
 
-    /// <summary>
-    /// Логика преследования игрока
-    /// </summary>
     void Follow()
     {
         if (isAttacking)
             return;
 
-        // Отслеживание цели только по горизонтали:
         Vector3 horizontalPlayerPos = new Vector3(player.position.x, transform.position.y, player.position.z);
         SetDestination(horizontalPlayerPos);
 
         float distanceToPlayer = Vector3.Distance(transform.position, horizontalPlayerPos);
         if (distanceToPlayer <= attackRange)
         {
-            StartCoroutine(Attack());
+            if (!isAttacking)
+            {
+                // Начинаем атаку
+                attackCoroutine = StartCoroutine(Attack());
+            }
         }
         else
         {
@@ -221,9 +228,6 @@ public class MobBehaviour : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Корутина атаки
-    /// </summary>
     IEnumerator Attack()
     {
         isAttacking = true;
@@ -231,36 +235,49 @@ public class MobBehaviour : MonoBehaviour
         agent.isStopped = true;
         anim.SetTrigger("IsAttacking");
 
+        // Здесь можно добавить дополнительные проверки (например, находится ли игрок всё ещё в зоне атаки)
         yield return new WaitForSeconds(3f);
 
-        agent.isStopped = false;
-        isAttacking = false;
-        currentState = State.Follow;
+        if (!isDead)
+        {
+            agent.isStopped = false;
+            isAttacking = false;
+            currentState = State.Follow;
+        }
+        attackCoroutine = null;
     }
 
-    /// <summary>
-    /// Устанавливает новую цель для NavMeshAgent и поворачивает моба в её сторону по горизонтали.
-    /// </summary>
+    // Устанавливает цель для агента и поворачивает моба, если он не получает ударов
     void SetDestination(Vector3 destination)
     {
-        // Отслеживание только по горизонтали: задаем Y равным Y моба
-        destination.y = transform.position.y;
-        Vector3 direction = destination - transform.position;
-        if (direction.sqrMagnitude > 0.001f)
-        {
-            Quaternion lookRotation = flipModel ? Quaternion.LookRotation(-direction) : Quaternion.LookRotation(direction);
-            transform.rotation = Quaternion.Slerp(transform.rotation, lookRotation, Time.deltaTime * rotationSpeed);
-        }
+        destination.y = transform.position.y; // Фиксируем Y координату
 
+        if (!isTakingHits)
+        {
+            Vector3 direction = destination - transform.position;
+            if (direction.sqrMagnitude > 0.001f)
+            {
+                Quaternion targetRotation = flipModel ? Quaternion.LookRotation(-direction) : Quaternion.LookRotation(direction);
+                transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * rotationSpeed);
+            }
+        }
         agent.SetDestination(destination);
     }
 
-    /// <summary>
-    /// Обработка столкновений (например, получение урона от пули)
-    /// </summary>
+    // Замораживает движение агента на указанное время
+    IEnumerator FreezeAgent(float duration)
+    {
+        bool previousStopped = agent.isStopped;
+        agent.isStopped = true;
+        yield return new WaitForSeconds(duration);
+        if (!isTakingHits && !isDead)
+            agent.isStopped = false;
+        else
+            agent.isStopped = previousStopped;
+    }
+
     private void OnTriggerEnter(Collider other)
     {
-        // Если моб уже мёртв, не обрабатываем столкновения
         if (isDead)
             return;
 
@@ -272,27 +289,71 @@ public class MobBehaviour : MonoBehaviour
                 health -= bullet.damage;
                 Debug.Log("Моб получил " + bullet.damage + " урона, оставшееся здоровье: " + health);
 
-                // Если здоровье меньше или равно 0, активируем режим смерти
-                if (health <= 0)
+                // Уничтожаем пулю после столкновения
+                Destroy(other.gameObject);
+
+                if (health > 0)
                 {
-                    isDead = true;
-                    agent.isStopped = true;  // Останавливаем движение сразу
-                    anim.SetTrigger("Die");  // Запускаем анимацию смерти (убедитесь, что в Animator есть триггер "Die")
-                    StartCoroutine(Die());
+                    Vector3 hitDirection = (transform.position - bullet.transform.position).normalized;
+                    TakeHit(hitDirection);
                 }
             }
         }
     }
 
-    /// <summary>
-    /// Корутина смерти: после активации анимации смерти ждём 4 секунды и удаляем объект.
-    /// Пока isDead == true, все остальные действия прекращаются.
-    /// </summary>
+    // Реагирует на удар: запускает цепочку анимаций и поворот в сторону игрока
+    public void TakeHit(Vector3 hitDirection)
+    {
+        lastHitTime = Time.time;
+        isTakingHits = true;
+        anim.SetTrigger("HitTrigger");
+        anim.SetBool("IsHit", true);
+
+        // Замораживаем движение агента на 1 секунду
+        StartCoroutine(FreezeAgent(1f));
+
+        // Поворачиваем моба в сторону игрока
+        Vector3 directionToPlayer = new Vector3(player.position.x - transform.position.x, 0, player.position.z - transform.position.z).normalized;
+        if (Time.time - lastTurnTime > turnCooldown)
+        {
+            lastTurnTime = Time.time;
+            if (hitTurnCoroutine != null)
+            {
+                StopCoroutine(hitTurnCoroutine);
+            }
+            hitTurnCoroutine = StartCoroutine(TurnTowardsHit(directionToPlayer));
+        }
+    }
+
+    // Плавно поворачивает моба в сторону targetDir
+    IEnumerator TurnTowardsHit(Vector3 targetDir)
+    {
+        yield return new WaitForSeconds(turnCooldown);
+
+        if (flipModel)
+        {
+            targetDir = -targetDir;
+        }
+
+        Quaternion targetRotation = Quaternion.LookRotation(targetDir);
+        float t = 0f;
+        float duration = 0.3f;
+        Quaternion initialRotation = transform.rotation;
+
+        while (t < duration)
+        {
+            t += Time.deltaTime;
+            transform.rotation = Quaternion.Slerp(initialRotation, targetRotation, t / duration);
+            yield return null;
+        }
+        hitTurnCoroutine = null;
+    }
+
     IEnumerator Die()
     {
-        // Можно дополнительно отключить коллайдер, чтобы не было лишних столкновений
         GetComponent<Collider>().enabled = false;
         yield return new WaitForSeconds(4f);
+        anim.enabled = false;
         Destroy(gameObject);
     }
 }
