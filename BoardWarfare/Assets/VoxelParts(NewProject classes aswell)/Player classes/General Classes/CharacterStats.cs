@@ -11,14 +11,13 @@ public class CharacterStats : MonoBehaviour
 
     [Header("Эффекты")]
     public bool isBleeding = false;
-    public float bleedLevel;  // Уровень кровотечения
-    public float bleedDuration;  // Длительность эффекта кровотечения
+    public float bleedLevel;            // Уровень кровотечения
+    public float bleedDuration;         // Длительность эффекта кровотечения
     public float bleedDamagePerSecond;  // Урон в секунду от кровотечения
 
     [Header("Стан (Stun)")]
     public bool isStunned = false;
     public float stunDuration = 2f;  // Продолжительность эффекта стана в секундах
-
 
     private PlayerMovement playerMovement;  // Ссылка на класс PlayerMovement
 
@@ -30,28 +29,30 @@ public class CharacterStats : MonoBehaviour
 
     void Update()
     {
-        if (isStunned)
-        {
-            // Блокируем движение, если персонаж оглушен
-            playerMovement.HandleMovement();
-            return;
-        }
-
+        // Применяем кровотечение всегда, независимо от стана
         if (isBleeding)
         {
             ApplyBleedDamage();
+        }
+
+        // Если персонаж оглушён, можно дополнительно отключить ввод в PlayerMovement (но не прерывать Update)
+        if (isStunned)
+        {
+            // Например, можно установить нулевое движение или выполнить другую логику,
+            // а обработка кровотечения уже идёт выше.
+            // playerMovement.HandleMovement(); // Это можно убрать, если хотите просто "заморозить" движение.
         }
     }
 
     // Метод для применения урона от кровотечения
     private void ApplyBleedDamage()
     {
-        // Рассчитываем процент урона от кровотечения
-        float healthLostPercentage = Mathf.Round(maxHealth / 100 * bleedLevel);
-        bleedDamagePerSecond = Mathf.Round(maxHealth / 100 * bleedLevel);
+        // Рассчитываем урон от кровотечения без округления
+        bleedDamagePerSecond = maxHealth / 100f * bleedLevel;
+        currentHealth -= bleedDamagePerSecond * Time.deltaTime;
 
-        // Наносим урон
-        currentHealth -= Mathf.Round(bleedDamagePerSecond * Time.deltaTime);
+        // Можно вывести в Debug, чтобы видеть уменьшение здоровья:
+        // Debug.Log("Bleed damage: " + (bleedDamagePerSecond * Time.deltaTime) + " | currentHealth: " + currentHealth);
 
         // Проверяем, истекла ли длительность кровотечения
         bleedDuration -= Time.deltaTime;
@@ -64,7 +65,7 @@ public class CharacterStats : MonoBehaviour
     // Метод для начала кровотечения
     public void StartBleeding(float damage, float defense)
     {
-        bleedLevel = Mathf.Round((damage - defense) / 10);  // Уровень кровотечения зависит от урона и защиты
+        bleedLevel = Mathf.Round((damage - defense) / 10f);  // Уровень кровотечения зависит от урона и защиты
         bleedDuration = 5f;  // Длительность кровотечения по умолчанию 5 секунд
         isBleeding = true;
     }
@@ -97,6 +98,6 @@ public class CharacterStats : MonoBehaviour
     {
         yield return new WaitForSeconds(stunDuration);
         isStunned = false;
-        playerMovement.RemoveStun();  // Ожидаем завершения стана, восстанавливаем движение
+        playerMovement.RemoveStun();  // Восстанавливаем движение после стана
     }
 }
