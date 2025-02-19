@@ -8,7 +8,7 @@ public class MobBehaviour : MonoBehaviour
     private enum State
     {
         Patrol,   // Патруль
-        Follow,   // Следование за игроком
+        Follow,   // Следование за игроком (вандеринг)
         Attack,   // Атака
         Ultimate  // Использование ультимейта
     }
@@ -38,41 +38,46 @@ public class MobBehaviour : MonoBehaviour
     [Tooltip("Скорость поворота моба")]
     public float rotationSpeed = 5f;
 
-    // --- Параметры для реакции на удары ---
+    [Header("Параметры для реакции на удары")]
     [Tooltip("Период между поворотами при получении удара")]
     public float turnCooldown = 0.3f;
     [Tooltip("Длительность эффекта удара (если между ударами прошло больше этого времени, сбрасывается состояние удара)")]
     public float hitDuration = 1f;
 
-    // --- Настройки ускорения (Follow) ---
+    [Header("Настройки ускорения (Follow)")]
     [Tooltip("Исходная скорость агента (будет сохранена автоматически)")]
-    public float normalSpeed; // сохраняется в Start()
-    private Coroutine boostRoutine;  // ссылка на корутину проверки ускорения
+    public float normalSpeed;
+    private Coroutine boostRoutine;
 
-    // --- Настройки ультимейта ---
+    [Header("Настройки ультимейта")]
     [Tooltip("Минимальное время между использованием ультимейта (в секундах)")]
     public float ultimateCooldown = 10f;
     [Tooltip("Время последнего ультимейта")]
     public float lastUltimateTime = -10f;
-    private Coroutine ultimateChanceCoroutine;  // корутина проверки шанса ультимейта
+    private Coroutine ultimateChanceCoroutine;
+    private Coroutine ultimateRoutineCoroutine; // для отмены ультимейта
 
-    // --- Тестовые настройки (для отладки) ---
     [Header("Тестовые настройки")]
     [Tooltip("Если включено, при старте моб будет оглушён (для теста)")]
     public bool testStunOnStart = false;
     [Tooltip("Длительность тестового эффекта стана (в секундах)")]
     public float testStunDuration = 10f;
 
-    // --- Внутренние переменные состояния ---
+    // Внутренние переменные состояния
     private State currentState = State.Patrol;
     private int currentPatrolIndex = 0;
     private bool isWaiting = false;
     private bool isAttacking = false;
-    private bool isDead = false;      // моб мёртв
-    private bool deathStarted = false; // смерть обрабатывается один раз
+    private bool isDead = false;
+    private bool deathStarted = false;
     private float lastHitTime = 0f;
     private bool isTakingHits = false;
     private float lastTurnTime = 0f;
+    private bool isUltimateInProgress = false;
+    // Флаг, блокирующий смену стейта (перед финальным ожиданием в ультимейте)
+    private bool blockStateChange = false;
+    // Флаг, указывающий, что ультимейт был отменён ударом
+    private bool ultimateCancelled = false;
 
     // Компоненты
     private NavMeshAgent agent;
@@ -83,10 +88,8 @@ public class MobBehaviour : MonoBehaviour
         agent = GetComponent<NavMeshAgent>();
         anim = GetComponent<Animator>();
 
-        // Сохраняем исходную скорость агента
         normalSpeed = agent.speed;
 
-        // Если ссылка на игрока не задана, ищем его по тегу "Player"
         if (player == null)
         {
             GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
@@ -96,55 +99,61 @@ public class MobBehaviour : MonoBehaviour
                 Debug.LogWarning("Игрок с тегом 'Player' не найден!");
         }
 
-        // Устанавливаем цель: либо первая патрульная точка, либо случайная
         if (patrolPoints != null && patrolPoints.Length > 0)
             SetDestination(patrolPoints[currentPatrolIndex].position);
         else
             SetDestination(GetRandomPatrolPoint());
 
-        // Отключаем автоматическое обновление поворота агента
         agent.updateRotation = false;
 
-        // Тестовый эффект стана (для отладки)
         if (testStunOnStart)
-        {
             StartCoroutine(TestStunRoutine());
-        }
     }
 
     void Update()
     {
-        // Если моб мёртв – дальше ничего не делаем
-        if (health <= 0 && !deathStarted)
-        {
-            deathStarted = true;
-            isDead = true;
-            agent.isStopped = true;
-            anim.SetTrigger("Die");
-            StartCoroutine(Die());
-        }
+        // Если моб мёртв – гарантированно отключаем движение
         if (isDead)
+        {
+            agent.ResetPath();
             return;
+        }
 
-        // Если моб находится в состоянии Ultimate, не выполняем другие действия
+        // --- Цепочка из 4 проверок ---
+        if (health <= 0)
+        {
+            if (!deathStarted)
+            {
+                deathStarted = true;
+                isDead = true;
+                agent.isStopped = true;
+                anim.SetTrigger("Die");
+                StartCoroutine(Die());
+            }
+            return;
+        }
+        if (anim.GetCurrentAnimatorStateInfo(0).IsTag("Die"))
+            return;
         if (currentState == State.Ultimate)
             return;
+        if (currentState == State.Attack)
+            return;
+        if (blockStateChange)
+            return;
+        // --- Конец проверок ---
 
-        // Обновляем состояние получения удара
         if (isTakingHits && Time.time - lastHitTime > hitDuration)
         {
             isTakingHits = false;
             anim.SetBool("IsHit", false);
         }
 
-        // Отслеживаем позицию игрока (по горизонтали)
         Vector3 horizontalPlayerPos = new Vector3(player.position.x, transform.position.y, player.position.z);
         float distanceToPlayer = Vector3.Distance(transform.position, horizontalPlayerPos);
 
-        // Переключаем стейты по расстоянию
         if (currentState == State.Patrol && distanceToPlayer <= seeEnemyDistance)
         {
-            currentState = State.Follow;
+            SetState(State.Follow);
             anim.SetBool("SeeEnemy", true);
             if (isWaiting)
             {
@@ -155,7 +164,7 @@ public class MobBehaviour : MonoBehaviour
         }
         else if (currentState == State.Follow && distanceToPlayer > seeEnemyDistance)
         {
-            currentState = State.Patrol;
+            SetState(State.Patrol);
             anim.SetBool("SeeEnemy", false);
             if (patrolPoints != null && patrolPoints.Length > 0)
                 SetDestination(patrolPoints[currentPatrolIndex].position);
@@ -163,24 +172,11 @@ public class MobBehaviour : MonoBehaviour
                 SetDestination(GetRandomPatrolPoint());
         }
 
-        // Выполнение логики по состояниям
-        switch (currentState)
-        {
-            case State.Patrol:
-                Patrol();
-                break;
-            case State.Follow:
-                Follow();
-                break;
-            case State.Attack:
-                Attack();
-                break;
-            case State.Ultimate:
-                UltimateRoutine();
-                break;
-        }
+        if (currentState == State.Patrol)
+            Patrol();
+        else if (currentState == State.Follow)
+            Follow();
 
-        // Управление ускорением в режиме Follow
         if (currentState == State.Follow)
         {
             if (boostRoutine == null)
@@ -197,7 +193,6 @@ public class MobBehaviour : MonoBehaviour
             }
         }
 
-        // Проверка шанса ультимейта: только в режиме Follow, когда кулдаун истёк
         if (currentState == State.Follow && (Time.time - lastUltimateTime >= ultimateCooldown) && ultimateChanceCoroutine == null)
         {
             ultimateChanceCoroutine = StartCoroutine(UltimateChanceCheck());
@@ -209,12 +204,16 @@ public class MobBehaviour : MonoBehaviour
         }
     }
 
+    // Централизованная смена состояния
+    void SetState(State newState)
+    {
+        currentState = newState;
+    }
+
     void Patrol()
     {
         if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance && !isWaiting)
-        {
             StartCoroutine(PatrolWait());
-        }
         else if (agent.velocity.sqrMagnitude > 0.1f)
         {
             anim.SetBool("Walking", true);
@@ -228,21 +227,16 @@ public class MobBehaviour : MonoBehaviour
         agent.isStopped = true;
         anim.SetBool("Idle", true);
         anim.SetBool("Walking", false);
-
         yield return new WaitForSeconds(waitTimeAtPatrolPoint);
-
         agent.isStopped = false;
         isWaiting = false;
-
         if (patrolPoints != null && patrolPoints.Length > 0)
         {
             currentPatrolIndex = (currentPatrolIndex + 1) % patrolPoints.Length;
             SetDestination(patrolPoints[currentPatrolIndex].position);
         }
         else
-        {
             SetDestination(GetRandomPatrolPoint());
-        }
     }
 
     Vector3 GetRandomPatrolPoint()
@@ -260,9 +254,8 @@ public class MobBehaviour : MonoBehaviour
 
         Vector3 horizontalPlayerPos = new Vector3(player.position.x, transform.position.y, player.position.z);
         SetDestination(horizontalPlayerPos);
-
         float distanceToPlayer = Vector3.Distance(transform.position, horizontalPlayerPos);
-        if (distanceToPlayer <= attackRange)
+        if (ultimateChanceCoroutine == null && !isUltimateInProgress && distanceToPlayer <= attackRange)
         {
             StartCoroutine(Attack());
         }
@@ -275,21 +268,28 @@ public class MobBehaviour : MonoBehaviour
 
     IEnumerator Attack()
     {
+        if (currentState == State.Attack)
+            yield break;
+
         isAttacking = true;
-        currentState = State.Attack;
+        SetState(State.Attack);
         agent.isStopped = true;
+        CharacterStats stats = player.GetComponent<CharacterStats>();
+        //if (stats != null)
+            //stats.ApplyStun();
         anim.SetTrigger("IsAttacking");
-
         yield return new WaitForSeconds(3f);
-
         agent.isStopped = false;
         isAttacking = false;
-        currentState = State.Follow;
+        SetState(State.Follow);
     }
 
-    // SetDestination с обновлением поворота (если не получает удары)
+    // Если моб находится в ультимейте, метод движения не обновляет направление
     void SetDestination(Vector3 destination)
     {
+        if (currentState == State.Ultimate)
+            return;
+
         destination.y = transform.position.y;
         if (!isTakingHits)
         {
@@ -318,7 +318,6 @@ public class MobBehaviour : MonoBehaviour
     {
         if (isDead)
             return;
-
         if (other.CompareTag("Bullet"))
         {
             Bullet bullet = other.GetComponent<Bullet>();
@@ -326,7 +325,6 @@ public class MobBehaviour : MonoBehaviour
             {
                 health -= bullet.damage;
                 Debug.Log("Моб получил " + bullet.damage + " урона, оставшееся здоровье: " + health);
-
                 if (health <= 0)
                 {
                     // Смерть обрабатывается в Update()
@@ -346,14 +344,17 @@ public class MobBehaviour : MonoBehaviour
         isTakingHits = true;
         anim.SetTrigger("HitTrigger");
         anim.SetBool("IsHit", true);
-
         StartCoroutine(FreezeAgent(1f));
-
         Vector3 directionToPlayer = new Vector3(player.position.x - transform.position.x, 0, player.position.z - transform.position.z).normalized;
         if (Time.time - lastTurnTime > turnCooldown)
         {
             lastTurnTime = Time.time;
             StartCoroutine(TurnTowardsHit(directionToPlayer));
+        }
+        // Если моб получает удар во время ультимейта, отменяем ультимейт
+        if (currentState == State.Ultimate && !ultimateCancelled)
+        {
+            CancelUltimate();
         }
     }
 
@@ -376,6 +377,8 @@ public class MobBehaviour : MonoBehaviour
     IEnumerator Die()
     {
         GetComponent<Collider>().enabled = false;
+        // Отключаем вандеринг при смерти
+        agent.ResetPath();
         yield return new WaitForSeconds(4f);
         anim.enabled = false;
         Destroy(gameObject);
@@ -403,55 +406,91 @@ public class MobBehaviour : MonoBehaviour
     IEnumerator UltimateChanceCheck()
     {
         yield return new WaitForSeconds(2f);
-        if (currentState == State.Follow && (Time.time - lastUltimateTime >= ultimateCooldown))
+        if (currentState == State.Follow && !isUltimateInProgress && (Time.time - lastUltimateTime >= ultimateCooldown))
         {
+            // Активировать ультимейт можно только в Follow (вандеринг)
             if (Random.value <= 0.7f)
             {
-                currentState = State.Ultimate;
+                isUltimateInProgress = true;
+                ultimateCancelled = false;
+                SetState(State.Ultimate);
                 agent.isStopped = true;
-                yield return StartCoroutine(UltimateRoutine());
+                agent.ResetPath();
+                ultimateRoutineCoroutine = StartCoroutine(UltimateRoutine());
             }
         }
         ultimateChanceCoroutine = null;
     }
 
-    // UltimateRoutine с общей длительностью 540 кадров:
-    // 300 кадров (примерно 5 секунд) ожидания, затем 240 кадров (примерно 4 секунды) активации ульты.
     IEnumerator UltimateRoutine()
     {
-        // Блокируем все действия, переходим в ультимейт-стэнс
+        // Гарантируем, что агент стоит на месте
         agent.isStopped = true;
-        anim.SetBool("UltimateStance", true);
-        Debug.Log("Ждём аниму перехода");
+        agent.ResetPath();
+
+        // При входе в ультимейт оглушаем игрока
         CharacterStats stats = player.GetComponent<CharacterStats>();
-        Debug.Log("Ждёмс стан");
-        stats.ApplyStun();
-        // Фаза ожидания: 300 кадров (~5 секунд при 60 FPS)
-        yield return new WaitForSeconds(3f);
+        if (stats != null)
+            stats.stunDuration = 6f;
+            stats.ApplyStun();
+        // Переход в UltimateStance – моб остаётся неподвижным
+            anim.SetBool("UltimateStance", true);
+            Debug.Log("Ultimate: переход в стационарную позу");
+            yield return new WaitForSeconds(2f);
         
-        
-        // Проверяем, находится ли игрок на расстоянии не более 7f
+
+
+        // Перед финальным ожиданием блокируем смену стейта
+        blockStateChange = true;
+
         Vector3 horizontalPlayerPos = new Vector3(player.position.x, transform.position.y, player.position.z);
         float distanceToPlayer = Vector3.Distance(transform.position, horizontalPlayerPos);
         if (distanceToPlayer <= 10f)
         {
-            // Применяем эффекты к игроку
             
-            float damageForBleed = stats.armor + 30f;
-            stats.StartBleeding(damageForBleed, stats.armor);
-            anim.SetTrigger("Ultimate");
-            // Фаза ультимейта: 240 кадров (~4 секунды)
-            yield return new WaitForSeconds(4f);
-            Debug.Log("Анимка атаки");
-            // Выходим из ультимейта
-            anim.SetBool("UltimateStance", false);
-            agent.isStopped = false;
-            currentState = State.Follow;
-            lastUltimateTime = Time.time;
+            if (stats != null)
+            {
+                // Повторно оглушаем игрока и применяем эффекты
+                
+                anim.SetTrigger("Ultimate");
+                Debug.Log("Ultimate: атака");
+                float damageForBleed = stats.armor + 30f;
+                stats.StartBleeding(damageForBleed, stats.armor);
+            }
+            
+            yield return new WaitForSeconds(4f); // Ждем завершения анимации ульты
         }
+        else
+        {
+            Debug.Log("Ultimate: отменён, игрок вне досягаемости");
+        }
+
+        // Разрешаем смену стейта и завершаем ультимейт
+        blockStateChange = false;
+        anim.SetBool("UltimateStance", false);
+        agent.isStopped = false;
+        SetState(State.Follow);
+        lastUltimateTime = Time.time;
+        isUltimateInProgress = false;
     }
 
-    // Тестовый корутин для стана моба (настройка через Inspector)
+    // Если во время ультимейта моб получает удар, отменяем ультимейт
+    private void CancelUltimate()
+    {
+        ultimateCancelled = true;
+        if (ultimateRoutineCoroutine != null)
+        {
+            StopCoroutine(ultimateRoutineCoroutine);
+            ultimateRoutineCoroutine = null;
+        }
+        Debug.Log("Ultimate cancelled due to damage");
+        anim.SetBool("UltimateStance", false);
+        agent.isStopped = false;
+        SetState(State.Follow);
+        lastUltimateTime = Time.time;
+        isUltimateInProgress = false;
+    }
+
     IEnumerator TestStunRoutine()
     {
         Debug.Log("Test stun activated for " + testStunDuration + " seconds.");

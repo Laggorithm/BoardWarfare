@@ -808,7 +808,7 @@ MonoBehaviour:
   bleedDuration: 0
   bleedDamagePerSecond: 0
   isStunned: 0
-  stunDuration: 2
+  stunDuration: 4
 --- !u!1 &912695532
 GameObject:
   m_ObjectHideFlags: 0
@@ -1527,22 +1527,6 @@ PrefabInstance:
     - target: {fileID: 3920674031146172193, guid: 77124422d0837874fa3c20dd4f08ccd3, type: 3}
       propertyPath: m_Name
       value: "\u0421olosseum"
-      objectReference: {fileID: 0}
-    - target: {fileID: 4226735537132437423, guid: 77124422d0837874fa3c20dd4f08ccd3, type: 3}
-      propertyPath: m_IsActive
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 4226735538010178175, guid: 77124422d0837874fa3c20dd4f08ccd3, type: 3}
-      propertyPath: m_NavMeshData
-      value: 
-      objectReference: {fileID: 23800000, guid: 40c52aecc8f4207428bf2510615b8905, type: 2}
-    - target: {fileID: 4226735538501580320, guid: 77124422d0837874fa3c20dd4f08ccd3, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 1.628
-      objectReference: {fileID: 0}
-    - target: {fileID: 4226735538501580323, guid: 77124422d0837874fa3c20dd4f08ccd3, type: 3}
-      propertyPath: m_IsActive
-      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4405321904922076571, guid: 77124422d0837874fa3c20dd4f08ccd3, type: 3}
       propertyPath: m_RootOrder
