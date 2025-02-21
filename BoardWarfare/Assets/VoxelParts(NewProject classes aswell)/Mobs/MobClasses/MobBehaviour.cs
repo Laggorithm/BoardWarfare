@@ -275,8 +275,6 @@ public class MobBehaviour : MonoBehaviour
         SetState(State.Attack);
         agent.isStopped = true;
         CharacterStats stats = player.GetComponent<CharacterStats>();
-        //if (stats != null)
-            //stats.ApplyStun();
         anim.SetTrigger("IsAttacking");
         yield return new WaitForSeconds(3f);
         agent.isStopped = false;

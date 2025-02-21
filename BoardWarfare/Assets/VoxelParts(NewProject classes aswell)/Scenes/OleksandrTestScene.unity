@@ -1524,6 +1524,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 2139160679, guid: 77124422d0837874fa3c20dd4f08ccd3, type: 3}
+      propertyPath: m_Convex
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3920674031146172193, guid: 77124422d0837874fa3c20dd4f08ccd3, type: 3}
       propertyPath: m_Name
       value: "\u0421olosseum"
