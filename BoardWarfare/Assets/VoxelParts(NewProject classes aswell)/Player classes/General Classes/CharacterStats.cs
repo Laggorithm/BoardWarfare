@@ -21,6 +21,7 @@ public class CharacterStats : MonoBehaviour
 
     private PlayerMovement playerMovement;  // Ссылка на класс PlayerMovement
 
+    public Collider characterCollider;
     void Start()
     {
         currentHealth = maxHealth;
@@ -63,9 +64,9 @@ public class CharacterStats : MonoBehaviour
     }
 
     // Метод для начала кровотечения
-    public void StartBleeding(float damage, float defense)
+    public void StartBleeding()
     {
-        bleedLevel = Mathf.Round((damage - defense) / 10f);  // Уровень кровотечения зависит от урона и защиты
+        bleedLevel = 1;  // Уровень кровотечения зависит от урона и защиты
         bleedDuration = 5f;  // Длительность кровотечения по умолчанию 5 секунд
         isBleeding = true;
     }
@@ -99,5 +100,30 @@ public class CharacterStats : MonoBehaviour
         yield return new WaitForSeconds(stunDuration);
         isStunned = false;
         playerMovement.RemoveStun();  // Восстанавливаем движение после стана
+    }
+
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.tag == "Bleed")
+        {
+            currentHealth -= 10;
+            bleedLevel = 2;
+            bleedDuration = 5;
+            ApplyBleedDamage();
+            
+
+        }
+        else if (other.tag == "HeavyWeapon")
+        {
+            currentHealth -= 20;
+        }
+
+    }
+    private void Die()
+    {
+        if (currentHealth <= 0)
+        {
+            Object.Destroy(this);
+        }
     }
 }

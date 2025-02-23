@@ -17,6 +17,7 @@ TagManager:
   - Special
   - HeavyWeapon
   - Bullet
+  - Bleed
   layers:
   - Default
   - TransparentFX

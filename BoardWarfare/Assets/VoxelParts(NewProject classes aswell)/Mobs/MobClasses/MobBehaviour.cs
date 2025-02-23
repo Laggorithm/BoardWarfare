@@ -422,38 +422,39 @@ public class MobBehaviour : MonoBehaviour
 
     IEnumerator UltimateRoutine()
     {
-        // Гарантируем, что агент стоит на месте
-        agent.isStopped = true;
-        agent.ResetPath();
+        Vector3 horizontalPlayerPos = new Vector3(player.position.x, transform.position.y, player.position.z);
+        float distanceToPlayer = Vector3.Distance(transform.position, horizontalPlayerPos);
 
-        // При входе в ультимейт оглушаем игрока
-        CharacterStats stats = player.GetComponent<CharacterStats>();
-        if (stats != null)
-            stats.stunDuration = 6f;
+        if (distanceToPlayer <= 15f && distanceToPlayer >4f)
+        {
+            // Гарантируем, что агент стоит на месте
+            agent.isStopped = true;
+            agent.ResetPath();
+
+            // При входе в ультимейт оглушаем игрока
+            CharacterStats stats = player.GetComponent<CharacterStats>();
+            if (stats != null)
+                stats.stunDuration = 0.5f;
             stats.ApplyStun();
-        // Переход в UltimateStance – моб остаётся неподвижным
+            stats.stunDuration = 1f;
+            // Переход в UltimateStance – моб остаётся неподвижным
             anim.SetBool("UltimateStance", true);
             Debug.Log("Ultimate: переход в стационарную позу");
             yield return new WaitForSeconds(2f);
-        
 
 
-        // Перед финальным ожиданием блокируем смену стейта
-        blockStateChange = true;
 
-        Vector3 horizontalPlayerPos = new Vector3(player.position.x, transform.position.y, player.position.z);
-        float distanceToPlayer = Vector3.Distance(transform.position, horizontalPlayerPos);
-        if (distanceToPlayer <= 10f)
-        {
-            
+            // Перед финальным ожиданием блокируем смену стейта
+            blockStateChange = true;
+
+           
+
             if (stats != null)
             {
                 // Повторно оглушаем игрока и применяем эффекты
                 
                 anim.SetTrigger("Ultimate");
                 Debug.Log("Ultimate: атака");
-                float damageForBleed = stats.armor + 30f;
-                stats.StartBleeding(damageForBleed, stats.armor);
             }
             
             yield return new WaitForSeconds(4f); // Ждем завершения анимации ульты
@@ -461,6 +462,8 @@ public class MobBehaviour : MonoBehaviour
         else
         {
             Debug.Log("Ultimate: отменён, игрок вне досягаемости");
+            agent.isStopped = false;
+            SetState(State.Follow);
         }
 
         // Разрешаем смену стейта и завершаем ультимейт
