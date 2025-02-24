@@ -18,21 +18,24 @@ public class PlayerMovement : MonoBehaviour
     public float dashDistance = 4f;  // уменьшено расстояние дэша
     public float dashDuration = 0.3f; // уменьшена длительность дэша
     public float dashCooldown = 1.5f;
-    private bool canDash = true;
 
     private CharacterController controller;
     private Vector3 moveDirection;
+    private Vector3 dashDirection;
+    private Animator animator;
+
+    private bool canDash = true;
     private bool isCrouching = false;
     private bool isSprinting = false;
     private bool isDashing = false;
-    private Vector3 dashDirection;
-
     private bool isStunned = false;  // Флаг для стана
 
     void Start()
     {
         controller = GetComponent<CharacterController>();
         defaultHeight = controller.height;
+        animator = GetComponent<Animator>();
+
     }
 
     void Update()
@@ -45,8 +48,16 @@ public class PlayerMovement : MonoBehaviour
         HandleDash();
         ApplyGravity();
         controller.Move(moveDirection * Time.deltaTime);
+        UpdateAnimator();
     }
 
+    void UpdateAnimator()
+    {
+        if (animator == null) return;
+
+        animator.SetFloat("Speed", moveDirection.magnitude);
+        animator.SetBool("IsDashing", isDashing);
+    }
     // Метод для обработки движения
     public void HandleMovement()
     {

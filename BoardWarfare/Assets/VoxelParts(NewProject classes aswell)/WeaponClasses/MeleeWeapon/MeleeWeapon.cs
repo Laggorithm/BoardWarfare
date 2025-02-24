@@ -9,6 +9,7 @@ public class MeleeWeapon : MonoBehaviour
     public float attackDamage = 10f;
     public float attackCooldown = 1.0f;
     public SpellHolder playerSpellHolder; // Ссылка на SpellHolder игрока
+    public Animator playerAnimator; // Добавляем аниматора игрока
 
     private bool isOnCooldown = false;
     private SpellHolder weaponSpellHolder;
@@ -42,6 +43,7 @@ public class MeleeWeapon : MonoBehaviour
         if (weaponAnimator != null)
         {
             weaponAnimator.SetTrigger("Attack");
+            playerAnimator.SetTrigger("Attack");
         }
         else
         {
