@@ -1024,7 +1024,7 @@ CapsuleCollider:
   m_GameObject: {fileID: 8528373784898135811}
   m_Material: {fileID: 0}
   m_IsTrigger: 1
-  m_Enabled: 0
+  m_Enabled: 1
   m_Radius: 1.0360293
   m_Height: 3.080912
   m_Direction: 1
@@ -1098,6 +1098,9 @@ MonoBehaviour:
   lastUltimateTime: -10
   testStunOnStart: 0
   testStunDuration: 10
+  searchDuration: 3
+  retreatDuration: 2
+  retreatHealthThreshold: 3
 --- !u!1 &8528373784908083172
 GameObject:
   m_ObjectHideFlags: 0

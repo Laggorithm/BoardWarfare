@@ -119,9 +119,6 @@ public class MobBehaviour : MonoBehaviour
             SetDestination(GetRandomPatrolPoint());
 
         agent.updateRotation = false;
-
-        if (testStunOnStart)
-            StartCoroutine(TestStunRoutine());
     }
 
     void Update()
@@ -155,8 +152,13 @@ public class MobBehaviour : MonoBehaviour
         if (blockStateChange)
             return;
         // --- Конец проверок ---
-
-        if (isTakingHits && Time.time - lastHitTime > hitDuration)
+        while (health <= 0)
+        {
+            isTakingHits = false;
+            anim.SetBool("IsHit", false);
+           
+        }
+        if (isTakingHits && Time.time - lastHitTime > hitDuration || health <= 0)
         {
             isTakingHits = false;
             anim.SetBool("IsHit", false);
@@ -366,25 +368,21 @@ public class MobBehaviour : MonoBehaviour
 
     public void TakeHit(Vector3 hitDirection)
     {
-        // Если моб уже мёртв или его здоровье ниже нуля – пропускаем обработку удара
-        if (health <= 0 || isDead)
-            return;
+        if (currentState != State.Ultimate)
+        {
+            if (health <= 1 || isDead)
+                return;
 
-        lastHitTime = Time.time;
-        isTakingHits = true;
-        anim.SetTrigger("HitTrigger");
-        anim.SetBool("IsHit", true);
-        StartCoroutine(FreezeAgent(1f));
-        Vector3 directionToPlayer = new Vector3(player.position.x - transform.position.x, 0, player.position.z - transform.position.z).normalized;
-        if (Time.time - lastTurnTime > turnCooldown)
-        {
-            lastTurnTime = Time.time;
-            StartCoroutine(TurnTowardsHit(directionToPlayer));
-        }
-        // Если моб получает удар во время ультимейта, отменяем ультимейт
-        if (currentState == State.Ultimate && !ultimateCancelled)
-        {
-            CancelUltimate();
+            lastHitTime = Time.time;
+            isTakingHits = true;
+            anim.SetTrigger("HitTrigger");
+            StartCoroutine(FreezeAgent(1f));
+            Vector3 directionToPlayer = new Vector3(player.position.x - transform.position.x, 0, player.position.z - transform.position.z).normalized;
+            if (Time.time - lastTurnTime > turnCooldown)
+            {
+                lastTurnTime = Time.time;
+                StartCoroutine(TurnTowardsHit(directionToPlayer));
+            }
         }
     }
 
@@ -503,21 +501,6 @@ public class MobBehaviour : MonoBehaviour
     }
 
     // Если во время ультимейта моб получает удар, отменяем ультимейт
-    private void CancelUltimate()
-    {
-        ultimateCancelled = true;
-        if (ultimateRoutineCoroutine != null)
-        {
-            StopCoroutine(ultimateRoutineCoroutine);
-            ultimateRoutineCoroutine = null;
-        }
-        Debug.Log("Ultimate cancelled due to damage");
-        anim.SetBool("UltimateStance", false);
-        agent.isStopped = false;
-        SetState(State.Follow);
-        lastUltimateTime = Time.time;
-        isUltimateInProgress = false;
-    }
 
     // Новая корутина для состояния поиска (Search)
     IEnumerator SearchRoutine()
