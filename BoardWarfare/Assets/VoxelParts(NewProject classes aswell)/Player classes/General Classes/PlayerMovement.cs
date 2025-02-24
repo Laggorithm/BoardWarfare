@@ -5,23 +5,21 @@ public class PlayerMovement : MonoBehaviour
 {
     [Header("Основные параметры")]
     public float walkSpeed = 3f;
-    public float sprintSpeed = 6f;
+    public float sprintSpeed = 4f;   // снижена скорость спринта
     public float crouchSpeed = 2f;
     public float gravity = 20f;
     public float crouchHeight = 0.5f;
     private float defaultHeight;
 
-    [Header("Настройки подката")]
-    public float slideDuration = 0.7f;
-    public float slideSpeed = 20f;
-    private bool isSliding = false;
-    private float slideTimer;
+    //[Header("Настройки подката")]
+    // Подкат удалён – его функционал заменён обычным приседанием
 
     [Header("Настройки дэша")]
-    public float dashDistance = 7f;
-    public float dashDuration = 0.5f;
+    public float dashDistance = 4f;  // уменьшено расстояние дэша
+    public float dashDuration = 0.3f; // уменьшена длительность дэша
     public float dashCooldown = 1.5f;
     private bool canDash = true;
+
     private CharacterController controller;
     private Vector3 moveDirection;
     private bool isCrouching = false;
@@ -43,7 +41,7 @@ public class PlayerMovement : MonoBehaviour
 
         HandleMovement();
         HandleSprint();
-        HandleCrouchAndSlide();
+        HandleCrouch();
         HandleDash();
         ApplyGravity();
         controller.Move(moveDirection * Time.deltaTime);
@@ -52,7 +50,7 @@ public class PlayerMovement : MonoBehaviour
     // Метод для обработки движения
     public void HandleMovement()
     {
-        if (isSliding || isDashing) return;  // Если мы в процессе подката или дэша, движение заблокировано
+        if (isDashing) return;  // Если мы в процессе дэша, движение заблокировано
 
         float moveX = Input.GetAxis("Horizontal");
         float moveZ = Input.GetAxis("Vertical");
@@ -88,32 +86,16 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    void HandleCrouchAndSlide()
+    // Убрана логика подката – при нажатии LeftControl всегда запускается обычное приседание
+    void HandleCrouch()
     {
         if (controller.isGrounded && Input.GetKeyDown(KeyCode.LeftControl))
         {
-            if (isSprinting)
-            {
-                StartSlide();
-            }
-            else
-            {
-                StartCrouch();
-            }
+            StartCrouch();
         }
         else if (Input.GetKeyUp(KeyCode.LeftControl))
         {
             StopCrouch();
-        }
-
-        if (isSliding)
-        {
-            slideTimer -= Time.deltaTime;
-            if (slideTimer <= 0)
-            {
-                StopCrouch();
-                isSliding = false;
-            }
         }
     }
 
@@ -129,27 +111,18 @@ public class PlayerMovement : MonoBehaviour
         controller.height = defaultHeight;
     }
 
-    void StartSlide()
-    {
-        isSliding = true;
-        slideTimer = slideDuration;
-        moveDirection = transform.forward * slideSpeed;
-        moveDirection.y = 0;
-        StartCrouch();
-    }
-
     void HandleDash()
     {
         if (isDashing || !canDash) return;
 
-        // Check for movement key + dash (spacebar)
+        // Если нажата клавиша дэша (Space), определяем направление по нажатию клавиш движения
         if (Input.GetKeyDown(KeyCode.Space))
         {
             if (Input.GetKey(KeyCode.W)) dashDirection = transform.forward;
             else if (Input.GetKey(KeyCode.S)) dashDirection = -transform.forward;
             else if (Input.GetKey(KeyCode.A)) dashDirection = -transform.right;
             else if (Input.GetKey(KeyCode.D)) dashDirection = transform.right;
-            else dashDirection = -transform.forward; // Default: dash backward if no movement key
+            else dashDirection = -transform.forward; // по умолчанию дэшаем назад, если нет нажатых клавиш движения
 
             StartCoroutine(PerformDash());
         }

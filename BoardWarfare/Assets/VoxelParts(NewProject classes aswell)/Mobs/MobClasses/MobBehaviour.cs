@@ -7,10 +7,12 @@ public class MobBehaviour : MonoBehaviour
     // Режимы работы моба
     private enum State
     {
-        Patrol,   // Патруль
-        Follow,   // Следование за игроком (вандеринг)
-        Attack,   // Атака
-        Ultimate  // Использование ультимейта
+        Patrol,    // Патруль
+        Follow,    // Следование за игроком (вандеринг)
+        Attack,    // Атака
+        Ultimate,  // Использование ультимейта
+        Search,    // Поиск игрока (после потери)
+        Retreat    // Отступление (при низком здоровье)
     }
 
     [Header("Настройки моба")]
@@ -63,6 +65,15 @@ public class MobBehaviour : MonoBehaviour
     [Tooltip("Длительность тестового эффекта стана (в секундах)")]
     public float testStunDuration = 10f;
 
+    // Новые настройки
+    [Header("Дополнительное поведение")]
+    [Tooltip("Длительность поиска игрока, если его потеряли (в секундах)")]
+    public float searchDuration = 3f;
+    [Tooltip("Длительность отступления (в секундах)")]
+    public float retreatDuration = 2f;
+    [Tooltip("Порог здоровья для отступления")]
+    public float retreatHealthThreshold = 3f;
+
     // Внутренние переменные состояния
     private State currentState = State.Patrol;
     private int currentPatrolIndex = 0;
@@ -78,6 +89,9 @@ public class MobBehaviour : MonoBehaviour
     private bool blockStateChange = false;
     // Флаг, указывающий, что ультимейт был отменён ударом
     private bool ultimateCancelled = false;
+
+    // Переменная для хранения последней известной позиции игрока (для состояния Search)
+    private Vector3 lastKnownPlayerPos;
 
     // Компоненты
     private NavMeshAgent agent;
@@ -119,7 +133,7 @@ public class MobBehaviour : MonoBehaviour
             return;
         }
 
-        // --- Цепочка из 4 проверок ---
+        // --- Проверки смерти и текущего анимированного состояния ---
         if (health <= 0)
         {
             if (!deathStarted)
@@ -151,6 +165,15 @@ public class MobBehaviour : MonoBehaviour
         Vector3 horizontalPlayerPos = new Vector3(player.position.x, transform.position.y, player.position.z);
         float distanceToPlayer = Vector3.Distance(transform.position, horizontalPlayerPos);
 
+        // Если в режиме Follow, проверяем условия для отступления (если здоровье низкое)
+        if (currentState == State.Follow && health < retreatHealthThreshold && distanceToPlayer < attackRange + 2f)
+        {
+            SetState(State.Retreat);
+            StartCoroutine(RetreatRoutine());
+            return;
+        }
+
+        // Если моб в режиме Patrol и замечает игрока – переходим в Follow
         if (currentState == State.Patrol && distanceToPlayer <= seeEnemyDistance)
         {
             SetState(State.Follow);
@@ -162,16 +185,16 @@ public class MobBehaviour : MonoBehaviour
                 agent.isStopped = false;
             }
         }
+        // Если моб в Follow и теряет игрока, переходим в состояние Search
         else if (currentState == State.Follow && distanceToPlayer > seeEnemyDistance)
         {
-            SetState(State.Patrol);
             anim.SetBool("SeeEnemy", false);
-            if (patrolPoints != null && patrolPoints.Length > 0)
-                SetDestination(patrolPoints[currentPatrolIndex].position);
-            else
-                SetDestination(GetRandomPatrolPoint());
+            lastKnownPlayerPos = horizontalPlayerPos;
+            SetState(State.Search);
+            StartCoroutine(SearchRoutine());
         }
 
+        // Вызываем методы для управления движением в зависимости от состояния
         if (currentState == State.Patrol)
             Patrol();
         else if (currentState == State.Follow)
@@ -212,9 +235,13 @@ public class MobBehaviour : MonoBehaviour
 
     void Patrol()
     {
+        // Если агент на месте и не ждёт, запускаем корутину ожидания
         if (!agent.pathPending && agent.remainingDistance <= agent.stoppingDistance && !isWaiting)
+        {
             StartCoroutine(PatrolWait());
-        else if (agent.velocity.sqrMagnitude > 0.1f)
+        }
+        // Если агент движется, включаем анимацию ходьбы
+        else if (!agent.isStopped && agent.velocity.sqrMagnitude > 0.1f)
         {
             anim.SetBool("Walking", true);
             anim.SetBool("Idle", false);
@@ -239,9 +266,10 @@ public class MobBehaviour : MonoBehaviour
             SetDestination(GetRandomPatrolPoint());
     }
 
+    // Изменён метод: минимальное расстояние теперь 10f
     Vector3 GetRandomPatrolPoint()
     {
-        float randomDistance = Random.Range(5f, 15f);
+        float randomDistance = Random.Range(10f, 15f);
         Vector3 randomDirection = Random.insideUnitSphere * randomDistance;
         randomDirection.y = 0;
         return transform.position + randomDirection;
@@ -276,7 +304,7 @@ public class MobBehaviour : MonoBehaviour
         agent.isStopped = true;
         CharacterStats stats = player.GetComponent<CharacterStats>();
         anim.SetTrigger("IsAttacking");
-        yield return new WaitForSeconds(3f);
+        yield return new WaitForSeconds(3f); // Ждем завершения анимации атаки
         agent.isStopped = false;
         isAttacking = false;
         SetState(State.Follow);
@@ -338,6 +366,10 @@ public class MobBehaviour : MonoBehaviour
 
     public void TakeHit(Vector3 hitDirection)
     {
+        // Если моб уже мёртв или его здоровье ниже нуля – пропускаем обработку удара
+        if (health <= 0 || isDead)
+            return;
+
         lastHitTime = Time.time;
         isTakingHits = true;
         anim.SetTrigger("HitTrigger");
@@ -425,7 +457,7 @@ public class MobBehaviour : MonoBehaviour
         Vector3 horizontalPlayerPos = new Vector3(player.position.x, transform.position.y, player.position.z);
         float distanceToPlayer = Vector3.Distance(transform.position, horizontalPlayerPos);
 
-        if (distanceToPlayer <= 15f && distanceToPlayer >4f)
+        if (distanceToPlayer <= 15f && distanceToPlayer > 4f)
         {
             // Гарантируем, что агент стоит на месте
             agent.isStopped = true;
@@ -442,21 +474,16 @@ public class MobBehaviour : MonoBehaviour
             Debug.Log("Ultimate: переход в стационарную позу");
             yield return new WaitForSeconds(2f);
 
-
-
             // Перед финальным ожиданием блокируем смену стейта
             blockStateChange = true;
-
-           
 
             if (stats != null)
             {
                 // Повторно оглушаем игрока и применяем эффекты
-                
                 anim.SetTrigger("Ultimate");
                 Debug.Log("Ultimate: атака");
             }
-            
+
             yield return new WaitForSeconds(4f); // Ждем завершения анимации ульты
         }
         else
@@ -490,6 +517,53 @@ public class MobBehaviour : MonoBehaviour
         SetState(State.Follow);
         lastUltimateTime = Time.time;
         isUltimateInProgress = false;
+    }
+
+    // Новая корутина для состояния поиска (Search)
+    IEnumerator SearchRoutine()
+    {
+        // Если моб ещё не дошёл до последней известной позиции игрока – двигаемся туда
+        if (Vector3.Distance(transform.position, lastKnownPlayerPos) > agent.stoppingDistance)
+        {
+            SetDestination(lastKnownPlayerPos);
+            while (Vector3.Distance(transform.position, lastKnownPlayerPos) > agent.stoppingDistance)
+            {
+                // Если игрок внезапно появляется – возвращаемся в преследование
+                Vector3 currentPlayerPos = new Vector3(player.position.x, transform.position.y, player.position.z);
+                if (Vector3.Distance(transform.position, currentPlayerPos) <= seeEnemyDistance)
+                {
+                    SetState(State.Follow);
+                    yield break;
+                }
+                yield return null;
+            }
+        }
+        // Достигнув последней известной позиции, моб остаётся в состоянии поиска (Idle) на заданное время
+        anim.SetBool("Idle", true);
+        anim.SetBool("Walking", false);
+        yield return new WaitForSeconds(searchDuration);
+        // Если игрок не найден, переходим в патруль
+        SetState(State.Patrol);
+        if (patrolPoints != null && patrolPoints.Length > 0)
+        {
+            currentPatrolIndex = (currentPatrolIndex + 1) % patrolPoints.Length;
+            SetDestination(patrolPoints[currentPatrolIndex].position);
+        }
+        else
+            SetDestination(GetRandomPatrolPoint());
+    }
+
+    // Новая корутина для состояния отступления (Retreat)
+    IEnumerator RetreatRoutine()
+    {
+        // Определяем направление от игрока и вычисляем точку отступления
+        Vector3 retreatDir = (transform.position - new Vector3(player.position.x, transform.position.y, player.position.z)).normalized;
+        Vector3 retreatPos = transform.position + retreatDir * 10f;
+        SetDestination(retreatPos);
+        anim.SetBool("Walking", true);
+        anim.SetBool("Idle", false);
+        yield return new WaitForSeconds(retreatDuration);
+        SetState(State.Follow);
     }
 
     IEnumerator TestStunRoutine()
