@@ -15,10 +15,22 @@ public class MeleeWeaponHolder : MonoBehaviour
     [Tooltip("Ссылка на SpellHolder, который будет отключаться")]
     public SpellHolder spellHolder;
 
+    //Ссылки на смену анимаций
+    private Animator animator;
+    public AnimatorOverrideController oneHandedOverride;
+    public AnimatorOverrideController twoHandedOverride;
+    public AnimatorOverrideController scytheOverride;
+    public AnimatorOverrideController daggersOverride;
+    public AnimatorOverrideController hammerOverride;
+    private RuntimeAnimatorController defaultAnimator;
+
+
     private MeleeWeapon activeWeapon;
 
     void Start()
     {
+        animator = GetComponent<Animator>(); // Инициализируем аниматор
+        defaultAnimator = animator.runtimeAnimatorController;
         SetActiveWeapon(null);
     }
 
@@ -57,6 +69,10 @@ public class MeleeWeaponHolder : MonoBehaviour
             activeWeapon.transform.localRotation = Quaternion.identity;
             Debug.Log($"Активировано оружие: {activeWeapon.name}");
 
+            if (activeWeapon != null)
+            {
+                activeWeapon.playerAnimator = GetComponent<Animator>();
+            }
             // Проверяем тег экипированного оружия
             if (activeWeapon.CompareTag("Special") && spellHolder != null)
             {
@@ -68,6 +84,23 @@ public class MeleeWeaponHolder : MonoBehaviour
                 spellHolder.enabled = true;
                 Debug.Log("SpellHolder включен!");
             }
+
+            // Меняем анимации в зависимости от оружия
+            if (animator != null)
+            {
+                if (newWeapon.CompareTag("OneHanded"))
+                    animator.runtimeAnimatorController = oneHandedOverride;
+                else if (newWeapon.CompareTag("TwoHanded"))
+                    animator.runtimeAnimatorController = twoHandedOverride;
+                else if (newWeapon.CompareTag("Scythe"))
+                    animator.runtimeAnimatorController = scytheOverride;
+                else if (newWeapon.CompareTag("Daggers"))
+                    animator.runtimeAnimatorController = daggersOverride;
+                else if (newWeapon.CompareTag("Hammer"))
+                    animator.runtimeAnimatorController = hammerOverride;
+                else
+                    animator.runtimeAnimatorController = null;
+            }
         }
         else
         {
@@ -76,6 +109,10 @@ public class MeleeWeaponHolder : MonoBehaviour
             if (spellHolder != null)
             {
                 spellHolder.enabled = true; // Если убираем оружие, включаем SpellHolder обратно
+            }
+            if (animator != null)
+            {
+                animator.runtimeAnimatorController = defaultAnimator; // Возвращаем стандартные анимации
             }
         }
     }
