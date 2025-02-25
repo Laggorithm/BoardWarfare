@@ -1,5 +1,6 @@
 ﻿using System.Collections;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class CharacterStats : MonoBehaviour
 {
@@ -42,6 +43,10 @@ public class CharacterStats : MonoBehaviour
             // Например, можно установить нулевое движение или выполнить другую логику,
             // а обработка кровотечения уже идёт выше.
             // playerMovement.HandleMovement(); // Это можно убрать, если хотите просто "заморозить" движение.
+        }
+        if (currentHealth <= 0)
+        {
+            Die();
         }
     }
 
@@ -121,9 +126,8 @@ public class CharacterStats : MonoBehaviour
     }
     private void Die()
     {
-        if (currentHealth <= 0)
-        {
-            Object.Destroy(this);
-        }
+        stunDuration = 999999999;
+        ApplyStun();
+        
     }
 }

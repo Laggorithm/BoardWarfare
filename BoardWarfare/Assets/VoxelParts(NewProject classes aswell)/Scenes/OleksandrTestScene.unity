@@ -1530,9 +1530,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 21112652a37d45a4d8d29d98ea93a9d5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  spellType: 1
+  spellType: 2
   cooldown: 3
-  projectilePrefab: {fileID: 3294408018876436676, guid: 55841494a44dc80418a5a12afa2262d6, type: 3}
+  projectilePrefab: {fileID: 3294408018876436676, guid: 6955d96f10fa5f647ae4d5a2cfaafebb, type: 3}
   shootingPoint: {fileID: 775518499}
   singleShotSettings:
     projectileCount: 1
@@ -1605,9 +1605,45 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 4226735538010178175, guid: 77124422d0837874fa3c20dd4f08ccd3, type: 3}
+      propertyPath: m_TileSize
+      value: 1024
+      objectReference: {fileID: 0}
+    - target: {fileID: 4226735538010178175, guid: 77124422d0837874fa3c20dd4f08ccd3, type: 3}
+      propertyPath: m_VoxelSize
+      value: 0.05
+      objectReference: {fileID: 0}
+    - target: {fileID: 4226735538010178175, guid: 77124422d0837874fa3c20dd4f08ccd3, type: 3}
+      propertyPath: m_NavMeshData
+      value: 
+      objectReference: {fileID: 23800000, guid: a7bc2d57a52f69344b83fd8baa2fd64d, type: 2}
+    - target: {fileID: 4226735538010178175, guid: 77124422d0837874fa3c20dd4f08ccd3, type: 3}
+      propertyPath: m_UseGeometry
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 4226735538010178175, guid: 77124422d0837874fa3c20dd4f08ccd3, type: 3}
+      propertyPath: m_OverrideTileSize
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4226735538010178175, guid: 77124422d0837874fa3c20dd4f08ccd3, type: 3}
+      propertyPath: m_OverrideVoxelSize
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 4405321904922076571, guid: 77124422d0837874fa3c20dd4f08ccd3, type: 3}
       propertyPath: m_RootOrder
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 4405321904922076571, guid: 77124422d0837874fa3c20dd4f08ccd3, type: 3}
+      propertyPath: m_LocalScale.x
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 4405321904922076571, guid: 77124422d0837874fa3c20dd4f08ccd3, type: 3}
+      propertyPath: m_LocalScale.y
+      value: 8
+      objectReference: {fileID: 0}
+    - target: {fileID: 4405321904922076571, guid: 77124422d0837874fa3c20dd4f08ccd3, type: 3}
+      propertyPath: m_LocalScale.z
+      value: 8
       objectReference: {fileID: 0}
     - target: {fileID: 4405321904922076571, guid: 77124422d0837874fa3c20dd4f08ccd3, type: 3}
       propertyPath: m_LocalPosition.x
