@@ -5,7 +5,8 @@ using UnityEngine.AI;
 public class MobBehaviour : MonoBehaviour
 {
     // Режимы работы моба
-    private enum State
+    
+    public enum State
     {
         Patrol,    // Патруль
         Follow,    // Следование за игроком (вандеринг)
@@ -14,6 +15,7 @@ public class MobBehaviour : MonoBehaviour
         Search,    // Поиск игрока (после потери)
         Retreat    // Отступление (при низком здоровье)
     }
+
 
     [Header("Настройки моба")]
     [Tooltip("Если установлено, модель моба будет повернута на 180 градусов, чтобы он шёл спиной.")]
@@ -230,10 +232,11 @@ public class MobBehaviour : MonoBehaviour
     }
 
     // Централизованная смена состояния
-    void SetState(State newState)
+    public void SetState(State newState)
     {
         currentState = newState;
     }
+
 
     void Patrol()
     {
