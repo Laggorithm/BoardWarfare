@@ -57,6 +57,9 @@ public class PlayerMovement : MonoBehaviour
 
         animator.SetFloat("Speed", moveDirection.magnitude);
         animator.SetBool("IsDashing", isDashing);
+
+        animator.SetFloat("VelocityX", moveDirection.x);  // параметр для движения по оси X
+        animator.SetFloat("VelocityZ", moveDirection.z);  // параметр для движения по оси Z
     }
     // Метод для обработки движения
     public void HandleMovement()
@@ -66,12 +69,13 @@ public class PlayerMovement : MonoBehaviour
         float moveX = Input.GetAxis("Horizontal");
         float moveZ = Input.GetAxis("Vertical");
 
-        Vector3 move = transform.right * moveX + transform.forward * moveZ;
+        Vector3 move = -(transform.right * moveX + transform.forward * moveZ); // Инвертируем направление
         float currentSpeed = isSprinting ? sprintSpeed : (isCrouching ? crouchSpeed : walkSpeed);
 
         moveDirection.x = move.x * currentSpeed;
         moveDirection.z = move.z * currentSpeed;
     }
+
 
     // Метод для начала стана
     public void ApplyStun()
@@ -129,11 +133,11 @@ public class PlayerMovement : MonoBehaviour
         // Если нажата клавиша дэша (Space), определяем направление по нажатию клавиш движения
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            if (Input.GetKey(KeyCode.W)) dashDirection = transform.forward;
-            else if (Input.GetKey(KeyCode.S)) dashDirection = -transform.forward;
-            else if (Input.GetKey(KeyCode.A)) dashDirection = -transform.right;
-            else if (Input.GetKey(KeyCode.D)) dashDirection = transform.right;
-            else dashDirection = -transform.forward; // по умолчанию дэшаем назад, если нет нажатых клавиш движения
+            if (Input.GetKey(KeyCode.W)) dashDirection = -transform.forward;
+            else if (Input.GetKey(KeyCode.S)) dashDirection = transform.forward;
+            else if (Input.GetKey(KeyCode.A)) dashDirection = transform.right;
+            else if (Input.GetKey(KeyCode.D)) dashDirection = -transform.right;
+            else dashDirection = transform.forward; // по умолчанию дэшаем назад, если нет нажатых клавиш движения
 
             StartCoroutine(PerformDash());
         }

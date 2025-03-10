@@ -30,15 +30,15 @@ public class FirstPersonCamera : MonoBehaviour
 
         if (isThirdPerson)
         {
-            Quaternion rotation = Quaternion.Euler(xRotation, playerBody.eulerAngles.y, 0f);
-            Vector3 desiredPosition = playerBody.position + rotation * thirdPersonOffset;
+            Quaternion rotation = Quaternion.Euler(xRotation, playerBody.eulerAngles.y + 180f, 0f);
+            Vector3 desiredPosition = playerBody.position + rotation * -thirdPersonOffset; // Инвертируем offset
             transform.position = desiredPosition;
             transform.LookAt(playerBody.position + Vector3.up * 1.5f);
             playerBody.Rotate(Vector3.up * mouseX);
         }
         else
         {
-            transform.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
+            transform.localRotation = Quaternion.Euler(xRotation, 180f, 0f); // Поворот на 180 градусов
             playerBody.Rotate(Vector3.up * mouseX);
             transform.position = playerBody.position;
         }
