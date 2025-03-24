@@ -18,6 +18,11 @@ TagManager:
   - HeavyWeapon
   - Bullet
   - Bleed
+  - TwoHanded
+  - OneHanded
+  - Scythe
+  - Daggers
+  - Hammer
   layers:
   - Default
   - TransparentFX

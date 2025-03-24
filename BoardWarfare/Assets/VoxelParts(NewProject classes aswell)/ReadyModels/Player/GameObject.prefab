@@ -102,8 +102,33 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 9097516796759016773, guid: 3e76dfc739c2bb440bfa92d6fb6030a8, type: 3}
+      propertyPath: m_TagString
+      value: TwoHanded
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 3e76dfc739c2bb440bfa92d6fb6030a8, type: 3}
+--- !u!1 &4985772066716450852 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 9097516796759016773, guid: 3e76dfc739c2bb440bfa92d6fb6030a8, type: 3}
+  m_PrefabInstance: {fileID: 4283444500431078753}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &2262198458984512970
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4985772066716450852}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b6b6b21d9e2c0534ebe82a841300e2e1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  weaponModel: {fileID: 4985772066716450852}
+  attackDamage: 10
+  attackCooldown: 1
+  playerSpellHolder: {fileID: 0}
 --- !u!4 &5655067491655965342 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8433852319003107327, guid: 3e76dfc739c2bb440bfa92d6fb6030a8, type: 3}
@@ -123,6 +148,10 @@ PrefabInstance:
     - target: {fileID: 2865176871126943375, guid: 4733f6a353867e64f8bbba7a5ea66486, type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 2865176871126943375, guid: 4733f6a353867e64f8bbba7a5ea66486, type: 3}
+      propertyPath: m_TagString
+      value: OneHanded
       objectReference: {fileID: 0}
     - target: {fileID: 3209086878873525301, guid: 4733f6a353867e64f8bbba7a5ea66486, type: 3}
       propertyPath: m_RootOrder
@@ -187,6 +216,27 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 3209086878873525301, guid: 4733f6a353867e64f8bbba7a5ea66486, type: 3}
   m_PrefabInstance: {fileID: 4283444500667777630}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &2067993609621767377 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 2865176871126943375, guid: 4733f6a353867e64f8bbba7a5ea66486, type: 3}
+  m_PrefabInstance: {fileID: 4283444500667777630}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &4545538324130127591
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2067993609621767377}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b6b6b21d9e2c0534ebe82a841300e2e1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  weaponModel: {fileID: 2067993609621767377}
+  attackDamage: 10
+  attackCooldown: 1
+  playerSpellHolder: {fileID: 0}
 --- !u!1001 &4283444501314002718
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -201,6 +251,10 @@ PrefabInstance:
     - target: {fileID: 3486900499432430941, guid: c2bf113a0eca04a499ceaa9b3b0c1ef7, type: 3}
       propertyPath: m_IsActive
       value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 3486900499432430941, guid: c2bf113a0eca04a499ceaa9b3b0c1ef7, type: 3}
+      propertyPath: m_TagString
+      value: Scythe
       objectReference: {fileID: 0}
     - target: {fileID: 4262697914884491239, guid: c2bf113a0eca04a499ceaa9b3b0c1ef7, type: 3}
       propertyPath: m_RootOrder
@@ -265,6 +319,27 @@ Transform:
   m_CorrespondingSourceObject: {fileID: 4262697914884491239, guid: c2bf113a0eca04a499ceaa9b3b0c1ef7, type: 3}
   m_PrefabInstance: {fileID: 4283444501314002718}
   m_PrefabAsset: {fileID: 0}
+--- !u!1 &797752396299534915 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 3486900499432430941, guid: c2bf113a0eca04a499ceaa9b3b0c1ef7, type: 3}
+  m_PrefabInstance: {fileID: 4283444501314002718}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &5819195957168670242
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 797752396299534915}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b6b6b21d9e2c0534ebe82a841300e2e1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  weaponModel: {fileID: 797752396299534915}
+  attackDamage: 10
+  attackCooldown: 1
+  playerSpellHolder: {fileID: 0}
 --- !u!1001 &4283444501884679948
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -336,8 +411,33 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
+    - target: {fileID: 8726706977966927769, guid: 38a1c6684e4d0a94396d7282bbadf7e6, type: 3}
+      propertyPath: m_TagString
+      value: Hammer
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 38a1c6684e4d0a94396d7282bbadf7e6, type: 3}
+--- !u!1 &4785822094909479061 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8726706977966927769, guid: 38a1c6684e4d0a94396d7282bbadf7e6, type: 3}
+  m_PrefabInstance: {fileID: 4283444501884679948}
+  m_PrefabAsset: {fileID: 0}
+--- !u!114 &5932653630386310482
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4785822094909479061}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b6b6b21d9e2c0534ebe82a841300e2e1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  weaponModel: {fileID: 4785822094909479061}
+  attackDamage: 10
+  attackCooldown: 1
+  playerSpellHolder: {fileID: 0}
 --- !u!4 &5269624406480241199 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 8237274407258846499, guid: 38a1c6684e4d0a94396d7282bbadf7e6, type: 3}

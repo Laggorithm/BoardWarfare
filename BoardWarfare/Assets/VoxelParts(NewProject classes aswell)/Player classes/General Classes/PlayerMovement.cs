@@ -10,9 +10,7 @@ public class PlayerMovement : MonoBehaviour
     public float gravity = 20f;
     public float crouchHeight = 0.5f;
     private float defaultHeight;
-
-    //[Header("Настройки подката")]
-    // Подкат удалён – его функционал заменён обычным приседанием
+    public float currentSpeed = 0f;
 
     [Header("Настройки дэша")]
     public float dashDistance = 4f;  // уменьшено расстояние дэша
@@ -24,6 +22,8 @@ public class PlayerMovement : MonoBehaviour
     private Vector3 dashDirection;
     private Animator animator;
 
+    public Transform cameraTransform; // Ссылка на камеру для направления движения
+
     private bool canDash = true;
     private bool isCrouching = false;
     private bool isSprinting = false;
@@ -33,8 +33,9 @@ public class PlayerMovement : MonoBehaviour
     void Start()
     {
         controller = GetComponent<CharacterController>();
-        defaultHeight = controller.height;
         animator = GetComponent<Animator>();
+        defaultHeight = controller.height;
+        currentSpeed = walkSpeed;
 
     }
 
@@ -42,40 +43,81 @@ public class PlayerMovement : MonoBehaviour
     {
         if (isStunned) return;  // Блокируем движение, если персонаж оглушен
 
-        HandleMovement();
-        HandleSprint();
-        HandleCrouch();
-        HandleDash();
-        ApplyGravity();
-        controller.Move(moveDirection * Time.deltaTime);
-        UpdateAnimator();
+        if (Input.GetKey(KeyCode.LeftShift)) 
+        {
+            currentSpeed = sprintSpeed;  // Спринт
+            Debug.Log("Sprint");  // Выводим в консоль, когда активирован спринт
+        }
+        // Проверка на приседание (если нет спринта)
+        else if (isCrouching)  // Если персонаж приседает
+        {
+            currentSpeed = crouchSpeed;  // Присед
+            Debug.Log("Crouch");  // Выводим в консоль, когда активирован режим приседания
+        }
+        // Если не спринт и не присед, то обычная ходьба
+        else
+        {
+            currentSpeed = walkSpeed;
+            Debug.Log("Walk");  // Выводим в консоль, когда обычная ходьба
+        }
+
+        HandleMovement();  // Обрабатываем движение и спринт
+        HandleCrouch();    // Обрабатываем приседание
+        HandleDash();      // Обрабатываем дэш
+        ApplyGravity();    // Применяем гравитацию
+        UpdateAnimator();  // Обновляем анимации
     }
+
+    // Метод для обработки движения
+
+    public void HandleMovement()
+    {
+        float moveX = Input.GetAxis("Horizontal");
+        float moveZ = Input.GetAxis("Vertical");
+
+        // Если нет ввода (клавиши не нажаты), то сбрасываем движение
+        if (moveX == 0f && moveZ == 0f)
+        {
+            moveDirection = Vector3.zero;  // Нет движения
+            animator.SetFloat("Speed", 0f);  // Скорость в аниматоре тоже обнуляем
+            return;  // Прерываем выполнение, чтобы не обновлять направление движения
+        }
+
+        // Получаем направление на основе камеры
+        Vector3 forward = cameraTransform.forward;
+        Vector3 right = cameraTransform.right;
+
+        // Игнорируем вертикальную составляющую камеры
+        forward.y = 0f;
+        right.y = 0f;
+        forward.Normalize();
+        right.Normalize();
+
+        // Рассчитываем направление движения
+        Vector3 move = forward * moveZ + right * moveX;
+
+        // Устанавливаем направление движения
+        moveDirection.x = move.x * currentSpeed;
+        moveDirection.z = move.z * currentSpeed;
+
+        // Поворачиваем игрока в сторону движения на 180 градусов
+        if (move.magnitude > 0.1f)
+        {
+            Quaternion targetRotation = Quaternion.LookRotation(move);
+            targetRotation *= Quaternion.Euler(0f, 180f, 0f);
+            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, Time.deltaTime * 10f);
+        }
+
+        // Передаем в аниматор реальную скорость
+        animator.SetFloat("Speed", new Vector3(moveDirection.x, 0f, moveDirection.z).magnitude);
+    }
+
 
     void UpdateAnimator()
     {
         if (animator == null) return;
-
-        animator.SetFloat("Speed", moveDirection.magnitude);
-        animator.SetBool("IsDashing", isDashing);
-
-        animator.SetFloat("VelocityX", moveDirection.x);  // параметр для движения по оси X
-        animator.SetFloat("VelocityZ", moveDirection.z);  // параметр для движения по оси Z
+        animator.SetFloat("VelocityZ", moveDirection.z);
     }
-    // Метод для обработки движения
-    public void HandleMovement()
-    {
-        if (isDashing) return;  // Если мы в процессе дэша, движение заблокировано
-
-        float moveX = Input.GetAxis("Horizontal");
-        float moveZ = Input.GetAxis("Vertical");
-
-        Vector3 move = -(transform.right * moveX + transform.forward * moveZ); // Инвертируем направление
-        float currentSpeed = isSprinting ? sprintSpeed : (isCrouching ? crouchSpeed : walkSpeed);
-
-        moveDirection.x = move.x * currentSpeed;
-        moveDirection.z = move.z * currentSpeed;
-    }
-
 
     // Метод для начала стана
     public void ApplyStun()
@@ -89,17 +131,6 @@ public class PlayerMovement : MonoBehaviour
         isStunned = false;
     }
 
-    void HandleSprint()
-    {
-        if (controller.isGrounded && Input.GetKey(KeyCode.LeftShift))
-        {
-            isSprinting = true;
-        }
-        else
-        {
-            isSprinting = false;
-        }
-    }
 
     // Убрана логика подката – при нажатии LeftControl всегда запускается обычное приседание
     void HandleCrouch()
@@ -128,44 +159,34 @@ public class PlayerMovement : MonoBehaviour
 
     void HandleDash()
     {
-        if (isDashing || !canDash) return;
+        if (isDashing || !canDash) return;  // Если уже в дэше или на кулдауне, не выполняем рывок
 
-        // Если нажата клавиша дэша (Space), определяем направление по нажатию клавиш движения
         if (Input.GetKeyDown(KeyCode.Space))
         {
-            if (Input.GetKey(KeyCode.W)) dashDirection = -transform.forward;
-            else if (Input.GetKey(KeyCode.S)) dashDirection = transform.forward;
-            else if (Input.GetKey(KeyCode.A)) dashDirection = transform.right;
-            else if (Input.GetKey(KeyCode.D)) dashDirection = -transform.right;
-            else dashDirection = transform.forward; // по умолчанию дэшаем назад, если нет нажатых клавиш движения
-
             StartCoroutine(PerformDash());
         }
     }
 
     private IEnumerator PerformDash()
     {
-        isDashing = true;
-        canDash = false;
-        controller.enabled = false;
+        isDashing = true;  // Начинаем дэш
+        canDash = false;   // Запрещаем повторный дэш, пока идет кулдаун
 
-        Vector3 startPosition = transform.position;
-        Vector3 targetPosition = startPosition + dashDirection * dashDistance;
-        float elapsedTime = 0;
+        float dashStartTime = Time.time;  // Запоминаем время начала дэша
 
-        while (elapsedTime < dashDuration)
+        Vector3 dashVelocity = transform.forward * dashDistance / dashDuration;  // Расчет скорости рывка
+
+        while (Time.time < dashStartTime + dashDuration)
         {
-            transform.position = Vector3.Lerp(startPosition, targetPosition, elapsedTime / dashDuration);
-            elapsedTime += Time.deltaTime;
-            yield return null;
+            controller.Move(dashVelocity * Time.deltaTime);  // Двигаем игрока вперед во время дэша
+            yield return null;  // Ждем следующий кадр
         }
 
-        transform.position = targetPosition;
-        controller.enabled = true;
-        isDashing = false;
-        yield return new WaitForSeconds(dashCooldown);
-        canDash = true;
+        isDashing = false;  // Дэш закончен
+        yield return new WaitForSeconds(dashCooldown);  // Ждем окончания кулдауна
+        canDash = true;  // Разрешаем следующий дэш
     }
+
 
     void ApplyGravity()
     {

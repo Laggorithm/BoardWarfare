@@ -5,11 +5,9 @@ public class MeleeWeapon : MonoBehaviour
 {
     [Header("Настройки оружия")]
     public GameObject weaponModel;
-    public Animator weaponAnimator;
     public float attackDamage = 10f;
     public float attackCooldown = 1.0f;
     public SpellHolder playerSpellHolder; // Ссылка на SpellHolder игрока
-    public Animator playerAnimator; // Добавляем аниматора игрока
 
     private bool isOnCooldown = false;
     private SpellHolder weaponSpellHolder;
@@ -39,16 +37,6 @@ public class MeleeWeapon : MonoBehaviour
     {
         if (isOnCooldown)
             return;
-
-        if (weaponAnimator != null)
-        {
-            weaponAnimator.SetTrigger("Attack");
-            playerAnimator.SetTrigger("Attack");
-        }
-        else
-        {
-            Debug.Log($"{name}: запуск атаки без анимации.");
-        }
 
         Debug.Log($"{name} атакует и наносит {attackDamage} урона!");
         StartCoroutine(AttackCooldown());

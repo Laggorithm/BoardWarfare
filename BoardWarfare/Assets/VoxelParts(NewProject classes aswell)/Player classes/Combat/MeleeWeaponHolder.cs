@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.Serialization;
 
 public class MeleeWeaponHolder : MonoBehaviour
 {
@@ -9,13 +10,10 @@ public class MeleeWeaponHolder : MonoBehaviour
     [Tooltip("Второе оружие (активируется клавишей 3)")]
     public MeleeWeapon weapon2;
 
-    [Tooltip("Точка для крепления оружия (например, кость руки)")]
-    public Transform weaponMountPoint;
-
     [Tooltip("Ссылка на SpellHolder, который будет отключаться")]
     public SpellHolder spellHolder;
 
-    //Ссылки на смену анимаций
+    // Ссылки на смену анимаций
     private Animator animator;
     public AnimatorOverrideController oneHandedOverride;
     public AnimatorOverrideController twoHandedOverride;
@@ -24,21 +22,26 @@ public class MeleeWeaponHolder : MonoBehaviour
     public AnimatorOverrideController hammerOverride;
     private RuntimeAnimatorController defaultAnimator;
 
-
     private MeleeWeapon activeWeapon;
 
     void Start()
     {
         animator = GetComponent<Animator>(); // Инициализируем аниматор
         defaultAnimator = animator.runtimeAnimatorController;
-        SetActiveWeapon(null);
+
+        // Деактивируем оба оружия в начале игры
+        if (weapon1 != null) weapon1.gameObject.SetActive(false);
+        if (weapon2 != null) weapon2.gameObject.SetActive(false);
+
+        SetActiveWeapon(null); // Начальное состояние — без оружия
     }
 
     void Update()
     {
+        // Выбор оружия по клавишам 1, 2 и 3
         if (Input.GetKeyDown(KeyCode.Alpha1))
         {
-            SetActiveWeapon(null);
+            SetActiveWeapon(null); // Пустая рука
         }
         else if (Input.GetKeyDown(KeyCode.Alpha2) && weapon1 != null)
         {
@@ -49,71 +52,60 @@ public class MeleeWeaponHolder : MonoBehaviour
             SetActiveWeapon(weapon2);
         }
 
+        // Атака и запуск анимации атаки, если есть активное оружие
         if (Input.GetMouseButtonDown(0) && activeWeapon != null)
         {
-            activeWeapon.Attack();
+            activeWeapon.Attack();         // Логика атаки оружия
+            animator.SetTrigger("Attack"); // Запуск анимации атаки
         }
     }
 
     private void SetActiveWeapon(MeleeWeapon newWeapon)
     {
+        // Деактивируем текущее оружие
         if (activeWeapon != null)
         {
-            Destroy(activeWeapon.gameObject);
+            activeWeapon.gameObject.SetActive(false); // Выключаем предыдущее оружие
         }
 
-        if (newWeapon != null && weaponMountPoint != null)
-        {
-            activeWeapon = Instantiate(newWeapon, weaponMountPoint);
-            activeWeapon.transform.localPosition = Vector3.zero;
-            activeWeapon.transform.localRotation = Quaternion.identity;
-            Debug.Log($"Активировано оружие: {activeWeapon.name}");
+        activeWeapon = newWeapon; // Устанавливаем новое оружие
 
-            if (activeWeapon != null)
-            {
-                activeWeapon.playerAnimator = GetComponent<Animator>();
-            }
-            // Проверяем тег экипированного оружия
+        if (activeWeapon != null)
+        {
+            activeWeapon.gameObject.SetActive(true); // Включаем новое оружие
+
+            // Отключаем SpellHolder при наличии специального оружия
             if (activeWeapon.CompareTag("Special") && spellHolder != null)
             {
                 spellHolder.enabled = false;
-                Debug.Log("SpellHolder отключен!");
             }
             else if (spellHolder != null)
             {
                 spellHolder.enabled = true;
-                Debug.Log("SpellHolder включен!");
             }
 
-            // Меняем анимации в зависимости от оружия
+            // Меняем анимации в зависимости от типа оружия
             if (animator != null)
             {
-                if (newWeapon.CompareTag("OneHanded"))
+                if (activeWeapon.CompareTag("OneHanded"))
                     animator.runtimeAnimatorController = oneHandedOverride;
-                else if (newWeapon.CompareTag("TwoHanded"))
+                else if (activeWeapon.CompareTag("TwoHanded"))
                     animator.runtimeAnimatorController = twoHandedOverride;
-                else if (newWeapon.CompareTag("Scythe"))
+                else if (activeWeapon.CompareTag("Scythe"))
                     animator.runtimeAnimatorController = scytheOverride;
-                else if (newWeapon.CompareTag("Daggers"))
+                else if (activeWeapon.CompareTag("Daggers"))
                     animator.runtimeAnimatorController = daggersOverride;
-                else if (newWeapon.CompareTag("Hammer"))
+                else if (activeWeapon.CompareTag("Hammer"))
                     animator.runtimeAnimatorController = hammerOverride;
                 else
-                    animator.runtimeAnimatorController = null;
+                    animator.runtimeAnimatorController = defaultAnimator;
             }
         }
         else
         {
-            activeWeapon = null;
-            Debug.Log("Активирована пустая рука.");
-            if (spellHolder != null)
-            {
-                spellHolder.enabled = true; // Если убираем оружие, включаем SpellHolder обратно
-            }
-            if (animator != null)
-            {
-                animator.runtimeAnimatorController = defaultAnimator; // Возвращаем стандартные анимации
-            }
+            // Если новое оружие не выбрано, вернуться к базовым настройкам
+            if (spellHolder != null) spellHolder.enabled = true;
+            if (animator != null) animator.runtimeAnimatorController = defaultAnimator;
         }
     }
 }
