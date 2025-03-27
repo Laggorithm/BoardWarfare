@@ -660,6 +660,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: 'UndeadSwordMaster '
       objectReference: {fileID: 0}
+    - target: {fileID: 6014322460080156688, guid: 4ce2e120f418c984398d0018c5a84227, type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 6014322460080156691, guid: 4ce2e120f418c984398d0018c5a84227, type: 3}
       propertyPath: m_RootOrder
       value: 3
