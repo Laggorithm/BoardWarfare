@@ -90,7 +90,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 538531066454738306}
-  m_LocalRotation: {x: -0.000000118766415, y: -0.00000019696863, z: -0.25881898, w: 0.9659258}
+  m_LocalRotation: {x: -0.00000011876642, y: -0.00000019696864, z: -0.258819, w: 0.9659259}
   m_LocalPosition: {x: 0.00000064074993, y: -0.27100083, z: 0.0000002682209}
   m_LocalScale: {x: 1, y: 0.7000001, z: 1}
   m_ConstrainProportionsScale: 0
@@ -707,6 +707,52 @@ Transform:
   m_Father: {fileID: 6505303553478041305}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: -10.069, y: 0, z: 21.14}
+--- !u!1 &3004722633303880913
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2376599509257830030}
+  - component: {fileID: 8249572102837506790}
+  m_Layer: 0
+  m_Name: "\u041A\u043E\u0441\u0442\u044B\u043B\u044C \u0434\u043B\u044F \u043A\u043B\u0430\u0441\u0441\u043E\u0432"
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &2376599509257830030
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3004722633303880913}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 6014322460080156691}
+  m_RootOrder: 7
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &8249572102837506790
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3004722633303880913}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 4b2a0187ca435e74da61c681197162d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  patrolPoints: []
+  waitTime: 2
 --- !u!1 &3033431692931767764
 GameObject:
   m_ObjectHideFlags: 0
@@ -1120,8 +1166,8 @@ GameObject:
   - component: {fileID: 6014322460080156691}
   - component: {fileID: 8538223805380089395}
   - component: {fileID: 9039193954855842452}
-  - component: {fileID: 4238990839182331561}
   - component: {fileID: 3151566591397749039}
+  - component: {fileID: 612791006051715495}
   m_Layer: 0
   m_Name: UndeadSwordMaster
   m_TagString: Untagged
@@ -1148,6 +1194,7 @@ Transform:
   - {fileID: 5299977148038103107}
   - {fileID: 1139049626953063874}
   - {fileID: 4010260961637122506}
+  - {fileID: 2376599509257830030}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -1185,36 +1232,6 @@ Animator:
   m_HasTransformHierarchy: 1
   m_AllowConstantClipSamplingOptimization: 1
   m_KeepAnimatorStateOnDisable: 0
---- !u!114 &4238990839182331561
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 6014322460080156688}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 990dd7e463db82b4e9adc768bf550297, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  flipModel: 1
-  health: 160
-  patrolPoints: []
-  waitTimeAtPatrolPoint: 5
-  seeEnemyDistance: 25
-  attackRange: 5
-  player: {fileID: 0}
-  rotationSpeed: 500
-  turnCooldown: 0.3
-  hitDuration: 1
-  normalSpeed: 30
-  ultimateCooldown: 10
-  lastUltimateTime: -10
-  testStunOnStart: 0
-  testStunDuration: 10
-  searchDuration: 3
-  retreatDuration: 2
-  retreatHealthThreshold: 3
 --- !u!195 &3151566591397749039
 NavMeshAgent:
   m_ObjectHideFlags: 0
@@ -1225,11 +1242,11 @@ NavMeshAgent:
   m_Enabled: 1
   m_AgentTypeID: 0
   m_Radius: 3
-  m_Speed: 3.5
+  m_Speed: 5
   m_Acceleration: 8
-  avoidancePriority: 50
+  avoidancePriority: 99
   m_AngularSpeed: 120
-  m_StoppingDistance: 0
+  m_StoppingDistance: 4
   m_AutoTraverseOffMeshLink: 1
   m_AutoBraking: 1
   m_AutoRepath: 1
@@ -1237,6 +1254,32 @@ NavMeshAgent:
   m_BaseOffset: 0
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
+--- !u!114 &612791006051715495
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 6014322460080156688}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fc20ac13ead4877469240a9630e13cf0, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  stateBehaviours:
+  - {fileID: 8404439706912711051, guid: ede055189b07e214b96256eff9bcadc1, type: 3}
+  - {fileID: 9073852845086594244, guid: 73b8f6f2214b3f64f98f5b8adebb7f01, type: 3}
+  - {fileID: 8759225425727961180, guid: b4551ff37f9185543bc6e1fe695e4cdb, type: 3}
+  player: {fileID: 0}
+  health: 100
+  seeEnemyDistance: 15
+  attackRange: 5
+  retreatHealthThreshold: 3
+  patrolPoints: []
+  waitTimeAtPatrolPoint: 3
+  wanderingState: {fileID: 9073852845086594244, guid: 73b8f6f2214b3f64f98f5b8adebb7f01, type: 3}
+  patrolState: {fileID: 8404439706912711051, guid: ede055189b07e214b96256eff9bcadc1, type: 3}
+  followState: {fileID: 8759225425727961180, guid: b4551ff37f9185543bc6e1fe695e4cdb, type: 3}
 --- !u!1 &6266880532738581248
 GameObject:
   m_ObjectHideFlags: 0
@@ -1425,7 +1468,7 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 7053351155001597994}
-  m_LocalRotation: {x: 0.29252684, y: 0.81542736, z: 0.062481362, w: 0.49558276}
+  m_LocalRotation: {x: 0.29252687, y: 0.8154274, z: 0.062481366, w: 0.4955828}
   m_LocalPosition: {x: -0.07999992, y: -0.5280001, z: -0.3430004}
   m_LocalScale: {x: 1, y: 0.6, z: 1}
   m_ConstrainProportionsScale: 0
