@@ -9,6 +9,8 @@ public class FollowState : StateBehaviour
 
     public float rotationSpeed = 5f; // Скорость поворота
 
+    public bool walkBackwards = false; // Флаг для движения задом
+
     public override void Initialize(MobAI mobAI)
     {
         base.Initialize(mobAI);
@@ -44,8 +46,15 @@ public class FollowState : StateBehaviour
             // Обновляем цель каждый тик
             agent.SetDestination(player.position); // Двигаемся к игроку
 
-            // Поворот моба в противоположную сторону от игрока
-            RotateAwayFrom(player.position);
+            // Поворот моба в противоположную сторону от игрока (если нужно)
+            if (walkBackwards)
+            {
+                RotateAwayFrom(player.position); // Разворачиваем спиной, если флаг установлен
+            }
+            else
+            {
+                RotateTowards(player.position); // Поворот лицом к игроку
+            }
 
             // Проверяем расстояние до игрока
             float distanceToPlayer = Vector3.Distance(mob.transform.position, player.position);
@@ -79,6 +88,19 @@ public class FollowState : StateBehaviour
         if (oppositeDirection.sqrMagnitude > 0.01f) // Поворот только если есть достаточно расстояния
         {
             Quaternion targetRotation = Quaternion.LookRotation(oppositeDirection);
+            agent.transform.rotation = Quaternion.Slerp(agent.transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
+        }
+    }
+
+    // Поворот в сторону игрока
+    private void RotateTowards(Vector3 target)
+    {
+        Vector3 directionToTarget = target - agent.transform.position;
+        directionToTarget.y = 0f;  // Оставляем только горизонтальное направление
+
+        if (directionToTarget.sqrMagnitude > 0.01f) // Поворот только если есть достаточно расстояния
+        {
+            Quaternion targetRotation = Quaternion.LookRotation(directionToTarget);
             agent.transform.rotation = Quaternion.Slerp(agent.transform.rotation, targetRotation, rotationSpeed * Time.deltaTime);
         }
     }

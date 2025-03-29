@@ -753,6 +753,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   patrolPoints: []
   waitTime: 2
+  walkBackwards: 0
+  rotationSpeed: 0
 --- !u!1 &3033431692931767764
 GameObject:
   m_ObjectHideFlags: 0
@@ -1246,9 +1248,9 @@ NavMeshAgent:
   m_Acceleration: 8
   avoidancePriority: 99
   m_AngularSpeed: 120
-  m_StoppingDistance: 4
+  m_StoppingDistance: 0
   m_AutoTraverseOffMeshLink: 1
-  m_AutoBraking: 1
+  m_AutoBraking: 0
   m_AutoRepath: 1
   m_Height: 8
   m_BaseOffset: 0
@@ -1270,6 +1272,7 @@ MonoBehaviour:
   - {fileID: 8404439706912711051, guid: ede055189b07e214b96256eff9bcadc1, type: 3}
   - {fileID: 9073852845086594244, guid: 73b8f6f2214b3f64f98f5b8adebb7f01, type: 3}
   - {fileID: 8759225425727961180, guid: b4551ff37f9185543bc6e1fe695e4cdb, type: 3}
+  - {fileID: 7021665564837963790, guid: 93fd45ea68fc39745aeb38c85c5a9c89, type: 3}
   player: {fileID: 0}
   health: 100
   seeEnemyDistance: 15
@@ -1280,6 +1283,7 @@ MonoBehaviour:
   wanderingState: {fileID: 9073852845086594244, guid: 73b8f6f2214b3f64f98f5b8adebb7f01, type: 3}
   patrolState: {fileID: 8404439706912711051, guid: ede055189b07e214b96256eff9bcadc1, type: 3}
   followState: {fileID: 8759225425727961180, guid: b4551ff37f9185543bc6e1fe695e4cdb, type: 3}
+  attackState: {fileID: 7021665564837963790, guid: 93fd45ea68fc39745aeb38c85c5a9c89, type: 3}
 --- !u!1 &6266880532738581248
 GameObject:
   m_ObjectHideFlags: 0

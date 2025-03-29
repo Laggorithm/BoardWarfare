@@ -14,14 +14,15 @@ public class MobAI : MonoBehaviour
     public float seeEnemyDistance = 15f;
     public float attackRange = 5f;
     public float retreatHealthThreshold = 3f;
-    public Transform[] patrolPoints;
+    public Transform[] patrolPoints; // Патрульные точки
     public float waitTimeAtPatrolPoint = 2f;
     private float distanceToPlayer;
 
-    public WanderingState wanderingState; // Добавляем ссылку на WanderingState
+    public WanderingState wanderingState;
     public PatrolState patrolState;
     public FollowState followState;
     public AttackState attackState;
+
     private void Start()
     {
         agent = GetComponent<NavMeshAgent>();
@@ -48,6 +49,12 @@ public class MobAI : MonoBehaviour
             stateMachine.AddState(state);
         }
 
+        // Передаем патрульные точки в патрульное состояние
+        if (patrolState != null)
+        {
+            patrolState.SetPatrolPoints(patrolPoints); // Передаем патрульные точки
+        }
+
         // Устанавливаем первое состояние, если есть
         if (stateBehaviours.Count > 0)
         {
@@ -60,7 +67,6 @@ public class MobAI : MonoBehaviour
         // Проверяем, что текущее состояние не является тем, что мы пытаемся установить
         if (distanceToPlayer <= attackRange)
         {
-            // Если игрок в зоне атаки
             if (!(stateMachine.CurrentState is AttackState))
             {
                 stateMachine.SetState(attackState);
@@ -68,7 +74,6 @@ public class MobAI : MonoBehaviour
         }
         else if (distanceToPlayer <= seeEnemyDistance)
         {
-            // Если игрок в зоне видимости, но не в зоне атаки
             if (!(stateMachine.CurrentState is FollowState))
             {
                 stateMachine.SetState(followState);
@@ -76,10 +81,8 @@ public class MobAI : MonoBehaviour
         }
         else
         {
-            // Если игрок далеко, то начинаем патрулировать или бродить
             if (patrolPoints != null && patrolPoints.Length > 0)
             {
-                // Если есть патрульные точки, то начинаем патрулировать
                 if (!(stateMachine.CurrentState is PatrolState))
                 {
                     stateMachine.SetState(patrolState);
@@ -87,7 +90,6 @@ public class MobAI : MonoBehaviour
             }
             else
             {
-                // Если нет патрульных точек, начинаем бродить
                 if (!(stateMachine.CurrentState is WanderingState))
                 {
                     stateMachine.SetState(wanderingState);
@@ -95,9 +97,6 @@ public class MobAI : MonoBehaviour
             }
         }
     }
-
-
-
 
     private void Update()
     {
@@ -110,21 +109,18 @@ public class MobAI : MonoBehaviour
             }
         }
 
-        // Если игрок существует, проверяем расстояние до него
         if (player != null)
         {
             distanceToPlayer = Vector3.Distance(transform.position, player.position);
         }
         StateSwitch();
         stateMachine.Tick();
-
-        // Управление анимациями в зависимости от скорости
         HandleAnimations();
     }
 
     private void HandleAnimations()
     {
-        if (agent.velocity.magnitude > 0.1f) // Если скорость больше 0.1, начинаем анимацию ходьбы
+        if (agent.velocity.magnitude > 0.1f)
         {
             anim.SetBool("Walking", true);
         }

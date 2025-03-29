@@ -23,6 +23,7 @@ TagManager:
   - Scythe
   - Daggers
   - Hammer
+  - USMPatrolPoints
   layers:
   - Default
   - TransparentFX

@@ -11,7 +11,7 @@ GameObject:
   - component: {fileID: 6945135951520282369}
   - component: {fileID: 8759225425727961180}
   m_Layer: 0
-  m_Name: Follow
+  m_Name: FollowUSM
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
