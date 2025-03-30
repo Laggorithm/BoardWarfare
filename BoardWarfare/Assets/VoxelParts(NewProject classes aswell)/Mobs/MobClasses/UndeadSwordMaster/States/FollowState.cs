@@ -20,7 +20,6 @@ public class FollowState : StateBehaviour
 
     public override void Enter()
     {
-        Debug.Log("Entering Follow State");
 
         // Попробуем найти игрока по тегу
         if (player == null)
@@ -58,11 +57,6 @@ public class FollowState : StateBehaviour
 
             // Проверяем расстояние до игрока
             float distanceToPlayer = Vector3.Distance(mob.transform.position, player.position);
-
-            if (distanceToPlayer <= stopDistance) // Когда до игрока осталось меньше расстояния для атаки
-            {
-                mob.GetComponent<StateMachine>().SetState(mob.GetComponent<AttackState>());
-            }
         }
         else
         {
@@ -72,7 +66,6 @@ public class FollowState : StateBehaviour
 
     public override void Exit()
     {
-        Debug.Log("Exiting Follow State");
         // Убираем любые дополнительные действия при выходе, если нужно
     }
 

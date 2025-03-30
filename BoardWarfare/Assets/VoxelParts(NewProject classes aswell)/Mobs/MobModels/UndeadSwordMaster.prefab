@@ -1273,17 +1273,28 @@ MonoBehaviour:
   - {fileID: 9073852845086594244, guid: 73b8f6f2214b3f64f98f5b8adebb7f01, type: 3}
   - {fileID: 8759225425727961180, guid: b4551ff37f9185543bc6e1fe695e4cdb, type: 3}
   - {fileID: 7021665564837963790, guid: 93fd45ea68fc39745aeb38c85c5a9c89, type: 3}
+  secondPhaseStateBehaviours:
+  - {fileID: 7021665564837963790, guid: 93fd45ea68fc39745aeb38c85c5a9c89, type: 3}
+  - {fileID: 8759225425727961180, guid: b4551ff37f9185543bc6e1fe695e4cdb, type: 3}
+  - {fileID: 7021665564837963790, guid: 93fd45ea68fc39745aeb38c85c5a9c89, type: 3}
+  - {fileID: 7021665564837963790, guid: 93fd45ea68fc39745aeb38c85c5a9c89, type: 3}
   player: {fileID: 0}
-  health: 100
+  maxHealth: 160
+  health: 160
   seeEnemyDistance: 15
   attackRange: 5
-  retreatHealthThreshold: 3
   patrolPoints: []
   waitTimeAtPatrolPoint: 3
+  SecondPhaseAttackRange: 5
+  Phase: 1
   wanderingState: {fileID: 9073852845086594244, guid: 73b8f6f2214b3f64f98f5b8adebb7f01, type: 3}
   patrolState: {fileID: 8404439706912711051, guid: ede055189b07e214b96256eff9bcadc1, type: 3}
   followState: {fileID: 8759225425727961180, guid: b4551ff37f9185543bc6e1fe695e4cdb, type: 3}
   attackState: {fileID: 7021665564837963790, guid: 93fd45ea68fc39745aeb38c85c5a9c89, type: 3}
+  SecondPhaseLightAttack: {fileID: 7021665564837963790, guid: 93fd45ea68fc39745aeb38c85c5a9c89, type: 3}
+  SecondPhaseFollow: {fileID: 8759225425727961180, guid: b4551ff37f9185543bc6e1fe695e4cdb, type: 3}
+  SecondPhaseUltimateAttack: {fileID: 7021665564837963790, guid: 93fd45ea68fc39745aeb38c85c5a9c89, type: 3}
+  SecondPhaseAdditionalSkill: {fileID: 7021665564837963790, guid: 93fd45ea68fc39745aeb38c85c5a9c89, type: 3}
 --- !u!1 &6266880532738581248
 GameObject:
   m_ObjectHideFlags: 0

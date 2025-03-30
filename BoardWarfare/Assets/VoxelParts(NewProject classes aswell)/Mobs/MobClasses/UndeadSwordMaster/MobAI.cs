@@ -5,23 +5,34 @@ using UnityEngine.AI;
 public class MobAI : MonoBehaviour
 {
     [SerializeField] private List<StateBehaviour> stateBehaviours = new List<StateBehaviour>();
+    [SerializeField] private List<StateBehaviour> secondPhaseStateBehaviours = new List<StateBehaviour>(); // Список стейтов для второй фазы
+
     public StateMachine stateMachine;
     private NavMeshAgent agent;
     private Animator anim;
     public Transform player;
 
-    public float health = 10f;
-    public float seeEnemyDistance = 15f;
-    public float attackRange = 5f;
-    public float retreatHealthThreshold = 3f;
-    public Transform[] patrolPoints; // Патрульные точки
+    public float maxHealth; // Новая переменная для максимального хп
+    public float health;
+    public float seeEnemyDistance;
+    public float attackRange;
+    public Transform[] patrolPoints;
     public float waitTimeAtPatrolPoint = 2f;
     private float distanceToPlayer;
+    public float SecondPhaseAttackRange;
+    private int UltimateCharge;
+    private int SecondPhaseAdditionalSkillCharge;
+    public int Phase = 1;
 
-    public WanderingState wanderingState;
+    public StateBehaviour wanderingState;
     public PatrolState patrolState;
-    public FollowState followState;
-    public AttackState attackState;
+    public StateBehaviour followState;
+    public StateBehaviour attackState;
+
+    public StateBehaviour SecondPhaseLightAttack;
+    public StateBehaviour SecondPhaseFollow;
+    public StateBehaviour SecondPhaseUltimateAttack;
+    public StateBehaviour SecondPhaseAdditionalSkill;
 
     private void Start()
     {
@@ -37,25 +48,27 @@ public class MobAI : MonoBehaviour
 
         stateMachine = new StateMachine();
 
-        // Создаём состояния из добавленных в инспекторе компонентов
+        // Инициализируем состояния первой фазы
         foreach (var state in stateBehaviours)
         {
-            if (state == null)
-            {
-                Debug.LogWarning("Один из элементов списка stateBehaviours равен null!");
-                continue;
-            }
+            if (state == null) continue;
             state.Initialize(this);
             stateMachine.AddState(state);
         }
 
-        // Передаем патрульные точки в патрульное состояние
-        if (patrolState != null)
+        // Инициализируем состояния второй фазы
+        foreach (var state in secondPhaseStateBehaviours)
         {
-            patrolState.SetPatrolPoints(patrolPoints); // Передаем патрульные точки
+            if (state == null) continue;
+            state.Initialize(this);
+            stateMachine.AddState(state);
         }
 
-        // Устанавливаем первое состояние, если есть
+        if (patrolState != null)
+        {
+            patrolState.SetPatrolPoints(patrolPoints);
+        }
+
         if (stateBehaviours.Count > 0)
         {
             stateMachine.SetState(stateBehaviours[0]);
@@ -64,39 +77,90 @@ public class MobAI : MonoBehaviour
 
     private void StateSwitch()
     {
-        // Проверяем, что текущее состояние не является тем, что мы пытаемся установить
         if (distanceToPlayer <= attackRange)
         {
-            if (!(stateMachine.CurrentState is AttackState))
+            // Проверка, если текущий стейт не является attackState
+            if (stateMachine.CurrentState != attackState)
             {
                 stateMachine.SetState(attackState);
             }
         }
         else if (distanceToPlayer <= seeEnemyDistance)
         {
-            if (!(stateMachine.CurrentState is FollowState))
+            // Проверка, если текущий стейт не является followState
+            if (stateMachine.CurrentState != followState)
             {
                 stateMachine.SetState(followState);
             }
         }
         else
         {
+            // Если есть точки патруля
             if (patrolPoints != null && patrolPoints.Length > 0)
             {
-                if (!(stateMachine.CurrentState is PatrolState))
+                // Проверка, если текущий стейт не является patrolState
+                if (stateMachine.CurrentState != patrolState)
                 {
                     stateMachine.SetState(patrolState);
                 }
             }
             else
             {
-                if (!(stateMachine.CurrentState is WanderingState))
+                // Если нет точек патруля, то проверка на wanderingState
+                if (stateMachine.CurrentState != wanderingState)
                 {
                     stateMachine.SetState(wanderingState);
                 }
             }
         }
     }
+
+
+    private void StatePhaseTwoSwitch()
+    {
+        // Проверка, если моб находится на определенном расстоянии от игрока
+        if (distanceToPlayer > SecondPhaseAttackRange)
+        {
+            // Проверка для перехода в AdditionalSkill
+            if (SecondPhaseAdditionalSkillCharge == 2)
+            {
+                UltimateCharge += 1;
+                SecondPhaseAdditionalSkillCharge = 0;
+                if (stateMachine.CurrentState != SecondPhaseAdditionalSkill)  // Проверка на текущий стейт
+                {
+                    stateMachine.SetState(SecondPhaseAdditionalSkill);
+                }
+            }
+            else
+            {
+                if (stateMachine.CurrentState != SecondPhaseFollow)  // Проверка на текущий стейт
+                {
+                    stateMachine.SetState(SecondPhaseFollow);
+                }
+            }
+        }
+        else
+        {
+            if (UltimateCharge >= 3)
+            {
+                UltimateCharge = 0;
+                if (stateMachine.CurrentState != SecondPhaseUltimateAttack)  // Проверка на текущий стейт
+                {
+                    stateMachine.SetState(SecondPhaseUltimateAttack);
+                }
+            }
+            else
+            {
+                if (stateMachine.CurrentState != SecondPhaseLightAttack)  // Проверка на текущий стейт
+                {
+                    SecondPhaseAdditionalSkillCharge += 1;
+                    stateMachine.SetState(SecondPhaseLightAttack);
+                    Debug.Log("на нахуй");
+                }
+            }
+        }
+    }
+
 
     private void Update()
     {
@@ -113,7 +177,19 @@ public class MobAI : MonoBehaviour
         {
             distanceToPlayer = Vector3.Distance(transform.position, player.position);
         }
-        StateSwitch();
+
+        // Переключение фазы при падении хп ниже 50%
+        if (Phase == 1 && health <= maxHealth * 0.5f)
+        {
+            Phase = 2;
+        }
+
+        switch (Phase)
+        {
+            case 1: StateSwitch(); break;
+            case 2: StatePhaseTwoSwitch(); Debug.Log("Вторая фаза поехала"); break;
+        }
+
         stateMachine.Tick();
         HandleAnimations();
     }
@@ -122,11 +198,19 @@ public class MobAI : MonoBehaviour
     {
         if (agent.velocity.magnitude > 0.1f)
         {
-            anim.SetBool("Walking", true);
+            if (agent.speed == 5)
+            {
+                anim.SetBool("Walking", true);
+            }
+            else
+            {
+                anim.SetBool("Running", true);
+            }
         }
         else
         {
             anim.SetBool("Walking", false);
+            anim.SetBool("Running", false);
         }
     }
 }
