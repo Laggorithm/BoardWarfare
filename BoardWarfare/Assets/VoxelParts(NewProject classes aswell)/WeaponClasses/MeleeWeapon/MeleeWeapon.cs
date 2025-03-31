@@ -11,6 +11,7 @@ public class MeleeWeapon : MonoBehaviour
 
     private bool isOnCooldown = false;
     private SpellHolder weaponSpellHolder;
+    public Sprite weaponIcon; // Спрайт для UI
 
     private void Start()
     {

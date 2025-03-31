@@ -23,10 +23,20 @@ public class CharacterStats : MonoBehaviour
     private PlayerMovement playerMovement;  // Ссылка на класс PlayerMovement
 
     public Collider characterCollider;
+
+    [Header("UI")]
+    public Slider healthBar; // Слайдер для отображения здоровья
+
     void Start()
     {
         currentHealth = maxHealth;
         playerMovement = GetComponent<PlayerMovement>();  // Получаем ссылку на PlayerMovement
+
+        if (healthBar != null)
+        {
+            healthBar.maxValue = maxHealth; // Устанавливаем максимальное значение
+            healthBar.value = currentHealth; // Устанавливаем начальное значение
+        }
     }
 
     void Update()
@@ -48,6 +58,12 @@ public class CharacterStats : MonoBehaviour
         {
             Die();
         }
+
+        // Обновляем UI-полоску здоровья
+        if (healthBar != null)
+        {
+            healthBar.value = currentHealth;
+        }
     }
 
     // Метод для применения урона от кровотечения
@@ -59,6 +75,12 @@ public class CharacterStats : MonoBehaviour
 
         // Можно вывести в Debug, чтобы видеть уменьшение здоровья:
         // Debug.Log("Bleed damage: " + (bleedDamagePerSecond * Time.deltaTime) + " | currentHealth: " + currentHealth);
+
+        // Обновляем UI-полоску здоровья
+        if (healthBar != null)
+        {
+            healthBar.value = currentHealth;
+        }
 
         // Проверяем, истекла ли длительность кровотечения
         bleedDuration -= Time.deltaTime;
@@ -115,19 +137,22 @@ public class CharacterStats : MonoBehaviour
             bleedLevel = 2;
             bleedDuration = 5;
             ApplyBleedDamage();
-            
-
         }
         else if (other.tag == "HeavyWeapon")
         {
             currentHealth -= 20;
         }
 
+        // Обновляем UI-полоску здоровья
+        if (healthBar != null)
+        {
+            healthBar.value = currentHealth;
+        }
     }
+
     private void Die()
     {
         stunDuration = 999999999;
         ApplyStun();
-        
     }
 }

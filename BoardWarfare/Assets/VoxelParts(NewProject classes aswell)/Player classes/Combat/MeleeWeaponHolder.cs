@@ -1,4 +1,5 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using UnityEngine.Serialization;
 
 public class MeleeWeaponHolder : MonoBehaviour
@@ -13,7 +14,10 @@ public class MeleeWeaponHolder : MonoBehaviour
     [Tooltip("Ссылка на SpellHolder, который будет отключаться")]
     public SpellHolder spellHolder;
 
-    // Ссылки на смену анимаций
+    [Header("UI изображения")]
+    [Tooltip("UI-изображение активного оружия")]
+    public Image weaponUIImage;
+
     private Animator animator;
     public AnimatorOverrideController oneHandedOverride;
     public AnimatorOverrideController twoHandedOverride;
@@ -26,22 +30,20 @@ public class MeleeWeaponHolder : MonoBehaviour
 
     void Start()
     {
-        animator = GetComponent<Animator>(); // Инициализируем аниматор
+        animator = GetComponent<Animator>();
         defaultAnimator = animator.runtimeAnimatorController;
 
-        // Деактивируем оба оружия в начале игры
         if (weapon1 != null) weapon1.gameObject.SetActive(false);
         if (weapon2 != null) weapon2.gameObject.SetActive(false);
 
-        SetActiveWeapon(null); // Начальное состояние — без оружия
+        SetActiveWeapon(null);
     }
 
     void Update()
     {
-        // Выбор оружия по клавишам 1, 2 и 3
         if (Input.GetKeyDown(KeyCode.Alpha1))
         {
-            SetActiveWeapon(null); // Пустая рука
+            SetActiveWeapon(null);
         }
         else if (Input.GetKeyDown(KeyCode.Alpha2) && weapon1 != null)
         {
@@ -52,29 +54,26 @@ public class MeleeWeaponHolder : MonoBehaviour
             SetActiveWeapon(weapon2);
         }
 
-        // Атака и запуск анимации атаки, если есть активное оружие
         if (Input.GetMouseButtonDown(0) && activeWeapon != null)
         {
-            activeWeapon.Attack();         // Логика атаки оружия
-            animator.SetTrigger("Attack"); // Запуск анимации атаки
+            activeWeapon.Attack();
+            animator.SetTrigger("Attack");
         }
     }
 
     private void SetActiveWeapon(MeleeWeapon newWeapon)
     {
-        // Деактивируем текущее оружие
         if (activeWeapon != null)
         {
-            activeWeapon.gameObject.SetActive(false); // Выключаем предыдущее оружие
+            activeWeapon.gameObject.SetActive(false);
         }
 
-        activeWeapon = newWeapon; // Устанавливаем новое оружие
+        activeWeapon = newWeapon;
 
         if (activeWeapon != null)
         {
-            activeWeapon.gameObject.SetActive(true); // Включаем новое оружие
+            activeWeapon.gameObject.SetActive(true);
 
-            // Отключаем SpellHolder при наличии специального оружия
             if (activeWeapon.CompareTag("Special") && spellHolder != null)
             {
                 spellHolder.enabled = false;
@@ -84,7 +83,6 @@ public class MeleeWeaponHolder : MonoBehaviour
                 spellHolder.enabled = true;
             }
 
-            // Меняем анимации в зависимости от типа оружия
             if (animator != null)
             {
                 if (activeWeapon.CompareTag("OneHanded"))
@@ -100,12 +98,24 @@ public class MeleeWeaponHolder : MonoBehaviour
                 else
                     animator.runtimeAnimatorController = defaultAnimator;
             }
+
+            // Устанавливаем UI-изображение
+            if (weaponUIImage != null && activeWeapon.weaponIcon != null)
+            {
+                weaponUIImage.sprite = activeWeapon.weaponIcon;
+                weaponUIImage.enabled = true;
+            }
         }
         else
         {
-            // Если новое оружие не выбрано, вернуться к базовым настройкам
             if (spellHolder != null) spellHolder.enabled = true;
             if (animator != null) animator.runtimeAnimatorController = defaultAnimator;
+
+            // Отключаем UI-изображение, если оружие убрано
+            if (weaponUIImage != null)
+            {
+                weaponUIImage.enabled = false;
+            }
         }
     }
 }
