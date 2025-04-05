@@ -122,7 +122,7 @@ public class MobAI : MonoBehaviour
         if (distanceToPlayer > SecondPhaseAttackRange)
         {
             // Проверка для перехода в AdditionalSkill
-            if (SecondPhaseAdditionalSkillCharge == 2)
+            if (SecondPhaseAdditionalSkillCharge == 3)
             {
                 UltimateCharge += 1;
                 SecondPhaseAdditionalSkillCharge = 0;
@@ -164,6 +164,7 @@ public class MobAI : MonoBehaviour
 
     private void Update()
     {
+        Debug.Log(distanceToPlayer);
         if (player == null)
         {
             GameObject playerObj = GameObject.FindGameObjectWithTag("Player");

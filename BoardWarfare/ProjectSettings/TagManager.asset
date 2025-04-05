@@ -26,6 +26,7 @@ TagManager:
   - USMPatrolPoints
   - BossPart1
   - BossPart2
+  - USMshootingPoint
   layers:
   - Default
   - TransparentFX
