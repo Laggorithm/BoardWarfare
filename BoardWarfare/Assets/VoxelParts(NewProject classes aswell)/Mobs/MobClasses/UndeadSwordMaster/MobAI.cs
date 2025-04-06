@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
 
@@ -16,18 +17,22 @@ public class MobAI : MonoBehaviour
     public float health;
     public float seeEnemyDistance;
     public float attackRange;
-    public Transform[] patrolPoints;
+    public int deathFrameDelay = 60; // Кол-во фреймов ожидания после смерти
     public float waitTimeAtPatrolPoint = 2f;
-    private float distanceToPlayer;
     public float SecondPhaseAttackRange;
-    private int UltimateCharge;
-    private int SecondPhaseAdditionalSkillCharge;
+    public Transform[] patrolPoints;
+
+    private float distanceToPlayer;
+    public int UltimateCharge;
+    public int SecondPhaseAdditionalSkillCharge;
+
     public int Phase = 1;
 
     public StateBehaviour wanderingState;
     public PatrolState patrolState;
     public StateBehaviour followState;
     public StateBehaviour attackState;
+
 
     public StateBehaviour SecondPhaseLightAttack;
     public StateBehaviour SecondPhaseFollow;
@@ -36,6 +41,9 @@ public class MobAI : MonoBehaviour
 
     private void Start()
     {
+        SecondPhaseAdditionalSkillCharge = 0;
+        UltimateCharge= 0;
+
         agent = GetComponent<NavMeshAgent>();
         anim = GetComponent<Animator>();
 
@@ -117,26 +125,19 @@ public class MobAI : MonoBehaviour
 
 
     private void StatePhaseTwoSwitch()
-    {
+    {   
+        if (!stateMachine.CurrentState.CanExit)
+        {
+            // Не переключаемся, пока текущий стейт не готов к выходу
+            return;
+        }
+
         if (distanceToPlayer > SecondPhaseAttackRange)
         {
-            if (SecondPhaseAdditionalSkillCharge == 3)
+            if (stateMachine.CurrentState != SecondPhaseFollow && SecondPhaseAdditionalSkillCharge < 3)
             {
-                if (stateMachine.CurrentState != SecondPhaseAdditionalSkill)
-                {
-                    UltimateCharge += 1;
-                    SecondPhaseAdditionalSkillCharge = 0;
-                    Debug.Log("Переход во SecondPhaseAdditionalSkill (Summon)");
-                    stateMachine.SetState(SecondPhaseAdditionalSkill);
-                }
-            }
-            else
-            {
-                if (stateMachine.CurrentState != SecondPhaseFollow)
-                {
-                    Debug.Log("Переход во Follow");
-                    stateMachine.SetState(SecondPhaseFollow);
-                }
+                Debug.Log("Переход во Follow");
+                stateMachine.SetState(SecondPhaseFollow);
             }
         }
         else
@@ -153,11 +154,18 @@ public class MobAI : MonoBehaviour
             }
             else
             {
-                if (stateMachine.CurrentState != SecondPhaseLightAttack)
+                if (stateMachine.CurrentState != SecondPhaseLightAttack && SecondPhaseAdditionalSkillCharge < 3)
                 {
                     SecondPhaseAdditionalSkillCharge += 1;
                     Debug.Log("Переход в Light Attack, заряд навыка: " + SecondPhaseAdditionalSkillCharge);
                     stateMachine.SetState(SecondPhaseLightAttack);
+                }
+                else if (SecondPhaseAdditionalSkillCharge >= 3 && stateMachine.CurrentState != SecondPhaseAdditionalSkill)
+                {
+                    Debug.Log("Переход во SecondPhaseAdditionalSkill (Summon)");
+                    stateMachine.SetState(SecondPhaseAdditionalSkill);
+                    UltimateCharge += 1;
+                    SecondPhaseAdditionalSkillCharge = 0;
                 }
             }
         }
@@ -165,43 +173,51 @@ public class MobAI : MonoBehaviour
 
 
 
+
     private void Update()
     {
-        if (player == null)
+        if(health >= 1)
         {
-            GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
-            if (playerObj != null)
+            if (player == null)
             {
-                player = playerObj.transform;
+                GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
+                if (playerObj != null)
+                {
+                    player = playerObj.transform;
+                }
             }
-        }
 
-        if (player != null)
+            if (player != null)
+            {
+                distanceToPlayer = Vector3.Distance(transform.position, player.position);
+            }
+
+            // Переключение фазы при падении хп ниже 50%
+            if (Phase == 1 && health <= maxHealth * 0.5f)
+            {
+                Phase = 2;
+            }
+
+            switch (Phase)
+            {
+                case 1: StateSwitch(); break;
+                case 2: StatePhaseTwoSwitch(); agent.speed = 8; break;
+            }
+
+            stateMachine.Tick();
+            HandleAnimations();
+        }
+        else
         {
-            distanceToPlayer = Vector3.Distance(transform.position, player.position);
+            StartCoroutine(DeathAfterFrames(deathFrameDelay));
         }
-
-        // Переключение фазы при падении хп ниже 50%
-        if (Phase == 1 && health <= maxHealth * 0.5f)
-        {
-            Phase = 2;
-        }
-
-        switch (Phase)
-        {
-            case 1: StateSwitch(); break;
-            case 2: StatePhaseTwoSwitch();break;
-        }
-
-        stateMachine.Tick();
-        HandleAnimations();
     }
 
     private void HandleAnimations()
     {
         if (agent.velocity.magnitude > 0.1f)
         {
-            if (agent.speed == 5)
+            if (agent.speed <= 5)
             {
                 anim.SetBool("Walking", true);
             }
@@ -216,4 +232,21 @@ public class MobAI : MonoBehaviour
             anim.SetBool("Running", false);
         }
     }
+
+    public void TakeDamage(int damage)
+    {
+        health -= damage;
+    }
+
+    private IEnumerator DeathAfterFrames(int frames)
+    {
+        agent.speed = 0;
+        anim.SetTrigger("Die");
+        Debug.Log("Время вмирать");
+        for (int i = 0; i < frames; i++)
+            yield return null; 
+        Debug.Log("Смерть после " + frames + " фреймов");
+        Destroy(gameObject);
+    }
+
 }

@@ -356,13 +356,13 @@ MonoBehaviour:
   Waves:
   - ID: 1
     GroundMobs: 0
-    HeavyMobs: 0
+    HeavyMobs: 1
     AirMobs: 0
   WallPrefab: {fileID: 8960071746613413464, guid: 4ae334db0047eff48b956837e3706783, type: 3}
   TallWallPrefab: {fileID: 8960071746613413464, guid: 4ae334db0047eff48b956837e3706783, type: 3}
   HealPrefab: {fileID: 0}
   GroundMobPrefab: {fileID: 8528373784898135811, guid: cfdea230c461ccd43830f898fec1eb1b, type: 3}
-  HeavyMobPrefab: {fileID: 8528373784898135811, guid: cfdea230c461ccd43830f898fec1eb1b, type: 3}
+  HeavyMobPrefab: {fileID: 6014322460080156688, guid: 4ce2e120f418c984398d0018c5a84227, type: 3}
   AirMobPrefab: {fileID: 8528373784898135811, guid: cfdea230c461ccd43830f898fec1eb1b, type: 3}
   waveEffectValue: 0
   WaveEffectName: 
@@ -2064,75 +2064,6 @@ Transform:
   m_Father: {fileID: 852839271}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1001 &1844863400
-PrefabInstance:
-  m_ObjectHideFlags: 0
-  serializedVersion: 2
-  m_Modification:
-    m_TransformParent: {fileID: 0}
-    m_Modifications:
-    - target: {fileID: 612791006051715495, guid: 4ce2e120f418c984398d0018c5a84227, type: 3}
-      propertyPath: health
-      value: 160
-      objectReference: {fileID: 0}
-    - target: {fileID: 612791006051715495, guid: 4ce2e120f418c984398d0018c5a84227, type: 3}
-      propertyPath: secondPhaseStateBehaviours.Array.data[0]
-      value: 
-      objectReference: {fileID: -3096950385711884197, guid: 46f8f670495627b42835131e83f268d3, type: 3}
-    - target: {fileID: 612791006051715495, guid: 4ce2e120f418c984398d0018c5a84227, type: 3}
-      propertyPath: secondPhaseStateBehaviours.Array.data[3]
-      value: 
-      objectReference: {fileID: 4811023496943217800, guid: 313e89fbcae75294eb12ffe754ee9593, type: 3}
-    - target: {fileID: 6014322460080156688, guid: 4ce2e120f418c984398d0018c5a84227, type: 3}
-      propertyPath: m_Name
-      value: UndeadSwordMaster
-      objectReference: {fileID: 0}
-    - target: {fileID: 6014322460080156691, guid: 4ce2e120f418c984398d0018c5a84227, type: 3}
-      propertyPath: m_RootOrder
-      value: 14
-      objectReference: {fileID: 0}
-    - target: {fileID: 6014322460080156691, guid: 4ce2e120f418c984398d0018c5a84227, type: 3}
-      propertyPath: m_LocalPosition.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6014322460080156691, guid: 4ce2e120f418c984398d0018c5a84227, type: 3}
-      propertyPath: m_LocalPosition.y
-      value: 1.04
-      objectReference: {fileID: 0}
-    - target: {fileID: 6014322460080156691, guid: 4ce2e120f418c984398d0018c5a84227, type: 3}
-      propertyPath: m_LocalPosition.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6014322460080156691, guid: 4ce2e120f418c984398d0018c5a84227, type: 3}
-      propertyPath: m_LocalRotation.w
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: 6014322460080156691, guid: 4ce2e120f418c984398d0018c5a84227, type: 3}
-      propertyPath: m_LocalRotation.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6014322460080156691, guid: 4ce2e120f418c984398d0018c5a84227, type: 3}
-      propertyPath: m_LocalRotation.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6014322460080156691, guid: 4ce2e120f418c984398d0018c5a84227, type: 3}
-      propertyPath: m_LocalRotation.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6014322460080156691, guid: 4ce2e120f418c984398d0018c5a84227, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.x
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6014322460080156691, guid: 4ce2e120f418c984398d0018c5a84227, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.y
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 6014322460080156691, guid: 4ce2e120f418c984398d0018c5a84227, type: 3}
-      propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    m_RemovedComponents: []
-  m_SourcePrefab: {fileID: 100100000, guid: 4ce2e120f418c984398d0018c5a84227, type: 3}
 --- !u!1 &1868765789
 GameObject:
   m_ObjectHideFlags: 0

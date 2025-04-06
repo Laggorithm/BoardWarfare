@@ -24,9 +24,8 @@ TagManager:
   - Daggers
   - Hammer
   - USMPatrolPoints
-  - BossPart1
-  - BossPart2
   - USMshootingPoint
+  - USM
   layers:
   - Default
   - TransparentFX
