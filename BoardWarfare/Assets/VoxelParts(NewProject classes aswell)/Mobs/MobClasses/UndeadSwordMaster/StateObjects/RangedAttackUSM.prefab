@@ -46,4 +46,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   projectilePrefab: {fileID: 492143270598694485, guid: b1724106b4a61cd4f9f703b2a05a3f96, type: 3}
   shootingPoint: {fileID: 0}
-  waitFrames: 180
+  waitFrames: 360
