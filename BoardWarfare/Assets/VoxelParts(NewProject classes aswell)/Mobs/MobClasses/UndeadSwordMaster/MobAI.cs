@@ -118,23 +118,23 @@ public class MobAI : MonoBehaviour
 
     private void StatePhaseTwoSwitch()
     {
-        // Проверка, если моб находится на определенном расстоянии от игрока
         if (distanceToPlayer > SecondPhaseAttackRange)
         {
-            // Проверка для перехода в AdditionalSkill
             if (SecondPhaseAdditionalSkillCharge == 3)
             {
-                UltimateCharge += 1;
-                SecondPhaseAdditionalSkillCharge = 0;
-                if (stateMachine.CurrentState != SecondPhaseAdditionalSkill)  // Проверка на текущий стейт
+                if (stateMachine.CurrentState != SecondPhaseAdditionalSkill)
                 {
+                    UltimateCharge += 1;
+                    SecondPhaseAdditionalSkillCharge = 0;
+                    Debug.Log("Переход во SecondPhaseAdditionalSkill (Summon)");
                     stateMachine.SetState(SecondPhaseAdditionalSkill);
                 }
             }
             else
             {
-                if (stateMachine.CurrentState != SecondPhaseFollow)  // Проверка на текущий стейт
+                if (stateMachine.CurrentState != SecondPhaseFollow)
                 {
+                    Debug.Log("Переход во Follow");
                     stateMachine.SetState(SecondPhaseFollow);
                 }
             }
@@ -144,27 +144,29 @@ public class MobAI : MonoBehaviour
             if (UltimateCharge >= 3)
             {
                 UltimateCharge = 0;
-                if (stateMachine.CurrentState != SecondPhaseUltimateAttack)  // Проверка на текущий стейт
+
+                if (stateMachine.CurrentState != SecondPhaseUltimateAttack)
                 {
+                    Debug.Log("Переход в Ultimate Attack!");
                     stateMachine.SetState(SecondPhaseUltimateAttack);
                 }
             }
             else
             {
-                if (stateMachine.CurrentState != SecondPhaseLightAttack)  // Проверка на текущий стейт
+                if (stateMachine.CurrentState != SecondPhaseLightAttack)
                 {
                     SecondPhaseAdditionalSkillCharge += 1;
+                    Debug.Log("Переход в Light Attack, заряд навыка: " + SecondPhaseAdditionalSkillCharge);
                     stateMachine.SetState(SecondPhaseLightAttack);
-                    Debug.Log("на нахуй");
                 }
             }
         }
     }
 
 
+
     private void Update()
     {
-        Debug.Log(distanceToPlayer);
         if (player == null)
         {
             GameObject playerObj = GameObject.FindGameObjectWithTag("Player");
@@ -188,7 +190,7 @@ public class MobAI : MonoBehaviour
         switch (Phase)
         {
             case 1: StateSwitch(); break;
-            case 2: StatePhaseTwoSwitch(); Debug.Log("Вторая фаза поехала"); break;
+            case 2: StatePhaseTwoSwitch();break;
         }
 
         stateMachine.Tick();

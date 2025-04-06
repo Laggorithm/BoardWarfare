@@ -26,13 +26,18 @@ public class StateMachine
 
     public void SetState(IState newState)
     {
-        if (currentState != null)
+        if (currentState is StateBehaviour behaviour && !behaviour.CanExit)
         {
-            currentState.Exit();
+            // Стейт не готов к выходу — блокируем переход
+            UnityEngine.Debug.Log("StateMachine: Cannot exit current state yet.");
+            return;
         }
+
+        currentState?.Exit();
         currentState = newState;
-        currentState.Enter();
+        currentState?.Enter();
     }
+
 
     public void Tick()
     {

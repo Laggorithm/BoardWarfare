@@ -315,7 +315,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!114 &264028970
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -355,7 +355,7 @@ MonoBehaviour:
     isOccupied: 0
   Waves:
   - ID: 1
-    GroundMobs: 4
+    GroundMobs: 0
     HeavyMobs: 0
     AirMobs: 0
   WallPrefab: {fileID: 8960071746613413464, guid: 4ae334db0047eff48b956837e3706783, type: 3}

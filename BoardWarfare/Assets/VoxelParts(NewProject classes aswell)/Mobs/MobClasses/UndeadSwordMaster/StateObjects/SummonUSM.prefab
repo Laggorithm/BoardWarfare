@@ -46,4 +46,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   mobPrefab: {fileID: 8528373784898135811, guid: cfdea230c461ccd43830f898fec1eb1b, type: 3}
   mobCount: 3
-  summonDelay: 2
+  summonDelay: 1

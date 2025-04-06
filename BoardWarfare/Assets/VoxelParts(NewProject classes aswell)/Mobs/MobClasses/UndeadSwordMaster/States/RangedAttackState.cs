@@ -6,13 +6,14 @@ public class RangedAttackState : StateBehaviour
     public GameObject projectilePrefab;
     public Transform shootingPoint;
     public int waitFrames; // Количество фреймов ожидания после выстрела
+  
 
     private NavMeshAgent agent;
     private Animator anim;
     private Transform player;
     private MobAI mobAI;
     private int currentWaitFrames; // Текущее количество фреймов ожидания
-
+    public override bool CanExit => currentWaitFrames <= 0;
     public override void Initialize(MobAI mobAI)
     {
         base.Initialize(mobAI);
@@ -48,7 +49,7 @@ public class RangedAttackState : StateBehaviour
         agent.updateRotation = true; // Включаем автоматический поворот
         Debug.Log("Exiting RangedAttack State");
     }
-
+    
     private void Shoot()
     {
         if (projectilePrefab != null && shootingPoint != null)
