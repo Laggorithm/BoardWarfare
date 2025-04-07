@@ -18,6 +18,9 @@ public class MeleeWeaponHolder : MonoBehaviour
     [Tooltip("UI-изображение активного оружия")]
     public Image weaponUIImage;
 
+    [Header("Аудио-дорожки")]
+    public AudioSource attackSource;
+
     private Animator animator;
     public AnimatorOverrideController oneHandedOverride;
     public AnimatorOverrideController twoHandedOverride;
@@ -25,6 +28,7 @@ public class MeleeWeaponHolder : MonoBehaviour
     public AnimatorOverrideController daggersOverride;
     public AnimatorOverrideController hammerOverride;
     private RuntimeAnimatorController defaultAnimator;
+
 
     private MeleeWeapon activeWeapon;
 
@@ -58,6 +62,7 @@ public class MeleeWeaponHolder : MonoBehaviour
         {
             activeWeapon.Attack();
             animator.SetTrigger("Attack");
+            PlayAttackSound();
         }
     }
 
@@ -116,6 +121,13 @@ public class MeleeWeaponHolder : MonoBehaviour
             {
                 weaponUIImage.enabled = false;
             }
+        }
+    }
+    void PlayAttackSound()
+    {
+        if (activeWeapon != null && activeWeapon.attackSound != null && attackSource != null)
+        {
+            attackSource.PlayOneShot(activeWeapon.attackSound);
         }
     }
 }

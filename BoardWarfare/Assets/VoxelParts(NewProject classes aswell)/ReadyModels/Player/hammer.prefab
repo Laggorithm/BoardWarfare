@@ -93,6 +93,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8237274407258846499}
   - component: {fileID: 8959258226056972657}
+  - component: {fileID: -5812659386056577534}
   m_Layer: 0
   m_Name: hammer
   m_TagString: Hammer
@@ -133,6 +134,21 @@ MonoBehaviour:
   attackDamage: 10
   attackCooldown: 1
   playerSpellHolder: {fileID: 0}
+  weaponIcon: {fileID: 0}
+  attackSound: {fileID: 0}
+--- !u!65 &-5812659386056577534
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8726706977966927769}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 3.616956, y: 5.8367243, z: 1}
+  m_Center: {x: 0.66760045, y: 2.4183626, z: 0}
 --- !u!1001 &701310340299955111
 PrefabInstance:
   m_ObjectHideFlags: 0

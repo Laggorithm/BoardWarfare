@@ -12,6 +12,7 @@ public class MeleeWeapon : MonoBehaviour
     private bool isOnCooldown = false;
     private SpellHolder weaponSpellHolder;
     public Sprite weaponIcon; // Спрайт для UI
+    public AudioClip attackSound;
 
     private void Start()
     {
@@ -39,7 +40,18 @@ public class MeleeWeapon : MonoBehaviour
         if (isOnCooldown)
             return;
 
-        Debug.Log($"{name} атакует и наносит {attackDamage} урона!");
+        // Включаем коллайдер, чтобы он реагировал на столкновения
+        Collider[] hitColliders = Physics.OverlapSphere(transform.position, 1f); // Можно настроить радиус
+        foreach (var hitCollider in hitColliders)
+        {
+            MobAI mobAI = hitCollider.GetComponent<MobAI>();
+            if (mobAI != null)
+            {
+                mobAI.TakeDamage((int)attackDamage); // Наносим урон
+                Debug.Log($"{name} атакует и наносит {attackDamage} урона!");
+            }
+        }
+
         StartCoroutine(AttackCooldown());
     }
 

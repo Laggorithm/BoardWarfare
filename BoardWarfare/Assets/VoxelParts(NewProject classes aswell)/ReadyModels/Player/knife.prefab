@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 3209086878873525301}
   - component: {fileID: 4661758257176832124}
+  - component: {fileID: 4189788760371640205}
   m_Layer: 0
   m_Name: knife
   m_TagString: OneHanded
@@ -49,6 +50,21 @@ MonoBehaviour:
   attackDamage: 10
   attackCooldown: 1
   playerSpellHolder: {fileID: 0}
+  weaponIcon: {fileID: 0}
+  attackSound: {fileID: 0}
+--- !u!65 &4189788760371640205
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2865176871126943375}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 1.3793142, y: 3.4488602, z: 1}
+  m_Center: {x: -0.20662439, y: 1.9722466, z: 0}
 --- !u!1 &6507398887006584406
 GameObject:
   m_ObjectHideFlags: 0

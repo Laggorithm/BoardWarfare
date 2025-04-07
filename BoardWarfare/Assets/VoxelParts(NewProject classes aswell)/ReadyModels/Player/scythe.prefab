@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 4262697914884491239}
   - component: {fileID: -4071059209069687289}
+  - component: {fileID: 4369004225665598307}
   m_Layer: 0
   m_Name: scythe
   m_TagString: Scythe
@@ -50,6 +51,21 @@ MonoBehaviour:
   attackDamage: 10
   attackCooldown: 1
   playerSpellHolder: {fileID: 0}
+  weaponIcon: {fileID: 0}
+  attackSound: {fileID: 0}
+--- !u!65 &4369004225665598307
+BoxCollider:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3486900499432430941}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 1
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Size: {x: 3.618103, y: 5.304846, z: 1}
+  m_Center: {x: 0.038646996, y: 0.99382186, z: 0}
 --- !u!1 &5615494401409033604
 GameObject:
   m_ObjectHideFlags: 0

@@ -15,8 +15,21 @@ public class PlayerMovement : MonoBehaviour
     public float dashDuration = 0.3f;
     public float dashCooldown = 1.5f;
 
-    [Header("Ссылки")]
+    [Header("Камера")]
     [SerializeField] private Transform cameraTransform; // SerializeField позволяет видеть private поле в инспекторе
+
+    [Header("Настройки звуков шагов")]
+    public float stepInterval = 0.5f; // интервал между шагами
+    private float stepTimer = 0f;
+
+    public float walkStepInterval = 0.5f;
+    public float sprintStepInterval = 0.35f;
+    public float crouchStepInterval = 0.7f;
+
+    public float walkVolume = 0.5f;
+    public float sprintVolume = 0.9f;
+    public float crouchVolume = 0.3f;
+
 
     private CharacterController controller;
     private Vector3 moveDirection;
@@ -32,6 +45,9 @@ public class PlayerMovement : MonoBehaviour
     private float verticalVelocity;
     private float dashTimer = 0f;
     private float dashCooldownTimer = 0f;
+
+    public AudioSource footstepSource;
+    public AudioClip[] footstepClips;
 
     void Awake()
     {
@@ -72,6 +88,8 @@ public class PlayerMovement : MonoBehaviour
         if (!isDashing)
         {
             ApplyMovement();
+            HandleFootsteps(); // Новый метод
+
         }
     }
 
@@ -233,4 +251,49 @@ public class PlayerMovement : MonoBehaviour
             Debug.LogWarning("Передана null камера!");
         }
     }
+    void PlayFootstep()
+    {
+        if (footstepClips.Length == 0 || footstepSource == null) return;
+
+        int index = Random.Range(0, footstepClips.Length);
+        footstepSource.PlayOneShot(footstepClips[index]);
+    }
+
+    private void HandleFootsteps()
+    {
+        bool isMovingInput = Mathf.Abs(Input.GetAxisRaw("Horizontal")) > 0.1f || Mathf.Abs(Input.GetAxisRaw("Vertical")) > 0.1f;
+
+        if (controller.isGrounded && isMovingInput && !isDashing)
+        {
+            // Устанавливаем интервал и громкость в зависимости от скорости
+            if (isSprinting)
+            {
+                stepInterval = sprintStepInterval;
+                footstepSource.volume = sprintVolume;
+            }
+            else if (isCrouching)
+            {
+                stepInterval = crouchStepInterval;
+                footstepSource.volume = crouchVolume;
+            }
+            else
+            {
+                stepInterval = walkStepInterval;
+                footstepSource.volume = walkVolume;
+            }
+
+            stepTimer -= Time.deltaTime;
+
+            if (stepTimer <= 0f)
+            {
+                PlayFootstep();
+                stepTimer = stepInterval;
+            }
+        }
+        else
+        {
+            stepTimer = 0f;
+        }
+    }
+
 }
