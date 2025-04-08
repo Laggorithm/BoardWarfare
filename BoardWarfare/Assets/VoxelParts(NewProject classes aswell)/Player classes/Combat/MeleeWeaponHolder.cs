@@ -58,12 +58,13 @@ public class MeleeWeaponHolder : MonoBehaviour
             SetActiveWeapon(weapon2);
         }
 
-        if (Input.GetMouseButtonDown(0) && activeWeapon != null)
+        if (Input.GetMouseButtonDown(0) && activeWeapon != null && activeWeapon.CanAttack())
         {
             activeWeapon.Attack();
             animator.SetTrigger("Attack");
             PlayAttackSound();
         }
+
     }
 
     private void SetActiveWeapon(MeleeWeapon newWeapon)

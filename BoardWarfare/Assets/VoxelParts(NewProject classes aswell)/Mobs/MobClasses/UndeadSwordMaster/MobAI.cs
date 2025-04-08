@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.UI;
 
 public class MobAI : MonoBehaviour
 {
@@ -12,6 +13,8 @@ public class MobAI : MonoBehaviour
     private NavMeshAgent agent;
     private Animator anim;
     public Transform player;
+
+    public Slider healthSlider;
 
     public float maxHealth; // Новая переменная для максимального хп
     public float health;
@@ -46,6 +49,19 @@ public class MobAI : MonoBehaviour
 
         agent = GetComponent<NavMeshAgent>();
         anim = GetComponent<Animator>();
+
+        // Поиск слайдера с тегом EnemyHPUI
+        GameObject hpUI = GameObject.FindGameObjectWithTag("EnemyHPUI");
+        if (hpUI != null)
+        {
+            healthSlider = hpUI.GetComponent<Slider>();
+            healthSlider.gameObject.SetActive(true); // Убедимся, что слайдер активен, если найден
+            UpdateHealthUI();
+        }
+        else
+        {
+            Debug.LogWarning("Слайдер HP не найден на сцене!");
+        }
 
         if (player == null)
         {
@@ -236,6 +252,7 @@ public class MobAI : MonoBehaviour
     public void TakeDamage(int damage)
     {
         health -= damage;
+        UpdateHealthUI();
     }
 
     private IEnumerator DeathAfterFrames(int frames)
@@ -247,6 +264,14 @@ public class MobAI : MonoBehaviour
             yield return null; 
         Debug.Log("Смерть после " + frames + " фреймов");
         Destroy(gameObject);
+    }
+    // Обновление полоски HP в UI
+    private void UpdateHealthUI()
+    {
+        if (healthSlider != null)
+        {
+            healthSlider.value = health / maxHealth; // Обновление полоски HP
+        }
     }
 
 }

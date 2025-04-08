@@ -5,6 +5,7 @@ public class MagicProjectile : MonoBehaviour
     public float speed = 20f;
     public float lifetime = 5f;
     public GameObject impactEffect;
+    public float damage = 10f; // Урон при столкновении
 
     private Rigidbody rb;
 
@@ -13,21 +14,38 @@ public class MagicProjectile : MonoBehaviour
         rb = GetComponent<Rigidbody>();
         rb.velocity = transform.forward * speed;
 
-        Destroy(gameObject, lifetime); // уничтожаем через время
+        Destroy(gameObject, lifetime); // Уничтожаем через время
     }
 
     void OnTriggerEnter(Collider other)
     {
-        // Проверка — есть ли у объекта MobBehavior
-        MobBehaviour mob = other.GetComponent<MobBehaviour>();
-
-        if (mob != null)
+        // Проверка, имеет ли объект тег "USM"
+        if (other.CompareTag("USM"))
         {
-            if (impactEffect != null)
-                Instantiate(impactEffect, transform.position, Quaternion.identity);
+            // Получаем компонент MobAI с объекта
+            MobAI mobAI = other.GetComponent<MobAI>();
 
-            Destroy(gameObject); // уничтожаем снаряд
+            if (mobAI != null)
+            {
+                // Спавн эффекта при столкновении
+                if (impactEffect != null)
+                {
+                    // Получаем точку столкновения
+                    Vector3 spawnPos = other.ClosestPoint(transform.position);
+                    GameObject effect = Instantiate(impactEffect, spawnPos, Quaternion.identity);
+                    Destroy(effect, 1f); // Эффект исчезнет через 1 секунду
+                }
+
+                // Наносим урон
+                mobAI.TakeDamage((int)damage);
+
+                // Лог для отладки
+                Debug.Log($"{name} атакует {other.name} с тегом USM и наносит {damage} урона!");
+            }
+
+            // Уничтожаем снаряд после столкновения
+            Destroy(gameObject);
         }
-        // Если нет MobBehavior — просто игнорируем и продолжаем лететь
+        // Если объект не с тегом "USM", ничего не делаем
     }
 }
