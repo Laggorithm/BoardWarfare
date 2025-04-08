@@ -26,6 +26,7 @@ TagManager:
   - USMPatrolPoints
   - USMshootingPoint
   - USM
+  - EnemyHPUI
   layers:
   - Default
   - TransparentFX

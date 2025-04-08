@@ -1264,7 +1264,7 @@ MonoBehaviour:
   - {fileID: 4811023496943217800, guid: 313e89fbcae75294eb12ffe754ee9593, type: 3}
   player: {fileID: 0}
   maxHealth: 160
-  health: 2
+  health: 160
   seeEnemyDistance: 15
   attackRange: 5
   deathFrameDelay: 60
