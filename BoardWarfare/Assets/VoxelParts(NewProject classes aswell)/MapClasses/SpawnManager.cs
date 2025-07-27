@@ -43,7 +43,6 @@ public class SpawnManager : MonoBehaviour
 
     public int waveEffectValue = 0;
     public string WaveEffectName;
-    public Movement movement;
     private void Start()
     {
         

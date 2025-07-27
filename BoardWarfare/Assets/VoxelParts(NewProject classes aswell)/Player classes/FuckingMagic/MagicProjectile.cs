@@ -5,47 +5,47 @@ public class MagicProjectile : MonoBehaviour
     public float speed = 20f;
     public float lifetime = 5f;
     public GameObject impactEffect;
-    public float damage = 10f; // Урон при столкновении
+    public float damage = 10f; // пїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
 
     private Rigidbody rb;
 
     void Start()
     {
         rb = GetComponent<Rigidbody>();
-        rb.velocity = transform.forward * speed;
+        rb.linearVelocity = transform.forward * speed;
 
-        Destroy(gameObject, lifetime); // Уничтожаем через время
+        Destroy(gameObject, lifetime); // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ
     }
 
     void OnTriggerEnter(Collider other)
     {
-        // Проверка, имеет ли объект тег "USM"
+        // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ, пїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ "USM"
         if (other.CompareTag("USM"))
         {
-            // Получаем компонент MobAI с объекта
+            // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ MobAI пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
             MobAI mobAI = other.GetComponent<MobAI>();
 
             if (mobAI != null)
             {
-                // Спавн эффекта при столкновении
+                // пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
                 if (impactEffect != null)
                 {
-                    // Получаем точку столкновения
+                    // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
                     Vector3 spawnPos = other.ClosestPoint(transform.position);
                     GameObject effect = Instantiate(impactEffect, spawnPos, Quaternion.identity);
-                    Destroy(effect, 1f); // Эффект исчезнет через 1 секунду
+                    Destroy(effect, 1f); // пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ 1 пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
                 }
 
-                // Наносим урон
+                // пїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅ
                 mobAI.TakeDamage((int)damage);
 
-                // Лог для отладки
-                Debug.Log($"{name} атакует {other.name} с тегом USM и наносит {damage} урона!");
+                // пїЅпїЅпїЅ пїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ
+                Debug.Log($"{name} пїЅпїЅпїЅпїЅпїЅпїЅпїЅ {other.name} пїЅ пїЅпїЅпїЅпїЅпїЅ USM пїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅ {damage} пїЅпїЅпїЅпїЅпїЅ!");
             }
 
-            // Уничтожаем снаряд после столкновения
+            // пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅпїЅ
             Destroy(gameObject);
         }
-        // Если объект не с тегом "USM", ничего не делаем
+        // пїЅпїЅпїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅ пїЅпїЅпїЅпїЅпїЅ "USM", пїЅпїЅпїЅпїЅпїЅпїЅ пїЅпїЅ пїЅпїЅпїЅпїЅпїЅпїЅ
     }
 }

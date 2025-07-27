@@ -218,7 +218,7 @@ public class SpellConfigurator : MonoBehaviour
 
         if (rb != null)
         {
-            rb.velocity = rotation * Vector3.forward; // Используем общую скорость для всех типов выстрелов
+            rb.linearVelocity = rotation * Vector3.forward; // Используем общую скорость для всех типов выстрелов
         }
     }
 

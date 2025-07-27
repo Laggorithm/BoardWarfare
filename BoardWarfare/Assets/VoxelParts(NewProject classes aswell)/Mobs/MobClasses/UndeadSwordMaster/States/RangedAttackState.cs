@@ -72,7 +72,7 @@ public class RangedAttackState : StateBehaviour
 
                 // Устанавливаем скорость снаряда
                 float projectileSpeed = 30f; // Скорость снаряда
-                rb.velocity = forwardDirection * projectileSpeed;
+                rb.linearVelocity = forwardDirection * projectileSpeed;
 
                 // Запускаем корутину для удаления снаряда через 2 секунды
                 mobAI.StartCoroutine(DestroyProjectileAfterDelay(projectile, 2f)); // Удалить через 2 секунды
